@@ -1,3 +1,3 @@
 namespace CCC.Keys;
 
-record KeyAdded(string Name, Guid ProjectId);
+record KeyAdded(Guid Id, string Name, Guid ProjectId);

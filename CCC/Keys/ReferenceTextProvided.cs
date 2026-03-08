@@ -1,3 +1,3 @@
 namespace CCC.Keys;
 
-record ReferenceTextProvided(string KeyName, Guid ProjectId, string Text);
+record ReferenceTextProvided(Guid KeyId, Guid ProjectId, string Text);
