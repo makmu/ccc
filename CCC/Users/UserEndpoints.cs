@@ -10,7 +10,7 @@ static class UserEndpoints
         {
             var context = await contextBuilder
                 .Where<UserAdded>(w => w
-                    .Or(e => e.Email, request.Email)
+                    .With(e => e.Email, request.Email)
                     .Or(e => e.Id, request.Id))
                 .LoadAsync();
 

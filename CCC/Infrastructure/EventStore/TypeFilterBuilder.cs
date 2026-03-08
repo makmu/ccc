@@ -7,6 +7,9 @@ class TypeFilterBuilder<T>
 {
     private readonly Dictionary<string, string> _properties = new();
 
+    public TypeFilterBuilder<T> With<TValue>(Expression<Func<T, TValue>> property, TValue value)
+        => Or(property, value);
+
     public TypeFilterBuilder<T> Or<TValue>(Expression<Func<T, TValue>> property, TValue value)
     {
         if (property.Body is not MemberExpression member)

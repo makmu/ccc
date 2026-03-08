@@ -11,7 +11,7 @@ static class OrganizationEndpoints
         {
             var context = await contextBuilder
                 .Where<OrganizationAdded>(w => w
-                    .Or(e => e.Id, request.Id)
+                    .With(e => e.Id, request.Id)
                     .Or(e => e.Name, request.Name))
                 .LoadAsync();
 
@@ -33,8 +33,8 @@ static class OrganizationEndpoints
         app.MapPost("/organizations/{organizationId}/teams", async (Guid organizationId, AddTeamRequest request, CommandContextBuilder contextBuilder) =>
         {
             var context = await contextBuilder
-                .Where<OrganizationAdded>(w => w.Or(e => e.Id, organizationId))
-                .Where<TeamAdded>(w => w.Or(e => e.OrganizationId, organizationId))
+                .Where<OrganizationAdded>(w => w.With(e => e.Id, organizationId))
+                .Where<TeamAdded>(w => w.With(e => e.OrganizationId, organizationId))
                 .LoadAsync();
 
             if (context.Events.All(e => e.Type != nameof(OrganizationAdded)))
