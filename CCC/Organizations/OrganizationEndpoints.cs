@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CCC.Infrastructure.EventStore;
+using CCC.SubscriptionModels;
 using CCC.Users;
 
 namespace CCC.Organizations;
@@ -10,18 +11,30 @@ static class OrganizationEndpoints
     {
         app.MapPost("/organizations", async (AddOrganizationRequest request, CommandContextBuilder contextBuilder) =>
         {
+            if (request.SubscriptionModelIds.Count == 0)
+                return Results.BadRequest("At least one subscription model must be referenced.");
+
             var context = await contextBuilder
                 .Where<OrganizationAdded>(w => w
                     .With(e => e.Id, request.Id)
                     .Or(e => e.Name, request.Name))
+                .Where<SubscriptionModelAdded>()
                 .LoadAsync();
 
-            if (context.Events.Count != 0)
+            if (context.Events.Any(e => e.Type == nameof(OrganizationAdded)))
                 return Results.Conflict("An organization with this id or name already exists.");
+
+            var existingModelIds = context.Events
+                .Where(e => e.Type == nameof(SubscriptionModelAdded))
+                .Select(e => JsonSerializer.Deserialize<SubscriptionModelAdded>(e.Payload)!.Id)
+                .ToHashSet();
+
+            if (request.SubscriptionModelIds.Any(id => !existingModelIds.Contains(id)))
+                return Results.NotFound("One or more subscription models were not found.");
 
             try
             {
-                await context.AppendAsync(new OrganizationAdded(request.Id, request.Name));
+                await context.AppendAsync(new OrganizationAdded(request.Id, request.Name, request.SubscriptionModelIds));
             }
             catch (ConcurrencyException)
             {
