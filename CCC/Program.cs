@@ -25,12 +25,12 @@ app.UseHttpsRedirection();
 
 await EventStoreSchema.CreateAsync(connectionString);
 
-app.MapPost("/organizations", (CCC.Organizations.CreateOrganizationRequest request) =>
+app.MapPost("/organizations", (CCC.Organizations.AddOrganizationRequest request) =>
 {
     return Results.Ok();
 });
 
-app.MapPost("/users", async (CCC.Users.CreateUserRequest request, EventStore eventStore) =>
+app.MapPost("/users", async (CCC.Users.AddUserRequest request, EventStore eventStore) =>
 {
     await eventStore.AppendAsync("UserAdded", new CCC.Users.UserAdded(request.Id, request.Name, request.Email), Guid.Empty);
     return Results.Ok();

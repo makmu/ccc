@@ -32,5 +32,9 @@ dotnet run --project CCC/CCC.csproj
 - ASP.NET Core
 - React (frontend, separate project)
 
+## Naming Conventions
+- **Never use CRUD terminology** in request, command, or event names (no `Create`, `Read`, `Update`, `Delete`)
+- Use intent-revealing, domain language instead — e.g. `AddUser`, `RegisterUser`, `ArchiveProject`, `PublishTranslation`
+
 ## Architectural Decisions
 If and only if architectural context is needed, consult the `docs/architecture/` folder for ADRs (Architecture Decision Records) and other architectural conventions.
