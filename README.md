@@ -10,14 +10,20 @@ CCC is a multi-tenant CMS for managing translation keys and their values across 
 
 ```bash
 dotnet build CCC.sln
-dotnet run --project CCC/CCC.csproj
+dotnet run --project backend/CCC/CCC.csproj
 ```
 
 Swagger UI is available at `http://localhost:5039/swagger` in development.
 
 ### Frontend
 
-> Not yet implemented.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+UI is available at `http://localhost:5173`. Requires the backend to be running.
 
 ---
 
