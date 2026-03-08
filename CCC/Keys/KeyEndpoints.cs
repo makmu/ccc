@@ -107,5 +107,53 @@ static class KeyEndpoints
 
             return Results.Ok();
         });
+
+        app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyName}/translations", async (Guid teamId, Guid projectId, string keyName, ProvideTranslationRequest request, CommandContextBuilder contextBuilder) =>
+        {
+            var context = await contextBuilder
+                .Where<TeamAdded>(w => w.With(e => e.Id, teamId))
+                .Where<ProjectAdded>(w => w.With(e => e.TeamId, teamId))
+                .Where<KeyAdded>(w => w.With(e => e.ProjectId, projectId))
+                .Where<LanguageAdded>(w => w.With(e => e.ProjectId, projectId))
+                .LoadAsync();
+
+            if (context.Events.All(e => e.Type != nameof(TeamAdded)))
+                return Results.NotFound("Team not found.");
+
+            var projectExists = context.Events
+                .Where(e => e.Type == nameof(ProjectAdded))
+                .Select(e => JsonSerializer.Deserialize<ProjectAdded>(e.Payload)!)
+                .Any(p => p.Id == projectId);
+
+            if (!projectExists)
+                return Results.NotFound("Project not found in this team.");
+
+            var keyExists = context.Events
+                .Where(e => e.Type == nameof(KeyAdded))
+                .Select(e => JsonSerializer.Deserialize<KeyAdded>(e.Payload)!)
+                .Any(k => k.Name == keyName);
+
+            if (!keyExists)
+                return Results.NotFound("Key not found in this project.");
+
+            var languageExists = context.Events
+                .Where(e => e.Type == nameof(LanguageAdded))
+                .Select(e => JsonSerializer.Deserialize<LanguageAdded>(e.Payload)!)
+                .Any(l => l.LanguageCode == request.LanguageCode);
+
+            if (!languageExists)
+                return Results.BadRequest("The specified language has not been added to this project.");
+
+            try
+            {
+                await context.AppendAsync(new TranslationProvided(keyName, projectId, request.LanguageCode, request.Text));
+            }
+            catch (ConcurrencyException)
+            {
+                return Results.Conflict("A concurrent operation modified the event store. Please retry.");
+            }
+
+            return Results.Ok();
+        });
     }
 }
