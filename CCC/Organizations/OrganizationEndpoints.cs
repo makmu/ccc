@@ -51,8 +51,16 @@ static class OrganizationEndpoints
                 .Where<TeamAdded>(w => w.With(e => e.OrganizationId, organizationId))
                 .LoadAsync();
 
-            if (context.Events.All(e => e.Type != nameof(OrganizationAdded)))
+            var organization = context.Events
+                .Where(e => e.Type == nameof(OrganizationAdded))
+                .Select(e => JsonSerializer.Deserialize<OrganizationAdded>(e.Payload)!)
+                .SingleOrDefault();
+
+            if (organization is null)
                 return Results.NotFound("Organization not found.");
+
+            if (!organization.SubscriptionModelIds.Contains(request.SubscriptionModelId))
+                return Results.BadRequest("The specified subscription model is not available in this organization.");
 
             var conflict = context.Events
                 .Where(e => e.Type == nameof(TeamAdded))
@@ -64,7 +72,7 @@ static class OrganizationEndpoints
 
             try
             {
-                await context.AppendAsync(new TeamAdded(request.Id, request.Name, organizationId));
+                await context.AppendAsync(new TeamAdded(request.Id, request.Name, organizationId, request.SubscriptionModelId));
             }
             catch (ConcurrencyException)
             {
