@@ -1,4 +1,6 @@
 using CCC.Infrastructure.EventStore;
+using CCC.Organizations;
+using CCC.Users;
 using Dapper;
 
 SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
@@ -29,32 +31,7 @@ app.UseHttpsRedirection();
 
 await EventStoreSchema.CreateAsync(connectionString);
 
-app.MapPost("/organizations", (CCC.Organizations.AddOrganizationRequest request) =>
-{
-    return Results.Ok();
-});
-
-app.MapPost("/users", async (CCC.Users.AddUserRequest request, CommandContextBuilder contextBuilder) =>
-{
-    var context = await contextBuilder
-        .Where<CCC.Users.UserAdded>(w => w
-            .Or(e => e.Email, request.Email)
-            .Or(e => e.Id, request.Id))
-        .LoadAsync();
-
-    if (context.Events.Count != 0)
-        return Results.Conflict("A user with this email address or id already exists.");
-
-    try
-    {
-        await context.AppendAsync(new CCC.Users.UserAdded(request.Id, request.Name, request.Email));
-    }
-    catch (ConcurrencyException)
-    {
-        return Results.Conflict("A concurrent operation modified the event store. Please retry.");
-    }
-
-    return Results.Ok();
-});
+app.MapOrganizationEndpoints();
+app.MapUserEndpoints();
 
 app.Run();
