@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CCC.Infrastructure.EventStore;
+using CCC.Users;
 
 namespace CCC.Organizations;
 
@@ -51,6 +52,40 @@ static class OrganizationEndpoints
             try
             {
                 await context.AppendAsync(new TeamAdded(request.Id, request.Name, organizationId));
+            }
+            catch (ConcurrencyException)
+            {
+                return Results.Conflict("A concurrent operation modified the event store. Please retry.");
+            }
+
+            return Results.Ok();
+        });
+
+        app.MapPost("/organizations/{organizationId}/owners", async (Guid organizationId, AssignOrganizationOwnerRequest request, CommandContextBuilder contextBuilder) =>
+        {
+            var context = await contextBuilder
+                .Where<OrganizationAdded>(w => w.With(e => e.Id, organizationId))
+                .Where<UserAdded>(w => w.With(e => e.Id, request.UserId))
+                .Where<OrganizationOwnerAssigned>(w => w.With(e => e.OrganizationId, organizationId))
+                .LoadAsync();
+
+            if (context.Events.All(e => e.Type != nameof(OrganizationAdded)))
+                return Results.NotFound("Organization not found.");
+
+            if (context.Events.All(e => e.Type != nameof(UserAdded)))
+                return Results.NotFound("User not found.");
+
+            var alreadyAssigned = context.Events
+                .Where(e => e.Type == nameof(OrganizationOwnerAssigned))
+                .Select(e => JsonSerializer.Deserialize<OrganizationOwnerAssigned>(e.Payload)!)
+                .Any(o => o.UserId == request.UserId);
+
+            if (alreadyAssigned)
+                return Results.Conflict("This user is already an owner of this organization.");
+
+            try
+            {
+                await context.AppendAsync(new OrganizationOwnerAssigned(request.UserId, organizationId));
             }
             catch (ConcurrencyException)
             {
