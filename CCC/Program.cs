@@ -16,4 +16,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapPost("/organizations", (CCC.Organizations.CreateOrganizationRequest request) =>
+{
+    return Results.Ok();
+});
+
 app.Run();
