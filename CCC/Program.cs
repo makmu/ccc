@@ -1,5 +1,6 @@
 using CCC.Infrastructure.EventStore;
 using CCC.Organizations;
+using CCC.SubscriptionModels;
 using CCC.Users;
 using Dapper;
 
@@ -32,6 +33,7 @@ app.UseHttpsRedirection();
 await EventStoreSchema.CreateAsync(connectionString);
 
 app.MapOrganizationEndpoints();
+app.MapSubscriptionModelEndpoints();
 app.MapUserEndpoints();
 
 app.Run();
