@@ -25,23 +25,40 @@ class EventStore(string connectionString)
 
     public async Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter)
     {
-        var kvList = filter.PayloadProperties.ToList();
+        var parameters = new DynamicParameters();
+        var conditions = new List<string>();
+        var entryIndex = 0;
 
-        var payloadClause = kvList.Count == 0
-            ? ""
-            : " AND (" + string.Join(" OR ", kvList.Select((_, i) => $"payload @> @p{i}::jsonb")) + ")";
+        foreach (var entry in filter.Entries)
+        {
+            var typeParam = $"t{entryIndex}";
+            parameters.Add(typeParam, entry.Type);
+
+            if (entry.PayloadProperties.Count == 0)
+            {
+                conditions.Add($"type = @{typeParam}");
+            }
+            else
+            {
+                var kvs = entry.PayloadProperties.ToList();
+                var payloadParts = kvs.Select((kv, i) =>
+                {
+                    var pName = $"p{entryIndex}_{i}";
+                    parameters.Add(pName, $"{{\"{kv.Key}\":{kv.Value}}}");
+                    return $"payload @> @{pName}::jsonb";
+                });
+                conditions.Add($"(type = @{typeParam} AND ({string.Join(" OR ", payloadParts)}))");
+            }
+
+            entryIndex++;
+        }
 
         var sql = $"""
             SELECT position, type, payload, timestamp, "user"
             FROM events
-            WHERE type = ANY(@types){payloadClause}
+            WHERE {string.Join(" OR ", conditions)}
             ORDER BY position
             """;
-
-        var parameters = new DynamicParameters();
-        parameters.Add("types", filter.Types);
-        for (var i = 0; i < kvList.Count; i++)
-            parameters.Add($"p{i}", JsonSerializer.Serialize(new Dictionary<string, string> { { kvList[i].Key, kvList[i].Value } }));
 
         await using var conn = new NpgsqlConnection(connectionString);
         return await conn.QueryAsync<EventRecord>(sql, parameters);

@@ -35,13 +35,14 @@ app.MapPost("/organizations", (CCC.Organizations.AddOrganizationRequest request)
 
 app.MapPost("/users", async (CCC.Users.AddUserRequest request, EventStore eventStore) =>
 {
-    var existing = await eventStore.LoadAsync(new EventFilter(
-        Types: ["UserAdded"],
-        PayloadProperties: new() { { "Email", request.Email } }
-    ));
+    var existing = await eventStore.LoadAsync(EventFilter.Builder
+        .Where<CCC.Users.UserAdded>(w => w
+            .Or(e => e.Email, request.Email)
+            .Or(e => e.Id, request.Id))
+        .Build());
 
     if (existing.Any())
-        return Results.Conflict("A user with this email address already exists.");
+        return Results.Conflict("A user already exists.");
 
     await eventStore.AppendAsync("UserAdded", new CCC.Users.UserAdded(request.Id, request.Name, request.Email), Guid.Empty);
     return Results.Ok();
