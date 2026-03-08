@@ -31,3 +31,6 @@ dotnet run --project CCC/CCC.csproj
 - .NET 8.0
 - ASP.NET Core
 - React (frontend, separate project)
+
+## Architectural Decisions
+If and only if architectural context is needed, consult the `docs/architecture/` folder for ADRs (Architecture Decision Records) and other architectural conventions.
