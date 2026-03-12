@@ -8,15 +8,18 @@ static class UserEndpoints
     {
         app.MapPost("/users", async (AddUserRequest request, CommandContextBuilder contextBuilder) =>
         {
+            // load context
             var context = await contextBuilder
                 .Where<UserAdded>(w => w
                     .With(e => e.Email, request.Email)
                     .Or(e => e.Id, request.Id))
                 .LoadAsync();
 
+            // decision
             if (context.Events.Count != 0)
                 return Results.Conflict("A user with this email address or id already exists.");
 
+            // write decision result
             try
             {
                 await context.AppendAsync(new UserAdded(request.Id, request.Name, request.Email));
