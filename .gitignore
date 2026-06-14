@@ -1,3 +1,5 @@
 .idea/
 bin/
 obj/
+presentation/node_modules/
+presentation/dist/

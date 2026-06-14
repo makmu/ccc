@@ -115,5 +115,49 @@ static class OrganizationEndpoints
 
             return Results.Ok();
         });
+
+        app.MapPost("/organizations/{organizationId}/rename", async (Guid organizationId, RenameOrganizationRequest request, CommandContextBuilder contextBuilder) =>
+        {
+            // Context
+            var context = await contextBuilder
+                .Where<OrganizationAdded>()
+                .Where<OrganizationRenamed>()
+                .LoadAsync();
+
+            // State Slice
+            var currentNames = new Dictionary<Guid, string>();
+            foreach (var e in context.Events)
+            {
+                if (e.Type == nameof(OrganizationAdded))
+                {
+                    var added = JsonSerializer.Deserialize<OrganizationAdded>(e.Payload)!;
+                    currentNames[added.Id] = added.Name;
+                }
+                else
+                {
+                    var renamed = JsonSerializer.Deserialize<OrganizationRenamed>(e.Payload)!;
+                    currentNames[renamed.OrganizationId] = renamed.Name;
+                }
+            }
+
+            // Descisions
+            if (!currentNames.ContainsKey(organizationId))
+                return Results.NotFound("Organization not found.");
+
+            if (currentNames.Any(o => o.Key != organizationId && o.Value == request.Name))
+                return Results.Conflict("An organization with this name already exists.");
+
+            // Append event
+            try
+            {
+                await context.AppendAsync(new OrganizationRenamed(organizationId, request.Name));
+            }
+            catch (ConcurrencyException)
+            {
+                return Results.Conflict("A concurrent operation modified the event store. Please retry.");
+            }
+
+            return Results.Ok();
+        });
     }
 }

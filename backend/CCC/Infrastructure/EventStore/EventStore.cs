@@ -15,12 +15,12 @@ class EventStore(string connectionString)
             new { type, payload = json, user });
     }
 
-    public async Task AppendAsync(string type, object payload, Guid user, long expectedMaxPosition, EventFilter filter)
+    public async Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter)
     {
-        var json = JsonSerializer.Serialize(payload);
-        var (whereClause, parameters) = BuildFilterConditions(filter);
+        var json = JsonSerializer.Serialize(eventPayload);
+        var (whereClause, parameters) = BuildFilterConditions(contextFilter);
 
-        parameters.Add("type", type);
+        parameters.Add("type", eventType);
         parameters.Add("payload", json);
         parameters.Add("user", user);
         parameters.Add("expectedMaxPosition", expectedMaxPosition);
