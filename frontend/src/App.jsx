@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import AddUserForm from './AddUserForm'
-import AddOrganizationForm from './AddOrganizationForm'
+import RegisterTenantForm from './RegisterTenantForm'
 import './App.css'
 
-const TABS = ['Add User', 'Add Organization']
+const TABS = ['Add User', 'Register Tenant']
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(0)
@@ -24,7 +24,7 @@ export default function App() {
       </div>
       <div className="tab-content">
         {activeTab === 0 && <AddUserForm />}
-        {activeTab === 1 && <AddOrganizationForm />}
+        {activeTab === 1 && <RegisterTenantForm />}
       </div>
     </div>
   )

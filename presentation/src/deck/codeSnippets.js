@@ -38,59 +38,59 @@ export const eventStoreSnippet = `public async Task AppendAsync(
     }
 }`
 
-export const organizationRenameInsertSqlSnippet = `INSERT INTO events ("type", "payload", "user")
+export const tenantRenameInsertSqlSnippet = `INSERT INTO events ("type", "payload", "user")
 SELECT
-    'OrganizationRenamed',
-    '{ "organizationId": "org-42", "name": "Acme One" }'::jsonb,
+    'TenantRenamed',
+    '{ "tenantId": "tenant-42", "name": "Acme One" }'::jsonb,
     '7f4a0f2d-8b4a-4fcb-9a1d-3d2a6f7b8c91'
 WHERE (
     SELECT COALESCE(MAX(position), -1)
     FROM events
-    WHERE type = 'OrganizationAdded'
-       OR type = 'OrganizationRenamed'
+    WHERE type = 'TenantRegistered'
+       OR type = 'TenantRenamed'
 ) = 42;`
 
-export const organizationRenameEndpointSnippet = `app.MapPost("/organizations/{organizationId}/rename",
-    async (Guid organizationId,
-           RenameOrganizationRequest request,
+export const tenantRenameEndpointSnippet = `app.MapPost("/tenants/{tenantId}/rename",
+    async (Guid tenantId,
+           RenameTenantRequest request,
            CommandContextBuilder contextBuilder) =>
 {
     var context = await contextBuilder
-        .Where<OrganizationAdded>()
-        .Where<OrganizationRenamed>()
+        .Where<TenantRegistered>()
+        .Where<TenantRenamed>()
         .LoadAsync();
 
     var currentNames = new Dictionary<Guid, string>();
     foreach (var e in context.Events)
     {
-        if (e.Type == nameof(OrganizationAdded))
+        if (e.Type == nameof(TenantRegistered))
         {
             var added = JsonSerializer
-                .Deserialize<OrganizationAdded>(e.Payload)!;
+                .Deserialize<TenantRegistered>(e.Payload)!;
             currentNames[added.Id] = added.Name;
         }
         else
         {
             var renamed = JsonSerializer
-                .Deserialize<OrganizationRenamed>(e.Payload)!;
-            currentNames[renamed.OrganizationId] = renamed.Name;
+                .Deserialize<TenantRenamed>(e.Payload)!;
+            currentNames[renamed.TenantId] = renamed.Name;
         }
     }
 
-    if (!currentNames.ContainsKey(organizationId))
-        return Results.NotFound("Organization not found.");
+    if (!currentNames.ContainsKey(tenantId))
+        return Results.NotFound("Tenant not found.");
 
     if (currentNames.Any(
-        o => o.Key != organizationId && o.Value == request.Name))
+        o => o.Key != tenantId && o.Value == request.Name))
     {
         return Results.Conflict(
-            "An organization with this name already exists.");
+            "A tenant with this name already exists.");
     }
 
     try
     {
         await context.AppendAsync(
-            new OrganizationRenamed(organizationId, request.Name));
+            new TenantRenamed(tenantId, request.Name));
     }
     catch (ConcurrencyException)
     {

@@ -2,7 +2,7 @@
 
 CCC is an example application for illustrating Command Context Consistency (CCC).
 
-It implements a very basic version of the ideas behind the [Calinga](https://www.calinga.io) system: organizations, projects, translation keys, and related write-side business rules.
+It implements a very basic version of the ideas behind the [Calinga](https://www.calinga.io) system: tenants, projects, translation keys, and related write-side business rules.
 
 The repository is not intended to be a generic content management system. Its main purpose is to explore and demonstrate an event-sourced write model based on minimal command-specific context slices and conditional appends.
 

@@ -27,7 +27,7 @@ backend/
 ├── CCC.EventStore/               NEW: extracted shared event store infrastructure
 ├── CCC.SliceRuntime/             NEW: shared slice base classes and hosting
 └── Slices/
-    ├── CCC.Slices.Organizations/ NEW: orgs, teams, subscription models
+    ├── CCC.Slices.Tenants/ NEW: tenants, teams, subscription models
     ├── CCC.Slices.Users/         NEW: user registry
     └── CCC.Slices.Keys/          NEW: keys, translations, reference texts
 ```
@@ -52,7 +52,7 @@ CCC  ─────────────────────────
 - [ ] Create `backend/CCC.Events/CCC.Events.csproj` (class library, .NET 8)
 - [ ] Add `CCC.Events` to `CCC.sln`
 - [ ] Move all event record types from their domain modules in `CCC/` into `CCC.Events/`, grouped by domain:
-  - `Organizations/` — `OrganizationAdded`, `TeamAdded`, `OrganizationOwnerAssigned`
+  - `Tenants/` — `TenantRegistered`, `TeamAdded`, `TenantOwnerAssigned`
   - `Projects/` — `ProjectAdded`, `LanguageAdded`
   - `Keys/` — `KeyAdded`, `KeyRenamed`, `ReferenceTextProvided`, `TranslationProvided`
   - `Users/` — `UserAdded`
@@ -169,34 +169,34 @@ interface IKeysQueryService
 
 ---
 
-## Phase 5 — Implement `CCC.Slices.Organizations`
+## Phase 5 — Implement `CCC.Slices.Tenants`
 
-- [ ] Create `backend/Slices/CCC.Slices.Organizations/CCC.Slices.Organizations.csproj`
+- [ ] Create `backend/Slices/CCC.Slices.Tenants/CCC.Slices.Tenants.csproj`
 - [ ] Reference `CCC.Events`, `CCC.EventStore`, and `CCC.SliceRuntime`
 - [ ] Add to `CCC.sln`
 
-### MongoDB database: `ccc_slice_organizations`
+### MongoDB database: `ccc_slice_tenants`
 
 Collections and their documents:
 
 ```
-organizations        — { _id, name }
+tenants        — { _id, name }
 subscription_models  — { _id, name, keyLimit }
-teams                — { _id, name, organizationId, subscriptionModelId }
-organization_owners  — { _id: { userId, organizationId } }
+teams                — { _id, name, tenantId, subscriptionModelId }
+tenant_owners  — { _id: { userId, tenantId } }
 ```
 
 ### Events to process
 
-`OrganizationAdded`, `SubscriptionModelAdded`, `TeamAdded`, `OrganizationOwnerAssigned`
+`TenantRegistered`, `SubscriptionModelAdded`, `TeamAdded`, `TenantOwnerAssigned`
 
 ### Query service interface
 
 ```csharp
-interface IOrganizationsQueryService
+interface ITenantsQueryService
 {
-    Task<OrganizationView?> GetOrganizationAsync(Guid id);
-    Task<IReadOnlyList<OrganizationView>> GetAllOrganizationsAsync();
+    Task<TenantView?> GetTenantAsync(Guid id);
+    Task<IReadOnlyList<TenantView>> GetAllTenantsAsync();
     Task<TeamView?> GetTeamAsync(Guid id);
     Task<SubscriptionModelView?> GetSubscriptionModelAsync(Guid id);
     Task<IReadOnlyList<SubscriptionModelView>> GetAllSubscriptionModelsAsync();
@@ -240,7 +240,7 @@ interface IUsersQueryService
 
 - [ ] Add project references from `CCC` to each slice project
 - [ ] Register slices in `Program.cs` using `AddSlice<T>()`
-- [ ] Add GET endpoints to `KeyEndpoints`, `OrganizationEndpoints`, `UserEndpoints`
+- [ ] Add GET endpoints to `KeyEndpoints`, `TenantEndpoints`, `UserEndpoints`
       that inject and call slice query services
 - [ ] Verify end-to-end: write an event via POST, confirm slice updates, confirm GET returns updated data
 

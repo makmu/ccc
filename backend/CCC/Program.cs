@@ -1,6 +1,6 @@
 using CCC.Infrastructure.EventStore;
 using CCC.Keys;
-using CCC.Organizations;
+using CCC.Tenants;
 using CCC.Projects;
 using CCC.SubscriptionModels;
 using CCC.Users;
@@ -35,7 +35,7 @@ app.UseHttpsRedirection();
 await EventStoreSchema.CreateAsync(connectionString);
 
 app.MapKeyEndpoints();
-app.MapOrganizationEndpoints();
+app.MapTenantEndpoints();
 app.MapProjectEndpoints();
 app.MapSubscriptionModelEndpoints();
 app.MapUserEndpoints();

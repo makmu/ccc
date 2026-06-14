@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/users': 'http://localhost:5039',
-      '/organizations': 'http://localhost:5039',
+      '/tenants': 'http://localhost:5039',
     },
   },
 })

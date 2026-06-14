@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { addOrganization } from './api'
+import { registerTenant } from './api'
 
 function randomUuid() {
   return crypto.randomUUID()
 }
 
-export default function AddOrganizationForm() {
+export default function RegisterTenantForm() {
   const [name, setName] = useState('')
   const [subIds, setSubIds] = useState([''])
   const [status, setStatus] = useState(null)
@@ -31,8 +31,8 @@ export default function AddOrganizationForm() {
       return
     }
     try {
-      await addOrganization({ id: randomUuid(), name, subscriptionModelIds })
-      setStatus({ ok: true, message: 'Organization added successfully.' })
+      await registerTenant({ id: randomUuid(), name, subscriptionModelIds })
+      setStatus({ ok: true, message: 'Tenant registered successfully.' })
       setName('')
       setSubIds([''])
     } catch (err) {
@@ -42,7 +42,7 @@ export default function AddOrganizationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="form-card">
-      <h2>Add Organization</h2>
+      <h2>Register Tenant</h2>
       <label>
         Name
         <input
@@ -76,7 +76,7 @@ export default function AddOrganizationForm() {
           + Add ID
         </button>
       </fieldset>
-      <button type="submit">Add Organization</button>
+      <button type="submit">Register Tenant</button>
       {status && (
         <p className={status.ok ? 'msg-ok' : 'msg-err'}>{status.message}</p>
       )}

@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Code, Deck, Fragment, Slide, Stack, useReveal } from '@revealjs/react'
-import { QRCodeSVG } from 'qrcode.react'
+import { Code, Deck, Fragment, Slide, useReveal } from '@revealjs/react'
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm.js'
 import 'reveal.js/dist/reveal.css'
 import 'reveal.js/dist/theme/black.css'
@@ -9,8 +8,8 @@ import './theme.css'
 import {
   eventStoreSnippet,
   keyEndpointSnippet,
-  organizationRenameInsertSqlSnippet,
-  organizationRenameEndpointSnippet,
+  tenantRenameInsertSqlSnippet,
+  tenantRenameEndpointSnippet,
 } from './codeSnippets.js'
 
 const deckConfig = {
@@ -28,24 +27,6 @@ const deckConfig = {
 
 function SectionLabel({ children }) {
   return <p className="section-label">{children}</p>
-}
-
-function StatCard({ value, label }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-value">{value}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  )
-}
-
-function QuotePanel({ children, footer }) {
-  return (
-    <figure className="quote-panel">
-      <blockquote>{children}</blockquote>
-      <figcaption>{footer}</figcaption>
-    </figure>
-  )
 }
 
 function SyncedCode({ children, lineNumbers, fragmentIndexes }) {
@@ -115,22 +96,25 @@ export default function CommandContextDeck() {
           <div className="cover-aside">
             <div className="signal-panel warm">
               <span></span>
-              <strong>TLDR;</strong>
+              <strong>TL;DR</strong>
               <p>
               A practical event-sourcing model where every command rebuilds only the facts it needs,
-              decides locally, and appends new facts atomically. No aggregate needed.</p>
+              decides locally, and appends new facts atomically. CCC over aggregates.</p>
             </div>
             <div className="signal-panel warm">
               <span></span>
               <strong>Also known as...</strong>
               <p>
-              "Slay the aggregate" or Dynamic Consistency Boundary (DCB).
+              "Dynamic Consistency Boundary (DCB)"
+              </p>
+              <p>
+              or "Kill the aggregate" 😉
               </p>
             </div>
             <div className="signal-panel">
               <span>Example</span>
               <strong>Calinga with CCC</strong>
-              <p>Multi-tenent, key-value CMS for translations management.</p>
+              <p>Multi-tenant, key-value CMS for translation management.</p>
             </div>
           </div>
         </div>
@@ -140,7 +124,7 @@ export default function CommandContextDeck() {
 
       <Slide className="ccc-slide">
         <SectionLabel>Every system can be split into commands and queries</SectionLabel>
-        <h2 className="slide-title">Command Query Segregation</h2>
+        <h2 className="slide-title">Command Query Separation </h2>
         <div className="comparison-grid dense">
           <div className="comparison-panel muted">
             <h3>Commands</h3>
@@ -154,17 +138,17 @@ export default function CommandContextDeck() {
         <div className="command-flow-diagram" aria-label="Flow from command to event to resulting state, contrasted with queries reading state">
           <div className="command-flow-step">
             <div className="command-flow-title">Command</div>
-            <div className="command-flow-chip">Rename tenent Acme -&gt; Acme One</div>
+            <div className="command-flow-chip">Rename tenant Acme -&gt; Acme One</div>
           </div>
           <div className="command-flow-arrow">&rarr;</div>
           <div className="command-flow-step">
             <div className="command-flow-title">Event</div>
-            <div className="command-flow-chip">TenentRenamed</div>
+            <div className="command-flow-chip">TenantRenamed</div>
           </div>
           <div className="command-flow-arrow">&rarr;</div>
           <div className="command-flow-step command-flow-step-latest">
             <div className="command-flow-title">State</div>
-            <div className="command-flow-chip">Current tenent name: Acme One</div>
+            <div className="command-flow-chip">Current tenant name: Acme One</div>
           </div>
         </div>
         <p className="slide-kicker">
@@ -194,22 +178,22 @@ export default function CommandContextDeck() {
           <div className="event-stream-track">
             <div className="event-node">
               <span className="event-dot"></span>
-              <span className="event-label">TenentRegistered</span>
+              <span className="event-label">TenantRegistered</span>
             </div>
             <span className="event-arrow">&rarr;</span>
             <div className="event-node">
               <span className="event-dot"></span>
-              <span className="event-label">TenentOwnerAssigned</span>
+              <span className="event-label">TenantOwnerAssigned</span>
             </div>
             <span className="event-arrow">&rarr;</span>
             <div className="event-node">
               <span className="event-dot"></span>
-              <span className="event-label">TenentRenamed</span>
+              <span className="event-label">TenantRenamed</span>
             </div>
             <span className="event-arrow">&rarr;</span>
             <div className="event-node event-node-latest">
               <span className="event-dot"></span>
-              <span className="event-label">TenentRenamed</span>
+              <span className="event-label">TenantRenamed</span>
               <span className="event-badge">new</span>
             </div>
           </div>
@@ -218,7 +202,7 @@ export default function CommandContextDeck() {
 
       <Slide className="ccc-slide">
         <SectionLabel>Why Event Sourcing?</SectionLabel>
-        <h2 className="slide-title">Why we use event sourcing</h2>
+        <h2 className="slide-title">Gains</h2>
         <div className="three-column-grid">
           <div className="info-panel">
             <h3>Agile architecture</h3>
@@ -239,29 +223,29 @@ export default function CommandContextDeck() {
       </Slide>
 
       <Slide className="ccc-slide">
-        <SectionLabel>Consistency</SectionLabel>
-        <h2 className="slide-title">We must prevent inconsistent state</h2>
+        <SectionLabel>We must prevent inconsistent state</SectionLabel>
+        <h2 className="slide-title">Consistency</h2>
         <div className="comparison-grid dense">
           <div className="comparison-panel muted">
             <h3>The race</h3>
-            <p>Two admins of two different tenents try to rename their tenent to the same new value at almost the same time.</p>
+            <p>Two admins of two different tenants try to rename their tenant to the same new value at almost the same time.</p>
           </div>
           <div className="comparison-panel accent">
             <h3>The risk</h3>
-            <p>If both requests decide on stale information, the system can violate the business rule that a tenent name must be unique across the whole system.</p>
+            <p>If both requests decide on stale information, the system can violate the business rule that a tenant name must be unique across the whole system.</p>
           </div>
         </div>
-        <div className="event-stream-diagram" aria-label="Two concurrent rename operations from different tenents competing for the same target name">
+        <div className="event-stream-diagram" aria-label="Two concurrent rename operations from different tenants competing for the same target name">
           <div className="event-stream-title">Same intent, same time</div>
           <div className="event-stream-track">
             <div className="event-node">
               <span className="event-dot"></span>
-              <span className="event-label">Rename tenent Acme -&gt; Horizon</span>
+              <span className="event-label">Rename tenant Acme -&gt; Horizon</span>
             </div>
             <span className="event-arrow">+</span>
             <div className="event-node">
               <span className="event-dot"></span>
-              <span className="event-label">Rename tenent Globex -&gt; Horizon</span>
+              <span className="event-label">Rename tenant Globex -&gt; Horizon</span>
             </div>
             <span className="event-arrow">&rarr;</span>
             <div className="event-node event-node-latest">
@@ -273,8 +257,8 @@ export default function CommandContextDeck() {
       </Slide>
 
       <Slide className="ccc-slide">
-        <SectionLabel>Classic Approach</SectionLabel>
-        <h2 className="slide-title">Aggregates as consistency boundaries</h2>
+        <SectionLabel>Aggregates as consistency boundaries</SectionLabel>
+        <h2 className="slide-title">Aggregates</h2>
         <div className="three-column-grid">
           <div className="info-panel">
             <h3>In DDD and classic event sourcing</h3>
@@ -295,94 +279,117 @@ export default function CommandContextDeck() {
       </Slide>
 
       <Slide className="ccc-slide">
-        <SectionLabel>Practical Example from Zollner Projects</SectionLabel>
+        <SectionLabel>Practical Example from existing Projects</SectionLabel>
         <h2 className="slide-title">Stream-enforced consistency</h2>
-        <div className="three-column-grid">
-          <div className="info-panel">
-            <h3>One event table</h3>
-            <p>All events live in a single table, but each event carries a `streamId` and a `streamVersion`.</p>
+        <div className="split-layout">
+          <div className="split-aside">
+            <div className="info-panel">
+              <h3>One event table</h3>
+            <p>All events live in a single table and carry a `streamId` and a `streamVersion`.</p>
           </div>
           <div className="info-panel">
             <h3>Combined primary key</h3>
-            <p>The table uses `(streamId, streamVersion)` as a primary key, so every next event must claim the next version number in that stream.</p>
+            <p>`(streamId, streamVersion)` is a primary key.</p>
           </div>
           <div className="info-panel">
             <h3>Race resolved by the database</h3>
-            <p>If two concurrent writes try to insert the same `streamId + version`, one succeeds and one fails.</p>
+            <p>Concurrent writes fail if they try to insert the same `streamId + version`.</p>
           </div>
-        </div>
-        <div className="event-table-mockup" aria-label="Example event table with stream id, stream version and payload columns">
-          <div className="event-stream-title">event table</div>
+          </div>
+          <div className="split-main">
+            <div className="event-table-mockup" aria-label="Example event table with stream id, stream version, type and payload columns">
+          <div className="event-stream-title">event log with streams</div>
           <table className="event-table">
+            <colgroup>
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '26%' }} />
+              <col style={{ width: '34%' }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Stream Id</th>
                 <th>Stream Version</th>
+                <th>Type</th>
                 <th>Payload</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>tenent-42</code></td>
+                <td><code>tenant-42</code></td>
                 <td><code>1</code></td>
-                <td><code>{'{ type: "TenentRegistered", name: "Acme" }'}</code></td>
+                <td><code>TenantRegistered</code></td>
+                <td><code>{'{ name: "Acme" }'}</code></td>
               </tr>
               <tr>
-                <td><code>tenent-99</code></td>
+                <td><code>tenant-99</code></td>
                 <td><code>3</code></td>
-                <td><code>{'{ type: "TenentOwnerAssigned", userId: "u-17" }'}</code></td>
+                <td><code>TenantOwnerAssigned</code></td>
+                <td><code>{'{ userId: "u-17" }'}</code></td>
               </tr>
               <tr>
                 <td><code>...</code></td>
                 <td><code>...</code></td>
                 <td><code>...</code></td>
+                <td><code>...</code></td>
               </tr>
               <tr>
-                <td><code>tenent-42</code></td>
+                <td><code>tenant-42</code></td>
                 <td><code>8</code></td>
-                <td><code>{'{ type: "TenentRenamed", name: "Acme One" }'}</code></td>
+                <td><code>TenantRenamed</code></td>
+                <td><code>{'{ name: "Acme One" }'}</code></td>
               </tr>
             </tbody>
           </table>
           <div className="event-table-insert-attempt" aria-label="Conflicting row insert that fails because stream id and stream version already exist">
             <div className="event-table-attempt-header">
-              <div className="event-table-note event-table-note-centered">-- Second user tries to rename the tenent --</div>
+              <div className="event-table-note event-table-note-centered">-- Second user tries to rename the tenant --</div>
             </div>
             <table className="event-table event-table-conflict">
+              <colgroup>
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '34%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Stream Id</th>
                   <th>Stream Version</th>
+                  <th>Type</th>
                   <th>Payload</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><code>tenent-42</code></td>
+                  <td><code>tenant-42</code></td>
                   <td><code>8</code></td>
-                  <td><code>{'{ type: "TenentRenamed", name: "Acme Prime" }'}</code></td>
+                  <td><code>TenantRenamed</code></td>
+                  <td><code>{'{ name: "Acme Prime" }'}</code></td>
                 </tr>
               </tbody>
             </table>
-            <p className="event-table-error"><span className="event-table-fail-badge">X</span> INSERT fails: duplicate key for `(streamId = tenent-42, streamVersion = 8)`</p>
+            <p className="event-table-error"><span className="event-table-fail-badge">X</span> INSERT fails: duplicate key for `(streamId = tenant-42, streamVersion = 8)`</p>
+            </div>
+            </div>
           </div>
         </div>
-        <p className="slide-kicker">
-          The application proposes the next version. The database enforces that only one writer can actually claim it.
-        </p>
       </Slide>
 
       <Slide className="ccc-slide">
-        <SectionLabel>Main Drawbacks</SectionLabel>
-        <h2 className="slide-title">The two big problems with this approach</h2>
+        <SectionLabel>The 2 big problems with this approach</SectionLabel>
+        <h2 className="slide-title">Main Drawbacks</h2>
         <div className="comparison-grid dense">
           <div className="comparison-panel muted">
             <h3>We lose architectural agility</h3>
-            <p>We are back to designing aggregates up front: which ones exist, what their boundaries are, and which rules must live inside them. Refactoring or re-scoping them later becomes a real pain.</p>
+            <p>We are back to designing aggregates up front: </p>
+            <p>which ones exist, what their boundaries are, and which rules must live inside them.</p>
+            <p>Refactoring or re-scoping them later becomes a real pain.</p>
           </div>
           <div className="comparison-panel accent">
             <h3>Some rules cross aggregate boundaries</h3>
-            <p>For example: how do we guarantee that a tenent name stays unique across the whole system when tenents are registered or renamed in different streams?</p>
+            <p>For example: </p>
+            <p>how do we guarantee that a tenant name stays unique across the whole system when tenants are registered or renamed in different streams?</p>
           </div>
         </div>
         <p className="slide-kicker">
@@ -391,7 +398,7 @@ export default function CommandContextDeck() {
       </Slide>
 
       <Slide className="ccc-slide" autoAnimate>
-        <SectionLabel>Core Idea</SectionLabel>
+        <SectionLabel>The Core Idea</SectionLabel>
         <h2 className="slide-title">Command Context Consistency</h2>
         <div className="process-strip">
           <div className="process-step">
@@ -406,7 +413,7 @@ export default function CommandContextDeck() {
               <span>2</span>
               <h3>Context</h3>
             </div>
-            <p>Load the smallest relevant slice of history required to make validation and consistency decisions.</p>
+            <p>Load the smallest relevant slice of history required to make validation and consistency decisions <b>for this command</b>.</p>
           </div>
           <div className="process-step">
             <div className="process-step-heading">
@@ -418,10 +425,102 @@ export default function CommandContextDeck() {
         </div>
       </Slide>
 
+      <Slide className="ccc-slide">
+        <SectionLabel>Concurrency without streams</SectionLabel>
+        <h2 className="slide-title">dynamic consistency boundary</h2>
+        <div className="split-layout">
+          <div className="split-aside">
+            <div className="comparison-panel muted">
+              <h3>No streamId, no version</h3>
+            <p>Every event lands in one global log with a single growing `position`. There are no stream boundaries to design up front.</p>
+          </div>
+          <div className="comparison-panel accent">
+            <h3>The command picks its own boundary</h3>
+            <p>The rename only cares about tenant names, so its context is every `TenantRegistered` and `TenantRenamed` event &mdash; across all tenants.</p>
+            </div>
+          </div>
+          <div className="split-main">
+            <div className="event-table-mockup" aria-label="One global event log where two concurrent renames to the same name are resolved by comparing the max position of a filtered event slice">
+          <div className="event-stream-title">event log without streams</div>
+          <table className="event-table">
+            <colgroup>
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '28%' }} />
+              <col style={{ width: '60%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Type</th>
+                <th>Payload</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>40</code></td>
+                <td><code>TenantRegistered</code></td>
+                <td><code>{'{ id: "tenant-42", name: "Acme" }'}</code></td>
+              </tr>
+              <tr>
+                <td><code>41</code></td>
+                <td><code>TenantRegistered</code></td>
+                <td><code>{'{ id: "tenant-99", name: "Globex" }'}</code></td>
+              </tr>
+              <tr>
+                <td><code>42</code></td>
+                <td><code>TenantRenamed</code></td>
+                <td><code>{'{ id: "tenant-7", name: "Initech One" }'}</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="context-filter-chip">
+            <span className="context-filter-label">context</span>
+            <span>MAX(position) WHERE type IN (TenantRegistered, TenantRenamed) = <strong>42</strong></span>
+          </p>
+          <div className="event-table-insert-attempt" aria-label="Two concurrent inserts, both having read position 42, one succeeds and one fails">
+            <div className="event-table-attempt-header">
+              <div className="event-table-note event-table-note-centered">-- Both admins read position 42 and both append "Horizon" --</div>
+            </div>
+            <table className="event-table event-table-success">
+              <colgroup>
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '60%' }} />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <td><code>&rarr; 43</code></td>
+                  <td><code>TenantRenamed</code></td>
+                  <td><code>{'{ id: "tenant-42", name: "Horizon" }'}</code></td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="event-table-error event-table-ok"><span className="event-table-fail-badge event-table-win-badge">OK</span> INSERT succeeds: filtered MAX(position) still = 42, so it claims position 43.</p>
+            <table className="event-table event-table-conflict">
+              <colgroup>
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '28%' }} />
+                <col style={{ width: '60%' }} />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <td><code>43?</code></td>
+                  <td><code>TenantRenamed</code></td>
+                  <td><code>{'{ id: "tenant-99", name: "Horizon" }'}</code></td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="event-table-error"><span className="event-table-fail-badge">X</span> INSERT fails: filtered MAX(position) is now 43 &ne; 42 &rarr; 0 rows written.</p>
+            </div>
+            </div>
+          </div>
+        </div>
+      </Slide>
+
       <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
         <div className="slide-example-grid">
           <div className="code-explainer example-copy">
-            <SectionLabel>Renaming a tenent</SectionLabel>
+            <SectionLabel>Renaming a tenant</SectionLabel>
             <h2 className="slide-title">Code Example</h2>
             <ol className="editorial-list tight">
               <Fragment as="li" index={0}>Request</Fragment>
@@ -429,12 +528,12 @@ export default function CommandContextDeck() {
               <Fragment as="li" index={2}>State slice replay</Fragment>
               <Fragment as="li" index={3}>Decision 1: valid tenant id</Fragment>
               <Fragment as="li" index={4}>Decision 2: new tenant name available</Fragment>
-              <Fragment as="li" index={5}>Append `OrganizationRenamed` only if nothing changed concurrently.</Fragment>
+              <Fragment as="li" index={5}>Append `TenantRenamed` only if nothing changed concurrently.</Fragment>
             </ol>
           </div>
           <div className="example-code">
             <SyncedCode lineNumbers="|1-4|6-9|11-26|28-29|31-36|38-48" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
-              {organizationRenameEndpointSnippet}
+              {tenantRenameEndpointSnippet}
             </SyncedCode>
           </div>
         </div>
@@ -469,12 +568,12 @@ export default function CommandContextDeck() {
             <h2 className="slide-title">Final SQL</h2>
             <ol className="editorial-list tight">
               <Fragment as="li" index={0}>Insert the concrete renamed event</Fragment>
-              <Fragment as="li" index={1}>If the relevant event slice has not change</Fragment>
+              <Fragment as="li" index={1}>If the relevant event slice has not changed</Fragment>
             </ol>
           </div>
           <div className="example-code">
             <SyncedCode lineNumbers="|1-5|6-11" fragmentIndexes={[0, 1]}>
-              {organizationRenameInsertSqlSnippet}
+              {tenantRenameInsertSqlSnippet}
             </SyncedCode>
           </div>
         </div>
@@ -502,8 +601,8 @@ export default function CommandContextDeck() {
       </Slide>
 
       <Slide className="ccc-slide">
-        <SectionLabel>In Practice</SectionLabel>
-        <h2 className="slide-title">Why I chose SQL over NoSQL here</h2>
+        <SectionLabel>Why I chose SQL over NoSQL</SectionLabel>
+        <h2 className="slide-title">SQL vs. NoSQL</h2>
         <div className="three-column-grid">
           <div className="info-panel accent-border">
             <h3>PostgreSQL</h3>
@@ -547,28 +646,34 @@ export default function CommandContextDeck() {
       <Slide className="ccc-slide ccc-slide-close" backgroundGradient="linear-gradient(135deg, #130b1d 0%, #0d1733 45%, #050816 100%)">
         <SectionLabel>Summary</SectionLabel>
         <h2 className="slide-title">Takeaways</h2>
-        <ul className="editorial-list">
-          <li>Commands and queries stay separate.</li>
-          <li>Events preserve domain facts.</li>
-          <li>Aggregates reduce agility.</li>
-          <li>CCC uses dynamic consistency boundaries.</li>
-          <li>Conditional writes ensure consistency.</li>
-        </ul>
+        <div className="closing-summary-grid">
+          <ul className="editorial-list">
+            <li>Event sourcing gives us architectural agility.</li>
+            <li>Aggregates protect consistency, but they also lock in boundaries.</li>
+            <li>CCC keeps consistency and moves the boundary to the command.</li>
+          </ul>
+          <div className="closing-band">
+            <div className="closing-band-qr">
+              <svg viewBox="0 0 98 96" width="160" height="160" role="img" aria-label="GitHub">
+                <path
+                  fill="#fff8eb"
+                  d="M48.854 0C21.839 0 0 21.743 0 48.64c0 21.514 13.98 39.77 33.362 46.21 2.427.453 3.316-1.043 3.316-2.317 0-1.148-.04-4.19-.064-8.225-13.572 2.93-16.437-6.482-16.437-6.482-2.218-5.594-5.417-7.082-5.417-7.082-4.43-3 .335-2.94.335-2.94 4.9.34 7.48 5 7.48 5 4.357 7.399 11.432 5.26 14.22 4.023.444-3.131 1.705-5.26 3.103-6.47-10.834-1.22-22.227-5.37-22.227-23.911 0-5.278 1.9-9.594 5.017-12.977-.508-1.22-2.175-6.143.472-12.8 0 0 4.09-1.297 13.398 4.957a46.94 46.94 0 0 1 12.2-1.617c4.138.019 8.307.557 12.2 1.617 9.307-6.254 13.39-4.957 13.39-4.957 2.655 6.657.988 11.58.48 12.8 3.124 3.383 5.01 7.7 5.01 12.977 0 18.587-11.412 22.678-22.279 23.878 1.754 1.505 3.316 4.482 3.316 9.036 0 6.522-.056 11.78-.056 13.385 0 1.284.88 2.79 3.34 2.312C84.03 88.402 98 70.148 98 48.64 98 21.743 76.153 0 48.854 0Z"
+                />
+              </svg>
+            </div>
+            <div className="closing-band-copy">
+              <p><a href="https://github.com/makmu/ccc">{'</>'} https://github.com/makmu/ccc</a></p>
+            </div>
+          </div>
+        </div>
         <p className="closing-thanks">Thank you! 🙏</p>
-        <div className="closing-band">
-          <div className="closing-band-copy">
-            <p><a href="https://github.com/makmu/ccc">{'</>'} https://github.com/makmu/ccc</a></p>
-          </div>
-          <div className="closing-band-qr">
-            <QRCodeSVG
-              value="https://github.com/makmu/ccc"
-              size={160}
-              bgColor="transparent"
-              fgColor="#fff8eb"
-              level="M"
-              includeMargin={false}
-            />
-          </div>
+        <div className="closing-reading">
+          <p>Further reading</p>
+          <ul className="closing-reading-list">
+            <li><a href="https://sara.event-thinking.io/2023/04/kill-aggregate-chapter-1-I-am-here-to-kill-the-aggregate.html">Kill the Aggregate - https://sara.event-thinking.io/2023/04/kill-aggregate-chapter-1-I-am-here-to-kill-the-aggregate.html</a></li>
+            <li><a href="https://dcb.events/">dcb.events - https://dcb.events/</a></li>
+            <li><a href="https://ralfwestphal.substack.com/s/event-orientation">Ralf Westphal: Event-Orientation - https://ralfwestphal.substack.com/s/event-orientation</a></li>
+          </ul>
         </div>
       </Slide>
     </Deck>

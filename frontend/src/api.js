@@ -11,8 +11,8 @@ export async function addUser(payload) {
   return res
 }
 
-export async function addOrganization(payload) {
-  const res = await fetch('/organizations', {
+export async function registerTenant(payload) {
+  const res = await fetch('/tenants', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

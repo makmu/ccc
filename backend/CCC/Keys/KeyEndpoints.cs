@@ -1,6 +1,6 @@
 using System.Text.Json;
 using CCC.Infrastructure.EventStore;
-using CCC.Organizations;
+using CCC.Tenants;
 using CCC.Projects;
 using CCC.SubscriptionModels;
 
