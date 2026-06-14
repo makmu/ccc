@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@revealjs/react": "^0.2.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "reveal.js": "^5.2.1"

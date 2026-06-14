@@ -279,6 +279,9 @@
 
 .closing-band {
   margin-top: 1.4rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.4rem;
+  align-items: center;
 }
 
 .formula-band span,
@@ -292,6 +295,31 @@
 
 .closing-band p {
   font-size: 1.72rem;
+}
+
+.closing-thanks {
+  margin: 0.6rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff8eb;
+}
+
+.closing-band-copy {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.closing-band-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.closing-band-qr svg {
+  display: block;
 }
 
 .quote-panel {
@@ -685,6 +713,11 @@
 
   .command-flow-arrow {
     display: none;
+  }
+
+  .closing-band {
+    grid-template-columns: 1fr;
+    justify-items: start;
   }
 
   .event-table {

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Code, Deck, Fragment, Slide, Stack, useReveal } from '@revealjs/react'
+import { QRCodeSVG } from 'qrcode.react'
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight.esm.js'
 import 'reveal.js/dist/reveal.css'
 import 'reveal.js/dist/theme/black.css'
@@ -553,9 +554,21 @@ export default function CommandContextDeck() {
           <li>CCC uses dynamic consistency boundaries.</li>
           <li>Conditional writes ensure consistency.</li>
         </ul>
+        <p className="closing-thanks">Thank you! 🙏</p>
         <div className="closing-band">
-          <p>Thank you.</p>
-          <p><a href="https://github.com/your-org/ccc">github.com/your-org/ccc</a></p>
+          <div className="closing-band-copy">
+            <p><a href="https://github.com/makmu/ccc">{'</>'} https://github.com/makmu/ccc</a></p>
+          </div>
+          <div className="closing-band-qr">
+            <QRCodeSVG
+              value="https://github.com/makmu/ccc"
+              size={160}
+              bgColor="transparent"
+              fgColor="#fff8eb"
+              level="M"
+              includeMargin={false}
+            />
+          </div>
         </div>
       </Slide>
     </Deck>
