@@ -550,11 +550,11 @@ export default function CommandContextDeck() {
               <Fragment as="li" index={2}>SQL where clauses from the context filter</Fragment>
               <Fragment as="li" index={3}>Additional SQL parameters</Fragment>
               <Fragment as="li" index={4}>Build the conditional SQL insert</Fragment>
-              <Fragment as="li" index={5}>Execute the statement and fail if event could not be inserted</Fragment>
+              <Fragment as="li" index={5}>Execute the serialized append and fail if the event could not be inserted</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-6|8-8|9-10|12-17|19-27|29-38" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
+            <SyncedCode lineNumbers="|1-6|8-8|9-10|12-17|19-27|29-37" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
               {eventStoreSnippet}
             </SyncedCode>
           </div>

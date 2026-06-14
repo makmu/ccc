@@ -26,9 +26,8 @@ export const eventStoreSnippet = `public async Task AppendAsync(
         ) = @expectedMaxPosition
         """;
 
-    await using var conn =
-        new NpgsqlConnection(connectionString);
-    var rows = await conn.ExecuteAsync(sql, parameters);
+    var rows = await ExecuteSqlSerializedWithRetriesAsync(
+        sql, parameters);
 
     if (rows == 0)
     {

@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.Json;
 using Dapper;
 using Npgsql;
@@ -6,6 +7,13 @@ namespace CCC.Infrastructure.EventStore;
 
 class EventStore(string connectionString)
 {
+    // The global log has no per-boundary unique constraint, so the conditional
+    // append's MAX(position) guard must be evaluated atomically against concurrent
+    // writers. SERIALIZABLE makes PostgreSQL's SSI detect two appends racing into
+    // the same filtered slice and abort one. A serialization failure can be a false
+    // positive, so we retry a bounded number of times before giving up.
+    private const int MaxAppendAttempts = 5;
+
     public async Task AppendAsync(string type, object payload, Guid user)
     {
         var json = JsonSerializer.Serialize(payload);
@@ -35,12 +43,41 @@ class EventStore(string connectionString)
             ) = @expectedMaxPosition
             """;
 
-        await using var conn = new NpgsqlConnection(connectionString);
-        var rows = await conn.ExecuteAsync(sql, parameters);
+        var rows = await ExecuteSqlSerializedWithRetriesAsync(sql, parameters);
 
         if (rows == 0)
             throw new ConcurrencyException("The event store was modified by a concurrent operation.");
     }
+
+    private async Task<int> ExecuteSqlSerializedWithRetriesAsync(string sql, object parameters)
+    {
+        await using var conn = new NpgsqlConnection(connectionString);
+        await conn.OpenAsync();
+
+        for (var attempt = 1; ; attempt++)
+        {
+            await using var tx = await conn.BeginTransactionAsync(IsolationLevel.Serializable);
+            try
+            {
+                var rows = await conn.ExecuteAsync(sql, parameters, tx);
+                await tx.CommitAsync();
+                return rows;
+            }
+            catch (PostgresException ex) when (IsSerializationFailure(ex))
+            {
+                await tx.RollbackAsync();
+
+                // Another transaction wrote into the same slice, or SSI flagged a false
+                // positive. Either way retry up to the limit; a genuine boundary conflict
+                // then surfaces as 0 affected rows to the caller.
+                if (attempt >= MaxAppendAttempts)
+                    throw new ConcurrencyException("The event store was modified by a concurrent operation.", ex);
+            }
+        }
+    }
+
+    private static bool IsSerializationFailure(PostgresException ex)
+        => ex.SqlState is PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected;
 
     public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, params string[] types)
     {
