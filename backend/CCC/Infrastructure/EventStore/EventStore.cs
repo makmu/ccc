@@ -43,13 +43,13 @@ class EventStore(string connectionString)
             ) = @expectedMaxPosition
             """;
 
-        var rows = await ExecuteSqlSerializedWithRetriesAsync(sql, parameters);
+        var rows = await ExecuteWithSerializableRetriesAsync(sql, parameters);
 
         if (rows == 0)
             throw new ConcurrencyException("The event store was modified by a concurrent operation.");
     }
 
-    private async Task<int> ExecuteSqlSerializedWithRetriesAsync(string sql, object parameters)
+    private async Task<int> ExecuteWithSerializableRetriesAsync(string sql, object parameters)
     {
         await using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync();

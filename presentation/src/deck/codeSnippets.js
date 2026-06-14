@@ -26,7 +26,7 @@ export const eventStoreSnippet = `public async Task AppendAsync(
         ) = @expectedMaxPosition
         """;
 
-    var rows = await ExecuteSqlSerializedWithRetriesAsync(
+    var rows = await ExecuteWithSerializableRetriesAsync(
         sql, parameters);
 
     if (rows == 0)
