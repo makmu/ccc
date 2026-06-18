@@ -11,6 +11,7 @@ import {
   tenantRenameInsertSqlSnippet,
   tenantRenameEndpointSnippet,
 } from './codeSnippets.js'
+import slicesDiagram from './slices.svg'
 
 const deckConfig = {
   hash: true,
@@ -583,7 +584,7 @@ export default function CommandContextDeck() {
         <div className="slide-example-grid">
           <div className="code-explainer example-copy">
             <SectionLabel>Adding a new key</SectionLabel>
-            <h2 className="slide-title">Another Example</h2>
+            <h2 className="slide-title">More Complex Example</h2>
             <ol className="editorial-list tight">
               <Fragment as="li" index={0}>Endpoint path and input parameters</Fragment>
               <Fragment as="li" index={1}>Build the context from the relevant event types</Fragment>
@@ -615,6 +616,26 @@ export default function CommandContextDeck() {
           <div className="info-panel accent-border">
             <h3>Result</h3>
             <p>The consistency mechanism stays visible in understandable SQL instead of depending on hidden framework behavior or unclear database semantics.</p>
+          </div>
+        </div>
+      </Slide>
+
+      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
+        <div className="slide-example-grid slices-grid">
+          <div className="code-explainer example-copy">
+            <SectionLabel>One more thing...</SectionLabel>
+            <h2 className="slide-title">Vertical Slices</h2>
+            <ul className="editorial-list tight">
+              <li><b>Grow without refactoring</b></li>
+              <li><b>Scales to many teams</b> </li>
+              <li><b>No microservice spaghetti</b></li>
+              <li><b>CQRS in action</b> </li>
+            </ul>
+          </div>
+          <div className="example-code">
+            <div className="slices-diagram">
+              <img src={slicesDiagram} alt="Multiple vertical slices — translation management, server API/CDN, and global search — each independent but reading from and writing to one shared append-only event stream" />
+            </div>
           </div>
         </div>
       </Slide>
