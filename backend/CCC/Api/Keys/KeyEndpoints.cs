@@ -1,10 +1,8 @@
-using System.Text.Json;
+using CCC.Domain;
+using CCC.Domain.Events;
 using CCC.Infrastructure.EventStore;
-using CCC.Tenants;
-using CCC.Projects;
-using CCC.SubscriptionModels;
 
-namespace CCC.Keys;
+namespace CCC.Api.Keys;
 
 static class KeyEndpoints
 {

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using CCC.Domain;
+using CCC.Domain.Events;
 using CCC.Helpers;
 using CCC.Infrastructure.EventStore;
 using CCC.Tenants;

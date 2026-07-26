@@ -1,4 +1,4 @@
-namespace CCC;
+namespace CCC.Domain;
 
 static class Tag
 {
