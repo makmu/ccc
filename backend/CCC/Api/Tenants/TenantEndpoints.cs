@@ -29,13 +29,13 @@ static class TenantEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
 
-            if(tenantIdTaken.State)
+            if (tenantIdTaken)
                 return Results.Conflict("A tenant with this id already exists.");
 
-            if(tenantNameTaken.State)
+            if (tenantNameTaken)
                 return Results.Conflict("A tenant with this name already exists.");
 
-            if(subscriptionsAvailable.Any(x => !x.State))
+            if (subscriptionsAvailable.Any(x => !x))
                 return Results.NotFound("One or more subscription models were not found.");
 
             try
@@ -62,13 +62,13 @@ static class TenantEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
 
-            if (!tenantIdRegistered.State)
+            if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
             if (!tenantSubscriptions.State.Contains(request.SubscriptionModelId))
                 return Results.BadRequest("The specified subscription model is not available in this tenant.");
 
-            if (teamIdTaken.State || teamNameConflict.State)
+            if (teamIdTaken || teamNameConflict)
                 return Results.Conflict("A team with this id or name already exists in this tenant.");
 
             try
@@ -92,13 +92,13 @@ static class TenantEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
             
-            if(!tenantIdRegistered.State)
+            if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
-            if (!userAdded.State)
+            if (!userAdded)
                 return Results.NotFound("User not found.");
 
-            if (userAlreadyAssigned.State)
+            if (userAlreadyAssigned)
                 return Results.Conflict("This user is already an owner of this tenant.");
 
             try
@@ -124,14 +124,14 @@ static class TenantEndpoints
             var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, currentTenantName, tenantNameTaken);
 
             // Decisions
-            if(!tenantIdRegistered.State)
+            if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
             // Case-insensitive no-op: renaming to the same name (any casing) changes nothing.
             if (currentTenantName.State.CanonicalName() == canonicalName)
                 return Results.Ok();
 
-            if(tenantNameTaken.State)
+            if (tenantNameTaken)
                 return Results.Conflict("A tenant with this name already exists.");
 
             // Append event — tag both names (canonical) under the same key so future

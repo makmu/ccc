@@ -14,7 +14,7 @@ static class SubscriptionModelEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(subscriptionIdTaken);
                 
-            if (subscriptionIdTaken.State)
+            if (subscriptionIdTaken)
                 return Results.Conflict("A subscription model with this id already exists.");
 
             try

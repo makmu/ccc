@@ -19,6 +19,8 @@ sealed class StateModel<T>(T initialState) : IStateModel
 
     public T State { get; private set; } = initialState;
 
+    public static implicit operator T(StateModel<T> model) => model.State;
+
     public StateModel<T> Where(string key, string value)
     {
         _tags.Add((key, value));

@@ -22,13 +22,13 @@ static class KeyEndpoints
             if (teamSubscription.State is not { } subscriptionModelId)
                 return Results.NotFound("Team not found.");
 
-            if (projectAdded.State == false)
+            if (!projectAdded)
                 return Results.NotFound("Project not found in this team.");
 
-            if (keyIdTaken.State)
+            if (keyIdTaken)
                 return Results.Conflict("Key ID already taken.");
 
-            if (keyNameTaken.State)
+            if (keyNameTaken)
                 return Results.Conflict("Key name already taken.");
 
             // The limit sits behind a team -> subscription hop, so it needs a second
@@ -38,7 +38,7 @@ static class KeyEndpoints
             var keyLimit = Model.KeyLimit(subscriptionModelId);
             await contextBuilder.BuildStateModelsAsync(keyLimit);
 
-            if (teamKeyCount.State >= keyLimit.State)
+            if (teamKeyCount >= keyLimit)
                 return Results.Conflict("The key limit for this team's subscription model has been reached.");
 
             try
@@ -68,16 +68,16 @@ static class KeyEndpoints
 
                 var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, currentReferenceText);
 
-                if (!teamAdded.State)
+                if (!teamAdded)
                     return Results.NotFound("Team not found.");
 
-                if (!projectAdded.State)
+                if (!projectAdded)
                     return Results.NotFound("Project not found in this team.");
 
-                if (!keyExists.State)
+                if (!keyExists)
                     return Results.NotFound("Key not found in this project.");
 
-                if (currentReferenceText.State == request.Text)
+                if (currentReferenceText == request.Text)
                 {
                     return Results.Ok();
                 }
@@ -107,19 +107,19 @@ static class KeyEndpoints
 
                 var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, languageAdded, currentTranslation);
 
-                if (!teamAdded.State)
+                if (!teamAdded)
                     return Results.NotFound("Team not found.");
 
-                if (!projectAdded.State)
+                if (!projectAdded)
                     return Results.NotFound("Project not found in this team.");
 
-                if (!keyExists.State)
+                if (!keyExists)
                     return Results.NotFound("Key not found in this project.");
 
-                if (!languageAdded.State)
+                if (!languageAdded)
                     return Results.BadRequest("The specified language has not been added to this project.");
 
-                if (currentTranslation.State == request.Text)
+                if (currentTranslation == request.Text)
                     return Results.Ok();
 
                 try
@@ -145,19 +145,19 @@ static class KeyEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, currentKeyName, keyNameTaken);
 
-            if (!teamAdded.State)
+            if (!teamAdded)
                 return Results.NotFound("Team not found.");
 
-            if (!projectAdded.State)
+            if (!projectAdded)
                 return Results.NotFound("Project not found in this team.");
 
-            if (!keyExists.State)
+            if (!keyExists)
                 return Results.NotFound("Key not found in this project.");
 
-            if (keyNameTaken.State)
+            if (keyNameTaken)
                 return Results.Conflict("A key with this name already exists in this project.");
 
-            if (currentKeyName.State == request.Name)
+            if (currentKeyName == request.Name)
                 return Results.Ok();
 
             try

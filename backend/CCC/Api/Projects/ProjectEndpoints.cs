@@ -21,13 +21,13 @@ static class ProjectEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectedIdTaken, projectNameTaken);
 
-            if (!teamAdded.State)
+            if (!teamAdded)
                 return Results.NotFound("Team not found.");
 
-            if (projectedIdTaken.State)
+            if (projectedIdTaken)
                 return Results.Conflict("A project with this ID already exists.");
 
-            if (projectNameTaken.State)
+            if (projectNameTaken)
                 return Results.Conflict("A project with this name already exists in this team.");
 
             try
@@ -53,19 +53,19 @@ static class ProjectEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
 
-            if (teamAdded.State == false)
+            if (!teamAdded)
                 return Results.NotFound("Team not found.");
 
-            if (projectAdded.State == false)
+            if (!projectAdded)
                 return Results.NotFound("Project not found in this team.");
 
-            if (languageAdded.State)
+            if (languageAdded)
                 return Results.Conflict("This language has already been added to the project.");
-            
-            if(isReferenceLanguage.State)
+
+            if (isReferenceLanguage)
                 return Results.BadRequest("The reference language cannot be added as a new language.");
 
-            if (validParentLanguage.State == false)
+            if (!validParentLanguage)
                 return Results.BadRequest("The parent language must be the project's reference language or a language already added to the project.");
 
             try

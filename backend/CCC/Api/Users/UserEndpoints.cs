@@ -15,9 +15,9 @@ static class UserEndpoints
 
             var context = await contextBuilder.BuildStateModelsAsync(idTaken, emailTaken);
 
-            if (idTaken.State)
+            if (idTaken)
                 return Results.Conflict("A user with this id already exists.");
-            if (emailTaken.State)
+            if (emailTaken)
                 return Results.Conflict("A user with this email address already exists.");
 
             try
