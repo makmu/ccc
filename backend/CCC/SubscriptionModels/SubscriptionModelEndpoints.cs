@@ -8,16 +8,19 @@ static class SubscriptionModelEndpoints
     {
         app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, CommandContextBuilder contextBuilder) =>
         {
-            var context = await contextBuilder
-                .Where<SubscriptionModelAdded>(w => w.With(e => e.Id, request.Id))
-                .LoadAsync();
+            var subscriptionIdTaken = StateModel.Init(false).
+                Where("subscription-id", request.Id.ToString())
+                .When<SubscriptionModelAdded>((_, _) => true);
 
-            if (context.Events.Count != 0)
+            var context = await contextBuilder.BuildStateModelsAsync(subscriptionIdTaken);
+                
+            if (subscriptionIdTaken.State)
                 return Results.Conflict("A subscription model with this id already exists.");
 
             try
             {
-                await context.AppendAsync(new SubscriptionModelAdded(request.Id, request.Name, request.KeyLimit));
+                await context.AppendAsync(new SubscriptionModelAdded(request.Id, request.Name, request.KeyLimit)
+                ,Tags.From(("subscription-id", request.Id.ToString())));
             }
             catch (ConcurrencyException)
             {

@@ -17,8 +17,11 @@ static class EventStoreSchema
                 "user"    UUID        NOT NULL
             );
 
+            ALTER TABLE events ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}';
+
             CREATE INDEX IF NOT EXISTS idx_events_type    ON events (type);
             CREATE INDEX IF NOT EXISTS idx_events_payload ON events USING GIN (payload);
+            CREATE INDEX IF NOT EXISTS idx_events_tags    ON events USING GIN (tags);
             """);
     }
 }

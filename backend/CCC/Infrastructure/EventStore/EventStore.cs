@@ -23,7 +23,7 @@ class EventStore(string connectionString)
             new { type, payload = json, user });
     }
 
-    public async Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter)
+    public async Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags)
     {
         var json = JsonSerializer.Serialize(eventPayload);
         var (whereClause, parameters) = BuildFilterConditions(contextFilter);
@@ -31,11 +31,12 @@ class EventStore(string connectionString)
         parameters.Add("type", eventType);
         parameters.Add("payload", json);
         parameters.Add("user", user);
+        parameters.Add("tags", tags);
         parameters.Add("expectedMaxPosition", expectedMaxPosition);
 
         var sql = $"""
-            INSERT INTO events (type, payload, "user")
-            SELECT @type, @payload::jsonb, @user
+            INSERT INTO events (type, payload, "user", tags)
+            SELECT @type, @payload::jsonb, @user, @tags
             WHERE (
                 SELECT COALESCE(MAX(position), -1)
                 FROM events
@@ -113,22 +114,16 @@ class EventStore(string connectionString)
             var typeParam = $"t{entryIndex}";
             parameters.Add(typeParam, entry.Type);
 
-            if (entry.PayloadProperties.Count == 0)
+            var parts = new List<string> { $"type = @{typeParam}" };
+
+            if (entry.Tags.Count > 0)
             {
-                conditions.Add($"type = @{typeParam}");
-            }
-            else
-            {
-                var kvs = entry.PayloadProperties.ToList();
-                var payloadParts = kvs.Select((kv, i) =>
-                {
-                    var pName = $"p{entryIndex}_{i}";
-                    parameters.Add(pName, $"{{\"{kv.Key}\":{kv.Value}}}");
-                    return $"payload @> @{pName}::jsonb";
-                });
-                conditions.Add($"(type = @{typeParam} AND ({string.Join(" OR ", payloadParts)}))");
+                var tagParam = $"tags{entryIndex}";
+                parameters.Add(tagParam, entry.Tags.ToArray());
+                parts.Add($"tags @> @{tagParam}");
             }
 
+            conditions.Add($"({string.Join(" AND ", parts)})");
             entryIndex++;
         }
 
