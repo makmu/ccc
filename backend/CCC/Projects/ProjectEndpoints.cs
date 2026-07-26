@@ -12,17 +12,17 @@ static class ProjectEndpoints
         app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, CommandContextBuilder contextBuilder) =>
         {
             var teamAdded = StateModel.Init(false)
-                .Where("team-id", teamId.ToString())
+                .Where(Tag.TeamId(teamId))
                 .When<TeamAdded>((_, _) => true);
 
             var projectedIdTaken = StateModel.Init(false)
-                .Where("project-id", request.Id.ToString())
+                .Where(Tag.ProjectId(request.Id))
                 .When<ProjectAdded>((_, _) => true);
 
             var canonicalName = request.Name.CanonicalName();
             var projectNameTaken = StateModel.Init(false)
-                .Where("team-id", teamId.ToString())
-                .Where("project-name", canonicalName)
+                .Where(Tag.TeamId(teamId))
+                .Where(Tag.ProjectName(canonicalName))
                 .When<ProjectAdded>((_, _) => true);
 
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectedIdTaken, projectNameTaken);
@@ -39,7 +39,7 @@ static class ProjectEndpoints
             try
             {
                 await context.AppendAsync(new ProjectAdded(request.Id, request.Name, teamId, request.ReferenceLanguage),
-                    Tags.From(("project-id", request.Id.ToString()), ("team-id", teamId.ToString()), ("project-name", canonicalName), ("language-code", request.ReferenceLanguage)));
+                    Tags.From(Tag.ProjectId(request.Id), Tag.TeamId(teamId), Tag.ProjectName(canonicalName), Tag.LanguageCode(request.ReferenceLanguage)));
             }
             catch (ConcurrencyException)
             {
@@ -52,28 +52,28 @@ static class ProjectEndpoints
         app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, CommandContextBuilder contextBuilder) =>
         {
             var teamAdded = StateModel.Init(false)
-                .Where("team-id", teamId.ToString())
+                .Where(Tag.TeamId(teamId))
                 .When<TeamAdded>((_, _) => true);
-            
+
             var projectAdded = StateModel.Init(false)
-                .Where("team-id", teamId.ToString())
-                .Where("project-id", projectId.ToString())
+                .Where(Tag.TeamId(teamId))
+                .Where(Tag.ProjectId(projectId))
                 .When<ProjectAdded>((_, _) => true);
-            
+
             var languageAdded = StateModel.Init(false)
-                .Where("project-id", projectId.ToString())
-                .Where("language-code", request.LanguageCode)
+                .Where(Tag.ProjectId(projectId))
+                .Where(Tag.LanguageCode(request.LanguageCode))
                 .When<LanguageAdded>((_, _) => true);
-            
+
             var validParentLanguage = StateModel.Init(false)
-                .Where("project-id", projectId.ToString())
-                .Where("language-code", request.ParentLanguageCode)
+                .Where(Tag.ProjectId(projectId))
+                .Where(Tag.LanguageCode(request.ParentLanguageCode))
                 .When<ProjectAdded>((_, _) => true)
                 .When<LanguageAdded>((e, _) => e.LanguageCode == request.ParentLanguageCode);
 
             var isReferenceLanguage = StateModel.Init(false)
-                .Where("project-id", projectId.ToString())
-                .Where("language-code", request.LanguageCode)
+                .Where(Tag.ProjectId(projectId))
+                .Where(Tag.LanguageCode(request.LanguageCode))
                 .When<ProjectAdded>((_, _) => true);
             
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
@@ -96,7 +96,7 @@ static class ProjectEndpoints
             try
             {
                 await context.AppendAsync(new LanguageAdded(request.LanguageCode, request.ParentLanguageCode, projectId)
-                    , Tags.From(("project-id", projectId.ToString()), ("language-code", request.LanguageCode)));
+                    , Tags.From(Tag.ProjectId(projectId), Tag.LanguageCode(request.LanguageCode)));
             }
             catch (ConcurrencyException)
             {

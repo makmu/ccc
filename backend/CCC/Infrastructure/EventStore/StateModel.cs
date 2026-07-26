@@ -25,6 +25,14 @@ sealed class StateModel<T>(T initialState) : IStateModel
         return this;
     }
 
+    // Tuple overload so a Tag factory result flows straight in:
+    // .Where(Tag.TeamId(id)) instead of .Where(TagKeys.TeamId, id.ToString()).
+    public StateModel<T> Where((string Key, string Value) tag)
+    {
+        _tags.Add(tag);
+        return this;
+    }
+
     public StateModel<T> When<TEvent>(Func<TEvent, T, T> reduce)
     {
         // Capture TEvent here so Apply can stay type-erased: it deserializes the

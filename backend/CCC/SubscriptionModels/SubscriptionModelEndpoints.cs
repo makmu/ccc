@@ -9,7 +9,7 @@ static class SubscriptionModelEndpoints
         app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, CommandContextBuilder contextBuilder) =>
         {
             var subscriptionIdTaken = StateModel.Init(false).
-                Where("subscription-id", request.Id.ToString())
+                Where(Tag.SubscriptionId(request.Id))
                 .When<SubscriptionModelAdded>((_, _) => true);
 
             var context = await contextBuilder.BuildStateModelsAsync(subscriptionIdTaken);
@@ -20,7 +20,7 @@ static class SubscriptionModelEndpoints
             try
             {
                 await context.AppendAsync(new SubscriptionModelAdded(request.Id, request.Name, request.KeyLimit)
-                ,Tags.From(("subscription-id", request.Id.ToString())));
+                ,Tags.From(Tag.SubscriptionId(request.Id)));
             }
             catch (ConcurrencyException)
             {

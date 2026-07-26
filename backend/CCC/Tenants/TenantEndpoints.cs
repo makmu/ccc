@@ -18,17 +18,17 @@ static class TenantEndpoints
                 return Results.BadRequest("At least one subscription model must be referenced.");
 
             var tenantIdTaken = StateModel.Init(false)
-                .Where("tenant-id", request.Id.ToString())
+                .Where(Tag.TenantId(request.Id))
                 .When<TenantRegistered>((_, _) => true);
 
             var canonicalName = request.Name.CanonicalName();
             var tenantNameTaken = StateModel.Init(false)
-                .Where("tenant-name", canonicalName)
+                .Where(Tag.TenantName(canonicalName))
                 .When<TenantRegistered>((_, _) => true)
                 .When<TenantRenamed>((e, _) => e.Name.CanonicalName() == canonicalName);
 
             var subscriptionsAvailable = request.SubscriptionModelIds.Select(x => StateModel.Init(false)
-                .Where("subscription-id", x.ToString())
+                .Where(Tag.SubscriptionId(x))
                 .When<SubscriptionModelAdded>((_, _) => true)).ToArray();
 
             var context = await contextBuilder.BuildStateModelsAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
@@ -45,7 +45,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantRegistered(request.Id, request.Name, request.SubscriptionModelIds),
-                    Tags.From(("tenant-id", request.Id.ToString()), ("tenant-name", canonicalName)));
+                    Tags.From(Tag.TenantId(request.Id), Tag.TenantName(canonicalName)));
             }
             catch (ConcurrencyException)
             {
@@ -58,22 +58,22 @@ static class TenantEndpoints
         app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, CommandContextBuilder contextBuilder) =>
         {
             var  tenantIdRegistered = StateModel.Init(false)
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantRegistered>((_, _) => true);
-            
+
             var tenantSubscriptions = StateModel.Init(Array.Empty<Guid>())
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantRegistered>((e, s) => e.SubscriptionModelIds.ToArray());
-            
+
             var teamIdTaken = StateModel.Init(false)
-                .Where("tenant-id", tenantId.ToString())
-                .Where("team-id", request.Id.ToString())
+                .Where(Tag.TenantId(tenantId))
+                .Where(Tag.TeamId(request.Id))
                 .When<TeamAdded>((_, _) => true);
-            
+
             var canonicalName = request.Name.CanonicalName();
             var teamNameConflict = StateModel.Init(false)
-                .Where("tenant-id", tenantId.ToString())
-                .Where("team-name", canonicalName)
+                .Where(Tag.TenantId(tenantId))
+                .Where(Tag.TeamName(canonicalName))
                 .When<TeamAdded>((_, _) => true);
 
             var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
@@ -90,7 +90,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TeamAdded(request.Id, request.Name, tenantId, request.SubscriptionModelId),
-                Tags.From(("team-id", request.Id.ToString()), ("tenant-id", tenantId.ToString()), ("team-name", canonicalName)));
+                Tags.From(Tag.TeamId(request.Id), Tag.TenantId(tenantId), Tag.TeamName(canonicalName)));
             }
             catch (ConcurrencyException)
             {
@@ -103,14 +103,14 @@ static class TenantEndpoints
         app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, CommandContextBuilder contextBuilder) =>
         {
             var tenantIdRegistered = StateModel.Init(false)
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantRegistered>((_, _) => true);
             var userAdded = StateModel.Init(false)
-                .Where("user-id", request.UserId.ToString())
+                .Where(Tag.UserId(request.UserId))
                 .When<UserAdded>((_, _) => true);
             var userAlreadyAssigned = StateModel.Init(false)
-                .Where("user-id", request.UserId.ToString())
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.UserId(request.UserId))
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantOwnerAssigned>((_, _) => true);
 
             var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
@@ -127,7 +127,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantOwnerAssigned(request.UserId, tenantId),
-                Tags.From(("tenant-id", tenantId.ToString()), ("user-id", request.UserId.ToString())));
+                Tags.From(Tag.TenantId(tenantId), Tag.UserId(request.UserId)));
             }
             catch (ConcurrencyException)
             {
@@ -140,12 +140,12 @@ static class TenantEndpoints
         app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, CommandContextBuilder contextBuilder) =>
         {
             var tenantIdRegistered = StateModel.Init(false)
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantRegistered>((_, _) => true);
 
             // This tenant's name history, folded to its latest name.
             var currentTenantName = StateModel.Init(string.Empty)
-                .Where("tenant-id", tenantId.ToString())
+                .Where(Tag.TenantId(tenantId))
                 .When<TenantRegistered>((e, _) => e.Name)
                 .When<TenantRenamed>((e, _) => e.Name);
 
@@ -154,7 +154,7 @@ static class TenantEndpoints
             // reducer decides whether it ends up taken or freed.
             var canonicalName = request.Name.CanonicalName();
             var tenantNameTaken = StateModel.Init(false)
-                .Where("tenant-name", canonicalName)
+                .Where(Tag.TenantName(canonicalName))
                 .When<TenantRegistered>((_, _) => true)
                 .When<TenantRenamed>((e, _) => e.Name.CanonicalName() == canonicalName);
 
@@ -176,9 +176,9 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantRenamed(tenantId, request.Name), Tags.From(
-                    ("tenant-id", tenantId.ToString()),
-                    ("tenant-name", currentTenantName.State.CanonicalName()),
-                    ("tenant-name", canonicalName)));
+                    Tag.TenantId(tenantId),
+                    Tag.TenantName(currentTenantName.State.CanonicalName()),
+                    Tag.TenantName(canonicalName)));
             }
             catch (ConcurrencyException)
             {

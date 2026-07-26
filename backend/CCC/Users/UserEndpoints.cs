@@ -12,12 +12,12 @@ static class UserEndpoints
             // uniqueness rule needs its own tag slice.
             var idTaken = StateModel
                 .Init(false)
-                .Where("user-id", request.Id.ToString())
+                .Where(Tag.UserId(request.Id))
                 .When<UserAdded>((_, _) => true);
 
             var emailTaken = StateModel
                 .Init(false)
-                .Where("user-email", request.Email)
+                .Where(Tag.UserEmail(request.Email))
                 .When<UserAdded>((_, _) => true);
 
             var context = await contextBuilder.BuildStateModelsAsync(idTaken, emailTaken);
@@ -33,7 +33,7 @@ static class UserEndpoints
             {
                 await context.AppendAsync(
                     new UserAdded(request.Id, request.Name, request.Email),
-                    Tags.From(("user-id", request.Id.ToString()), ("user-email", request.Email)));
+                    Tags.From(Tag.UserId(request.Id), Tag.UserEmail(request.Email)));
             }
             catch (ConcurrencyException)
             {
