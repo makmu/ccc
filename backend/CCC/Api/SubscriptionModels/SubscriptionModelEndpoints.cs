@@ -2,7 +2,7 @@ using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Infrastructure.EventStore;
 
-namespace CCC.SubscriptionModels;
+namespace CCC.Api.SubscriptionModels;
 
 static class SubscriptionModelEndpoints
 {

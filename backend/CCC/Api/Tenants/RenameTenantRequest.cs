@@ -1,3 +1,3 @@
-namespace CCC.Tenants;
+namespace CCC.Api.Tenants;
 
 record RenameTenantRequest(string Name);

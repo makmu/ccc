@@ -1,13 +1,9 @@
-using System.Text.Json;
 using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Helpers;
 using CCC.Infrastructure.EventStore;
-using CCC.SubscriptionModels;
-using CCC.Users;
-using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace CCC.Tenants;
+namespace CCC.Api.Tenants;
 
 static class TenantEndpoints
 {

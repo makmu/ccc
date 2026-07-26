@@ -1,9 +1,9 @@
 using CCC.Api.Keys;
+using CCC.Api.Projects;
+using CCC.Api.SubscriptionModels;
+using CCC.Api.Tenants;
+using CCC.Api.Users;
 using CCC.Infrastructure.EventStore;
-using CCC.Tenants;
-using CCC.Projects;
-using CCC.SubscriptionModels;
-using CCC.Users;
 using Dapper;
 
 SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());

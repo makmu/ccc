@@ -2,7 +2,7 @@ using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Infrastructure.EventStore;
 
-namespace CCC.Users;
+namespace CCC.Api.Users;
 
 static class UserEndpoints
 {

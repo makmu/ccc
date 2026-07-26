@@ -1,11 +1,9 @@
-using System.Text.Json;
 using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Helpers;
 using CCC.Infrastructure.EventStore;
-using CCC.Tenants;
 
-namespace CCC.Projects;
+namespace CCC.Api.Projects;
 
 static class ProjectEndpoints
 {
