@@ -10,9 +10,7 @@ static class SubscriptionModelEndpoints
     {
         app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, CommandContextBuilder contextBuilder) =>
         {
-            var subscriptionIdTaken = StateModel.Init(false).
-                Where(Tag.SubscriptionId(request.Id))
-                .When<SubscriptionModelAdded>((_, _) => true);
+            var subscriptionIdTaken = Model.SubscriptionExists(request.Id);
 
             var context = await contextBuilder.BuildStateModelsAsync(subscriptionIdTaken);
                 

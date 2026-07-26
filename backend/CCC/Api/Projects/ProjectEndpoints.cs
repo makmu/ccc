@@ -13,19 +13,11 @@ static class ProjectEndpoints
     {
         app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, CommandContextBuilder contextBuilder) =>
         {
-            var teamAdded = StateModel.Init(false)
-                .Where(Tag.TeamId(teamId))
-                .When<TeamAdded>((_, _) => true);
-
-            var projectedIdTaken = StateModel.Init(false)
-                .Where(Tag.ProjectId(request.Id))
-                .When<ProjectAdded>((_, _) => true);
+            var teamAdded = Model.TeamExists(teamId);
+            var projectedIdTaken = Model.ProjectIdTaken(request.Id);
 
             var canonicalName = request.Name.CanonicalName();
-            var projectNameTaken = StateModel.Init(false)
-                .Where(Tag.TeamId(teamId))
-                .Where(Tag.ProjectName(canonicalName))
-                .When<ProjectAdded>((_, _) => true);
+            var projectNameTaken = Model.ProjectNameTaken(teamId, request.Name);
 
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectedIdTaken, projectNameTaken);
 
@@ -53,31 +45,12 @@ static class ProjectEndpoints
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, CommandContextBuilder contextBuilder) =>
         {
-            var teamAdded = StateModel.Init(false)
-                .Where(Tag.TeamId(teamId))
-                .When<TeamAdded>((_, _) => true);
+            var teamAdded = Model.TeamExists(teamId);
+            var projectAdded = Model.ProjectInTeam(teamId, projectId);
+            var languageAdded = Model.LanguageInProject(projectId, request.LanguageCode);
+            var validParentLanguage = Model.ValidParentLanguage(projectId, request.ParentLanguageCode);
+            var isReferenceLanguage = Model.IsReferenceLanguage(projectId, request.LanguageCode);
 
-            var projectAdded = StateModel.Init(false)
-                .Where(Tag.TeamId(teamId))
-                .Where(Tag.ProjectId(projectId))
-                .When<ProjectAdded>((_, _) => true);
-
-            var languageAdded = StateModel.Init(false)
-                .Where(Tag.ProjectId(projectId))
-                .Where(Tag.LanguageCode(request.LanguageCode))
-                .When<LanguageAdded>((_, _) => true);
-
-            var validParentLanguage = StateModel.Init(false)
-                .Where(Tag.ProjectId(projectId))
-                .Where(Tag.LanguageCode(request.ParentLanguageCode))
-                .When<ProjectAdded>((_, _) => true)
-                .When<LanguageAdded>((e, _) => e.LanguageCode == request.ParentLanguageCode);
-
-            var isReferenceLanguage = StateModel.Init(false)
-                .Where(Tag.ProjectId(projectId))
-                .Where(Tag.LanguageCode(request.LanguageCode))
-                .When<ProjectAdded>((_, _) => true);
-            
             var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
 
             if (teamAdded.State == false)
