@@ -65,8 +65,8 @@ sealed class StateModel<T>(T initialState) : IStateModel
         }
     }
 
-    // Events are queried per model, so every record handed here already matches
-    // this model's tags — only the event type still needs dispatching.
+    // The loader has already matched this model's tags against the record, so
+    // only the event type still needs dispatching.
     public void Apply(EventRecord record)
     {
         if (_reducers.TryGetValue(record.Type, out var reduce))

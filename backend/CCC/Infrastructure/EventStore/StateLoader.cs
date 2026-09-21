@@ -2,27 +2,32 @@ namespace CCC.Infrastructure.EventStore;
 
 class StateLoader(EventStore eventStore)
 {
-    // One query per model (each already narrowed to its own types + tags, so no
-    // in-memory tag re-matching is needed). The append condition is the union of
-    // every model's filter, guarded by the highest position seen across them.
+    // One query for all models, filtered by the union of their filters, so every
+    // model is folded from the same snapshot of the event log — loading them one by
+    // one would let a concurrent append land between two queries. The price is
+    // in-memory tag re-matching: a record only matching model A still comes back
+    // when model B's entries are part of the same union.
     public async Task<StateContext> LoadAsync(params IStateModel[] models)
     {
-        var entries = new List<EventFilter.Entry>();
+        var filters = models.Select(model => model.Filter).ToArray();
+        var union = new EventFilter(filters.SelectMany(filter => filter.Entries).ToList());
         var maxPosition = -1L;
 
-        foreach (var model in models)
+        if (union.Entries.Count > 0)
         {
-            var filter = model.Filter;
-            entries.AddRange(filter.Entries);
-
-            foreach (var record in await eventStore.LoadAsync(filter)) // ordered by position
+            foreach (var record in await eventStore.LoadAsync(union)) // ordered by position
             {
-                model.Apply(record);
+                for (var i = 0; i < models.Length; i++)
+                {
+                    if (filters[i].Matches(record))
+                        models[i].Apply(record);
+                }
+
                 if (record.Position > maxPosition)
                     maxPosition = record.Position;
             }
         }
 
-        return new StateContext(eventStore, new EventFilter(entries), maxPosition);
+        return new StateContext(eventStore, union, maxPosition);
     }
 }

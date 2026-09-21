@@ -7,6 +7,7 @@ using CCC.Infrastructure.EventStore;
 using Dapper;
 
 SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
+SqlMapper.AddTypeHandler(new StringArrayTypeHandler());
 
 var builder = WebApplication.CreateBuilder(args);
 

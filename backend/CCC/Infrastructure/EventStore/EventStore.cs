@@ -84,7 +84,7 @@ class EventStore(string connectionString)
     {
         await using var conn = new NpgsqlConnection(connectionString);
         return await conn.QueryAsync<EventRecord>(
-            """SELECT position, type, payload, timestamp, "user" FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position""",
+            """SELECT position, type, payload, timestamp, "user", tags FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position""",
             new { fromPosition, types });
     }
 
@@ -93,7 +93,7 @@ class EventStore(string connectionString)
         var (whereClause, parameters) = BuildFilterConditions(filter);
 
         var sql = $"""
-            SELECT position, type, payload, timestamp, "user"
+            SELECT position, type, payload, timestamp, "user", tags
             FROM events
             WHERE {whereClause}
             ORDER BY position
