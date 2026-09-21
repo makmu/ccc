@@ -9,15 +9,15 @@ static class ProjectEndpoints
 {
     public static void MapProjectEndpoints(this WebApplication app)
     {
-        app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, StateLoader loader) =>
         {
-            var teamAdded = Model.TeamExists(teamId);
-            var projectedIdTaken = Model.ProjectIdTaken(request.Id);
+            var teamAdded = State.TeamExists(teamId);
+            var projectedIdTaken = State.ProjectIdTaken(request.Id);
 
             var canonicalName = request.Name.CanonicalName();
-            var projectNameTaken = Model.ProjectNameTaken(teamId, request.Name);
+            var projectNameTaken = State.ProjectNameTaken(teamId, request.Name);
 
-            var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectedIdTaken, projectNameTaken);
+            var context = await loader.LoadAsync(teamAdded, projectedIdTaken, projectNameTaken);
 
             if (!teamAdded)
                 return Results.NotFound("Team not found.");
@@ -41,15 +41,15 @@ static class ProjectEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, StateLoader loader) =>
         {
-            var teamAdded = Model.TeamExists(teamId);
-            var projectAdded = Model.ProjectInTeam(teamId, projectId);
-            var languageAdded = Model.LanguageInProject(projectId, request.LanguageCode);
-            var validParentLanguage = Model.ValidParentLanguage(projectId, request.ParentLanguageCode);
-            var isReferenceLanguage = Model.IsReferenceLanguage(projectId, request.LanguageCode);
+            var teamAdded = State.TeamExists(teamId);
+            var projectAdded = State.ProjectInTeam(teamId, projectId);
+            var languageAdded = State.LanguageInProject(projectId, request.LanguageCode);
+            var validParentLanguage = State.ValidParentLanguage(projectId, request.ParentLanguageCode);
+            var isReferenceLanguage = State.IsReferenceLanguage(projectId, request.LanguageCode);
 
-            var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
+            var context = await loader.LoadAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
 
             if (!teamAdded)
                 return Results.NotFound("Team not found.");

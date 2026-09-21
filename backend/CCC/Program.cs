@@ -19,7 +19,7 @@ var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
 
 builder.Services.AddSingleton(new EventStore(connectionString));
-builder.Services.AddTransient<CommandContextBuilder>();
+builder.Services.AddTransient<StateLoader>();
 
 var app = builder.Build();
 

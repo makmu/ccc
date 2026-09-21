@@ -8,12 +8,12 @@ static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("/users", async (AddUserRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/users", async (AddUserRequest request, StateLoader loader) =>
         {
-            var idTaken = Model.UserExists(request.Id);
-            var emailTaken = Model.UserEmailTaken(request.Email);
+            var idTaken = State.UserExists(request.Id);
+            var emailTaken = State.UserEmailTaken(request.Email);
 
-            var context = await contextBuilder.BuildStateModelsAsync(idTaken, emailTaken);
+            var context = await loader.LoadAsync(idTaken, emailTaken);
 
             if (idTaken)
                 return Results.Conflict("A user with this id already exists.");

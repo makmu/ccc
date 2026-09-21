@@ -8,11 +8,11 @@ static class SubscriptionModelEndpoints
 {
     public static void MapSubscriptionModelEndpoints(this WebApplication app)
     {
-        app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, StateLoader loader) =>
         {
-            var subscriptionIdTaken = Model.SubscriptionExists(request.Id);
+            var subscriptionIdTaken = State.SubscriptionExists(request.Id);
 
-            var context = await contextBuilder.BuildStateModelsAsync(subscriptionIdTaken);
+            var context = await loader.LoadAsync(subscriptionIdTaken);
                 
             if (subscriptionIdTaken)
                 return Results.Conflict("A subscription model with this id already exists.");

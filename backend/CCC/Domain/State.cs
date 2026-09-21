@@ -4,7 +4,7 @@ using CCC.Infrastructure.EventStore;
 
 namespace CCC.Domain;
 
-static class Model
+static class State
 {
     public static StateModel<bool> TenantExists(Guid tenantId) =>
         StateModel.Init(false)

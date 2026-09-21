@@ -1,6 +1,6 @@
 namespace CCC.Infrastructure.EventStore;
 
-class CommandContext(EventStore eventStore, EventFilter filter, long maxPosition)
+class StateContext(EventStore eventStore, EventFilter filter, long maxPosition)
 {
     public Task AppendAsync<T>(T payload, Tags tags)
         => eventStore.AppendAsync(typeof(T).Name, payload!, Guid.Empty, maxPosition, filter, tags.ToArray());

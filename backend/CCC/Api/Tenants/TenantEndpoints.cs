@@ -10,20 +10,20 @@ static class TenantEndpoints
 
     public static void MapTenantEndpoints(this WebApplication app)
     {
-        app.MapPost("/tenants", async (RegisterTenantRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/tenants", async (RegisterTenantRequest request, StateLoader loader) =>
         {
             if (request.SubscriptionModelIds.Count == 0)
                 return Results.BadRequest("At least one subscription model must be referenced.");
 
-            var tenantIdTaken = Model.TenantExists(request.Id);
+            var tenantIdTaken = State.TenantExists(request.Id);
 
             var canonicalName = request.Name.CanonicalName();
-            var tenantNameTaken = Model.TenantNameTaken(request.Name);
+            var tenantNameTaken = State.TenantNameTaken(request.Name);
 
             var subscriptionsAvailable = request.SubscriptionModelIds
-                .Select(Model.SubscriptionExists).ToArray();
+                .Select(State.SubscriptionExists).ToArray();
 
-            var context = await contextBuilder.BuildStateModelsAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
+            var context = await loader.LoadAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
 
             if (tenantIdTaken)
                 return Results.Conflict("A tenant with this id already exists.");
@@ -47,16 +47,16 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, StateLoader loader) =>
         {
-            var tenantIdRegistered = Model.TenantExists(tenantId);
-            var tenantSubscriptions = Model.TenantSubscriptions(tenantId);
-            var teamIdTaken = Model.TeamIdTaken(tenantId, request.Id);
+            var tenantIdRegistered = State.TenantExists(tenantId);
+            var tenantSubscriptions = State.TenantSubscriptions(tenantId);
+            var teamIdTaken = State.TeamIdTaken(tenantId, request.Id);
 
             var canonicalName = request.Name.CanonicalName();
-            var teamNameConflict = Model.TeamNameTaken(tenantId, request.Name);
+            var teamNameConflict = State.TeamNameTaken(tenantId, request.Name);
 
-            var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
+            var context = await loader.LoadAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
 
             if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
@@ -80,13 +80,13 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, StateLoader loader) =>
         {
-            var tenantIdRegistered = Model.TenantExists(tenantId);
-            var userAdded = Model.UserExists(request.UserId);
-            var userAlreadyAssigned = Model.UserIsTenantOwner(request.UserId, tenantId);
+            var tenantIdRegistered = State.TenantExists(tenantId);
+            var userAdded = State.UserExists(request.UserId);
+            var userAlreadyAssigned = State.UserIsTenantOwner(request.UserId, tenantId);
 
-            var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
+            var context = await loader.LoadAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
             
             if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
@@ -110,20 +110,20 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, StateLoader loader) =>
         {
-            var tenantIdRegistered = Model.TenantExists(tenantId);
-            var currentTenantName = Model.CurrentTenantName(tenantId);
-            var canonicalName = request.Name.CanonicalName();
-            var tenantNameTaken = Model.TenantNameTaken(request.Name);
+            var tenantIdRegistered = State.TenantExists(tenantId);
+            var currentTenantName = State.CurrentTenantName(tenantId);
+            var tenantNameTaken = State.TenantNameTaken(request.Name);
 
-            var context = await contextBuilder.BuildStateModelsAsync(tenantIdRegistered, currentTenantName, tenantNameTaken);
+            var context = await loader.LoadAsync(tenantIdRegistered, currentTenantName, tenantNameTaken);
 
             // Decisions
             if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
             // Case-insensitive no-op: renaming to the same name (any casing) changes nothing.
+            var canonicalName = request.Name.CanonicalName();
             if (currentTenantName.State.CanonicalName() == canonicalName)
                 return Results.Ok();
 

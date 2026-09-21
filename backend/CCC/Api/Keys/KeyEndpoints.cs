@@ -8,15 +8,15 @@ static class KeyEndpoints
 {
     public static void MapKeyEndpoints(this WebApplication app)
     {
-        app.MapPost("/teams/{teamId}/projects/{projectId}/keys", async (Guid teamId, Guid projectId, AddKeyRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/keys", async (Guid teamId, Guid projectId, AddKeyRequest request, StateLoader loader) =>
         {
-            var teamSubscription = Model.TeamSubscription(teamId);
-            var projectAdded = Model.ProjectInTeam(teamId, projectId);
-            var keyIdTaken = Model.KeyExists(teamId, projectId, request.Id);
-            var keyNameTaken = Model.KeyNameTaken(projectId, request.Name);
-            var teamKeyCount = Model.TeamKeyCount(teamId);
+            var teamSubscription = State.TeamSubscription(teamId);
+            var projectAdded = State.ProjectInTeam(teamId, projectId);
+            var keyIdTaken = State.KeyExists(teamId, projectId, request.Id);
+            var keyNameTaken = State.KeyNameTaken(projectId, request.Name);
+            var teamKeyCount = State.TeamKeyCount(teamId);
 
-            var context = await contextBuilder.BuildStateModelsAsync(
+            var context = await loader.LoadAsync(
                 teamSubscription, projectAdded, keyIdTaken, keyNameTaken, teamKeyCount);
 
             if (teamSubscription.State is not { } subscriptionModelId)
@@ -35,8 +35,8 @@ static class KeyEndpoints
             // read once the subscription id is known. KeyLimit is immutable, so it
             // does not need to be part of the (phase-1) append condition; the
             // team-id key count already is, which is what guards the invariant.
-            var keyLimit = Model.KeyLimit(subscriptionModelId);
-            await contextBuilder.BuildStateModelsAsync(keyLimit);
+            var keyLimit = State.KeyLimit(subscriptionModelId);
+            await loader.LoadAsync(keyLimit);
 
             if (teamKeyCount >= keyLimit)
                 return Results.Conflict("The key limit for this team's subscription model has been reached.");
@@ -59,14 +59,14 @@ static class KeyEndpoints
         });
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/reference-text",
-            async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, CommandContextBuilder contextBuilder) =>
+            async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, StateLoader loader) =>
             {
-                var teamAdded = Model.TeamExists(teamId);
-                var projectAdded = Model.ProjectInTeam(teamId, projectId);
-                var keyExists = Model.KeyExists(teamId, projectId, keyId);
-                var currentReferenceText = Model.CurrentReferenceText(keyId);
+                var teamAdded = State.TeamExists(teamId);
+                var projectAdded = State.ProjectInTeam(teamId, projectId);
+                var keyExists = State.KeyExists(teamId, projectId, keyId);
+                var currentReferenceText = State.CurrentReferenceText(keyId);
 
-                var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, currentReferenceText);
+                var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentReferenceText);
 
                 if (!teamAdded)
                     return Results.NotFound("Team not found.");
@@ -96,16 +96,16 @@ static class KeyEndpoints
             });
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/translations",
-            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, CommandContextBuilder contextBuilder) =>
+            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, StateLoader loader) =>
             {
-                var teamAdded = Model.TeamExists(teamId);
-                var projectAdded = Model.ProjectInTeam(teamId, projectId);
-                var keyExists = Model.KeyExists(teamId, projectId, keyId);
-                var languageAdded = Model.LanguageInProject(projectId, request.LanguageCode);
+                var teamAdded = State.TeamExists(teamId);
+                var projectAdded = State.ProjectInTeam(teamId, projectId);
+                var keyExists = State.KeyExists(teamId, projectId, keyId);
+                var languageAdded = State.LanguageInProject(projectId, request.LanguageCode);
 
-                var currentTranslation = Model.CurrentTranslation(keyId, request.LanguageCode);
+                var currentTranslation = State.CurrentTranslation(keyId, request.LanguageCode);
 
-                var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, languageAdded, currentTranslation);
+                var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, languageAdded, currentTranslation);
 
                 if (!teamAdded)
                     return Results.NotFound("Team not found.");
@@ -135,15 +135,15 @@ static class KeyEndpoints
                 return Results.Ok();
             });
 
-        app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename", async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, CommandContextBuilder contextBuilder) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename", async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, StateLoader loader) =>
         {
-            var teamAdded = Model.TeamExists(teamId);
-            var projectAdded = Model.ProjectInTeam(teamId, projectId);
-            var keyExists = Model.KeyExists(teamId, projectId, keyId);
-            var currentKeyName = Model.CurrentKeyName(keyId);
-            var keyNameTaken = Model.KeyNameTaken(projectId, request.Name);
+            var teamAdded = State.TeamExists(teamId);
+            var projectAdded = State.ProjectInTeam(teamId, projectId);
+            var keyExists = State.KeyExists(teamId, projectId, keyId);
+            var currentKeyName = State.CurrentKeyName(keyId);
+            var keyNameTaken = State.KeyNameTaken(projectId, request.Name);
 
-            var context = await contextBuilder.BuildStateModelsAsync(teamAdded, projectAdded, keyExists, currentKeyName, keyNameTaken);
+            var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentKeyName, keyNameTaken);
 
             if (!teamAdded)
                 return Results.NotFound("Team not found.");
