@@ -1,4 +1,4 @@
-namespace CCC.Helpers;
+namespace CCC.Domain;
 
 public static class StringExtensions
 {

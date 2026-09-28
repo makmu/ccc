@@ -1,6 +1,6 @@
-namespace CCC.Domain;
+namespace CCC.Domain.State;
 
-static class Tag
+public static class Tag
 {
     public static (string Key, string Value) TenantId(Guid id) => ("tenant-id", id.ToString());
     public static (string Key, string Value) TenantName(string name) => ("tenant-name", name);

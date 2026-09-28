@@ -1,6 +1,6 @@
 using CCC.Domain;
 using CCC.Domain.Events;
-using CCC.Helpers;
+using CCC.Domain.State;
 using CCC.EventStore;
 
 namespace CCC.Api.Projects;

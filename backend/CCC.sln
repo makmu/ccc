@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC", "CCC\CCC.csproj", "{0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.EventStore", "CCC.EventStore\CCC.EventStore.csproj", "{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Domain", "CCC.Domain\CCC.Domain.csproj", "{FC34E617-8DAA-44F4-8158-CDCD82859840}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,18 @@ Global
 		{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}.Release|x64.Build.0 = Release|Any CPU
 		{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}.Release|x86.ActiveCfg = Release|Any CPU
 		{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}.Release|x86.Build.0 = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|x64.Build.0 = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Debug|x86.Build.0 = Debug|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x64.ActiveCfg = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x64.Build.0 = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

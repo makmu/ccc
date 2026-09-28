@@ -106,13 +106,13 @@ Stored events and the HTTP contract have to be identical before and after. Treat
 
 ## Phase 2: Create `CCC.Domain` with events and state
 
-- [ ] Create `backend/CCC.Domain/CCC.Domain.csproj`, a `net10.0` class library that references `CCC.EventStore`
-- [ ] Add it to `CCC.sln` and reference it from `CCC.csproj`
-- [ ] Move `CCC/Domain/Events/*.cs` to `CCC.Domain/Events/` under the namespace `CCC.Domain.Events`, and make the records public. Don't rename any of them. See "What must not change"
-- [ ] Move `State.cs` and `Tag.cs` to `CCC.Domain/State/` under `CCC.Domain.State`, as `public static` classes
-- [ ] Move the `CanonicalName()` extension from `CCC/Helpers/StringExtensions.cs` into `CCC.Domain` and delete `CCC/Helpers/`. It only lives there until phase 3 replaces it
-- [ ] Delete the old `CCC/Domain/` folder
-- [ ] Build and rerun the smoke test
+- [x] Create `backend/CCC.Domain/CCC.Domain.csproj`, a `net10.0` class library that references `CCC.EventStore`
+- [x] Add it to `CCC.sln` and reference it from `CCC.csproj`
+- [x] Move `CCC/Domain/Events/*.cs` to `CCC.Domain/Events/` under the namespace `CCC.Domain.Events`, and make the records public. Don't rename any of them. See "What must not change"
+- [x] Move `State.cs` and `Tag.cs` to `CCC.Domain/State/` under `CCC.Domain.State`, as `public static` classes
+- [x] Move the `CanonicalName()` extension from `CCC/Helpers/StringExtensions.cs` into `CCC.Domain` and delete `CCC/Helpers/`. It only lives there until phase 3 replaces it
+- [x] Delete the old `CCC/Domain/` folder
+- [x] Build and rerun the smoke test
 
 ## Phase 3: Add value objects
 

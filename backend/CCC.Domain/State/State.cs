@@ -1,10 +1,9 @@
 using CCC.Domain.Events;
-using CCC.Helpers;
 using CCC.EventStore;
 
-namespace CCC.Domain;
+namespace CCC.Domain.State;
 
-static class State
+public static class State
 {
     public static StateModel<bool> TenantExists(Guid tenantId) =>
         StateModel.Init(false)

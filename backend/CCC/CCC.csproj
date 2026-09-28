@@ -6,6 +6,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\CCC.Domain\CCC.Domain.csproj"/>
         <ProjectReference Include="..\CCC.EventStore\CCC.EventStore.csproj"/>
     </ItemGroup>
 

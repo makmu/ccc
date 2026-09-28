@@ -1,4 +1,4 @@
-using CCC.Domain;
+using CCC.Domain.State;
 using CCC.Domain.Events;
 using CCC.EventStore;
 
