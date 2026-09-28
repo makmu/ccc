@@ -1,21 +1,24 @@
-using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Domain.State;
+using CCC.Domain.ValueObjects;
 using CCC.EventStore;
 
 namespace CCC.Api.Projects;
 
 static class ProjectEndpoints
 {
-    public static void MapProjectEndpoints(this WebApplication app)
+    public static void MapProjectEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, IStateLoader loader) =>
         {
-            var teamAdded = State.TeamExists(teamId);
-            var projectedIdTaken = State.ProjectIdTaken(request.Id);
+            var team = TeamId.Create(teamId);
+            var projectId = ProjectId.Create(request.Id);
+            var projectName = ProjectName.Create(request.Name);
+            var referenceLanguage = LanguageCode.Create(request.ReferenceLanguage);
 
-            var canonicalName = request.Name.CanonicalName();
-            var projectNameTaken = State.ProjectNameTaken(teamId, request.Name);
+            var teamAdded = State.TeamExists(team);
+            var projectedIdTaken = State.ProjectIdTaken(projectId);
+            var projectNameTaken = State.ProjectNameTaken(team, projectName);
 
             var context = await loader.LoadAsync(teamAdded, projectedIdTaken, projectNameTaken);
 
@@ -31,7 +34,7 @@ static class ProjectEndpoints
             try
             {
                 await context.AppendAsync(new ProjectAdded(request.Id, request.Name, teamId, request.ReferenceLanguage),
-                    Tags.From(Tag.ProjectId(request.Id), Tag.TeamId(teamId), Tag.ProjectName(canonicalName), Tag.LanguageCode(request.ReferenceLanguage)));
+                    Tags.From(Tag.ProjectId(projectId), Tag.TeamId(team), Tag.ProjectName(projectName), Tag.LanguageCode(referenceLanguage)));
             }
             catch (ConcurrencyException)
             {
@@ -43,13 +46,18 @@ static class ProjectEndpoints
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, IStateLoader loader) =>
         {
-            var teamAdded = State.TeamExists(teamId);
-            var projectAdded = State.ProjectInTeam(teamId, projectId);
-            var languageAdded = State.LanguageInProject(projectId, request.LanguageCode);
-            var validParentLanguage = State.ValidParentLanguage(projectId, request.ParentLanguageCode);
-            var isReferenceLanguage = State.IsReferenceLanguage(projectId, request.LanguageCode);
+            var team = TeamId.Create(teamId);
+            var project = ProjectId.Create(projectId);
+            var languageCode = LanguageCode.Create(request.LanguageCode);
+            var parentLanguageCode = LanguageCode.Create(request.ParentLanguageCode);
 
-            var context = await loader.LoadAsync(teamAdded, projectAdded, languageAdded, validParentLanguage,  isReferenceLanguage);
+            var teamAdded = State.TeamExists(team);
+            var projectAdded = State.ProjectInTeam(team, project);
+            var languageAdded = State.LanguageInProject(project, languageCode);
+            var validParentLanguage = State.ValidParentLanguage(project, parentLanguageCode);
+            var isReferenceLanguage = State.IsReferenceLanguage(project, languageCode);
+
+            var context = await loader.LoadAsync(teamAdded, projectAdded, languageAdded, validParentLanguage, isReferenceLanguage);
 
             if (!teamAdded)
                 return Results.NotFound("Team not found.");
@@ -68,8 +76,8 @@ static class ProjectEndpoints
 
             try
             {
-                await context.AppendAsync(new LanguageAdded(request.LanguageCode, request.ParentLanguageCode, projectId)
-                    , Tags.From(Tag.ProjectId(projectId), Tag.LanguageCode(request.LanguageCode)));
+                await context.AppendAsync(new LanguageAdded(request.LanguageCode, request.ParentLanguageCode, projectId),
+                    Tags.From(Tag.ProjectId(project), Tag.LanguageCode(languageCode)));
             }
             catch (ConcurrencyException)
             {

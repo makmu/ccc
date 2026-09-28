@@ -118,18 +118,18 @@ Stored events and the HTTP contract have to be identical before and after. Treat
 
 A value object checks format. If the input is malformed, the value object can't be constructed. Business rules like uniqueness, existence and limits need the event log, so they stay in the handlers.
 
-- [ ] Pick one construction pattern and use it for every value object, for example `static Result<TenantName> Create(string raw)` or `bool TryCreate(string raw, out TenantName value, out string error)`. Either works. Mixing them is worse than both. Implement the types as `readonly record struct` or `sealed record`
-- [ ] ID value objects wrap a `Guid` and reject `Guid.Empty`. They are `TenantId`, `TeamId`, `ProjectId`, `KeyId`, `UserId` and `SubscriptionModelId`
-- [ ] Name value objects reject empty and whitespace-only input. Each exposes `Value`, the name as entered, and `Canonical`, the trimmed lowercase form that replaces `CanonicalName()`. They are `TenantName`, `TeamName` and `ProjectName`
-- [ ] `KeyName` rejects empty input. The code doesn't canonicalize key names today, since `Tag.KeyName(name)` takes the raw name. Keep it that way. Changing it changes behaviour and deserves its own discussion
-- [ ] `LanguageCode` rejects empty input. A BCP 47 format check would be nice but isn't required
-- [ ] `EmailAddress` rejects empty input and does a basic format check. The code tags emails as entered today, so keep them raw
-- [ ] `KeyLimit` is an integer of 0 or more
-- [ ] Add `TranslationText` and `ReferenceText` wrappers only if they earn their keep. Both allow empty strings, so there's little to validate
-- [ ] Change the `Tag.*` factories to take value objects, e.g. `Tag.TenantName(TenantName name) => ("tenant-name", name.Canonical)`. After that nobody can pass an uncanonicalized name by accident. I think that's the best payoff in this whole phase
-- [ ] Change the `State.*` factories to take value objects too, e.g. `State.TenantNameTaken(TenantName name)`
-- [ ] Remove `CanonicalName()` once nothing calls it
-- [ ] Build, then check that every `Tag.*` factory still produces exactly the same string for the same input
+- [x] Pick one construction pattern and use it for every value object, for example `static Result<TenantName> Create(string raw)` or `bool TryCreate(string raw, out TenantName value, out string error)`. Either works. Mixing them is worse than both. Implement the types as `readonly record struct` or `sealed record`. Chosen: a third option, `static TenantName Create(string? raw)` that throws `InvalidValueException`. `InvalidValueFilter` in the API turns it into a 400 for every endpoint, so endpoints need no check per field. All types are `readonly record struct`
+- [x] ID value objects wrap a `Guid` and reject `Guid.Empty`. They are `TenantId`, `TeamId`, `ProjectId`, `KeyId`, `UserId` and `SubscriptionModelId`
+- [x] Name value objects reject empty and whitespace-only input. Each exposes `Value`, the name as entered, and `Canonical`, the trimmed lowercase form that replaces `CanonicalName()`. They are `TenantName`, `TeamName` and `ProjectName`
+- [x] `KeyName` rejects empty input. The code doesn't canonicalize key names today, since `Tag.KeyName(name)` takes the raw name. Keep it that way. Changing it changes behaviour and deserves its own discussion
+- [x] `LanguageCode` rejects empty input. A BCP 47 format check would be nice but isn't required
+- [x] `EmailAddress` rejects empty input and does a basic format check. The code tags emails as entered today, so keep them raw
+- [x] `KeyLimit` is an integer of 0 or more
+- [x] Add `TranslationText` and `ReferenceText` wrappers only if they earn their keep. Both allow empty strings, so there's little to validate. Skipped, along with user names and subscription model names. None of them are tagged or checked, so they stay plain strings
+- [x] Change the `Tag.*` factories to take value objects, e.g. `Tag.TenantName(TenantName name) => ("tenant-name", name.Canonical)`. After that nobody can pass an uncanonicalized name by accident. I think that's the best payoff in this whole phase
+- [x] Change the `State.*` factories to take value objects too, e.g. `State.TenantNameTaken(TenantName name)`. The state they return stays primitive. A caller that needs a value object back, like the old name in a rename, converts it
+- [x] Remove `CanonicalName()` once nothing calls it. It is now the internal `CanonicalForm.Of`, which the name value objects and `State.TenantNameTaken` share
+- [x] Build, then check that every `Tag.*` factory still produces exactly the same string for the same input. Checked by running `CCC.http` against the phase 0 build and this one and diffing the stored events: type, payload and tags are identical
 
 ## Phase 4: Create `CCC.Commands`
 

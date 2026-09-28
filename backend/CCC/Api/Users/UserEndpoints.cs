@@ -1,17 +1,21 @@
-using CCC.Domain.State;
 using CCC.Domain.Events;
+using CCC.Domain.State;
+using CCC.Domain.ValueObjects;
 using CCC.EventStore;
 
 namespace CCC.Api.Users;
 
 static class UserEndpoints
 {
-    public static void MapUserEndpoints(this WebApplication app)
+    public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/users", async (AddUserRequest request, IStateLoader loader) =>
         {
-            var idTaken = State.UserExists(request.Id);
-            var emailTaken = State.UserEmailTaken(request.Email);
+            var userId = UserId.Create(request.Id);
+            var email = EmailAddress.Create(request.Email);
+
+            var idTaken = State.UserExists(userId);
+            var emailTaken = State.UserEmailTaken(email);
 
             var context = await loader.LoadAsync(idTaken, emailTaken);
 
@@ -24,7 +28,7 @@ static class UserEndpoints
             {
                 await context.AppendAsync(
                     new UserAdded(request.Id, request.Name, request.Email),
-                    Tags.From(Tag.UserId(request.Id), Tag.UserEmail(request.Email)));
+                    Tags.From(Tag.UserId(userId), Tag.UserEmail(email)));
             }
             catch (ConcurrencyException)
             {

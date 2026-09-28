@@ -1,3 +1,4 @@
+using CCC.Api;
 using CCC.Api.Keys;
 using CCC.Api.Projects;
 using CCC.Api.SubscriptionModels;
@@ -30,10 +31,11 @@ app.UseHttpsRedirection();
 
 await EventStoreSchema.CreateAsync(connectionString);
 
-app.MapKeyEndpoints();
-app.MapTenantEndpoints();
-app.MapProjectEndpoints();
-app.MapSubscriptionModelEndpoints();
-app.MapUserEndpoints();
+var api = app.MapGroup("").AddEndpointFilter<InvalidValueFilter>();
+api.MapKeyEndpoints();
+api.MapTenantEndpoints();
+api.MapProjectEndpoints();
+api.MapSubscriptionModelEndpoints();
+api.MapUserEndpoints();
 
 app.Run();

@@ -1,6 +1,6 @@
-using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Domain.State;
+using CCC.Domain.ValueObjects;
 using CCC.EventStore;
 
 namespace CCC.Api.Tenants;
@@ -8,19 +8,21 @@ namespace CCC.Api.Tenants;
 static class TenantEndpoints
 {
 
-    public static void MapTenantEndpoints(this WebApplication app)
+    public static void MapTenantEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/tenants", async (RegisterTenantRequest request, IStateLoader loader) =>
         {
             if (request.SubscriptionModelIds.Count == 0)
                 return Results.BadRequest("At least one subscription model must be referenced.");
 
-            var tenantIdTaken = State.TenantExists(request.Id);
+            var tenantId = TenantId.Create(request.Id);
+            var tenantName = TenantName.Create(request.Name);
+            var subscriptionModelIds = request.SubscriptionModelIds.Select(SubscriptionModelId.Create).ToArray();
 
-            var canonicalName = request.Name.CanonicalName();
-            var tenantNameTaken = State.TenantNameTaken(request.Name);
+            var tenantIdTaken = State.TenantExists(tenantId);
+            var tenantNameTaken = State.TenantNameTaken(tenantName);
 
-            var subscriptionsAvailable = request.SubscriptionModelIds
+            var subscriptionsAvailable = subscriptionModelIds
                 .Select(State.SubscriptionExists).ToArray();
 
             var context = await loader.LoadAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
@@ -37,7 +39,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantRegistered(request.Id, request.Name, request.SubscriptionModelIds),
-                    Tags.From(Tag.TenantId(request.Id), Tag.TenantName(canonicalName)));
+                    Tags.From(Tag.TenantId(tenantId), Tag.TenantName(tenantName)));
             }
             catch (ConcurrencyException)
             {
@@ -49,19 +51,22 @@ static class TenantEndpoints
 
         app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, IStateLoader loader) =>
         {
-            var tenantIdRegistered = State.TenantExists(tenantId);
-            var tenantSubscriptions = State.TenantSubscriptions(tenantId);
-            var teamIdTaken = State.TeamIdTaken(tenantId, request.Id);
+            var tenant = TenantId.Create(tenantId);
+            var teamId = TeamId.Create(request.Id);
+            var teamName = TeamName.Create(request.Name);
+            var subscriptionModelId = SubscriptionModelId.Create(request.SubscriptionModelId);
 
-            var canonicalName = request.Name.CanonicalName();
-            var teamNameConflict = State.TeamNameTaken(tenantId, request.Name);
+            var tenantIdRegistered = State.TenantExists(tenant);
+            var tenantSubscriptions = State.TenantSubscriptions(tenant);
+            var teamIdTaken = State.TeamIdTaken(tenant, teamId);
+            var teamNameConflict = State.TeamNameTaken(tenant, teamName);
 
             var context = await loader.LoadAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
 
             if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
-            if (!tenantSubscriptions.State.Contains(request.SubscriptionModelId))
+            if (!tenantSubscriptions.State.Contains(subscriptionModelId.Value))
                 return Results.BadRequest("The specified subscription model is not available in this tenant.");
 
             if (teamIdTaken || teamNameConflict)
@@ -70,7 +75,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TeamAdded(request.Id, request.Name, tenantId, request.SubscriptionModelId),
-                Tags.From(Tag.TeamId(request.Id), Tag.TenantId(tenantId), Tag.TeamName(canonicalName)));
+                    Tags.From(Tag.TeamId(teamId), Tag.TenantId(tenant), Tag.TeamName(teamName)));
             }
             catch (ConcurrencyException)
             {
@@ -82,12 +87,15 @@ static class TenantEndpoints
 
         app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, IStateLoader loader) =>
         {
-            var tenantIdRegistered = State.TenantExists(tenantId);
-            var userAdded = State.UserExists(request.UserId);
-            var userAlreadyAssigned = State.UserIsTenantOwner(request.UserId, tenantId);
+            var tenant = TenantId.Create(tenantId);
+            var userId = UserId.Create(request.UserId);
+
+            var tenantIdRegistered = State.TenantExists(tenant);
+            var userAdded = State.UserExists(userId);
+            var userAlreadyAssigned = State.UserIsTenantOwner(userId, tenant);
 
             var context = await loader.LoadAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
-            
+
             if (!tenantIdRegistered)
                 return Results.NotFound("Tenant not found.");
 
@@ -100,7 +108,7 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantOwnerAssigned(request.UserId, tenantId),
-                Tags.From(Tag.TenantId(tenantId), Tag.UserId(request.UserId)));
+                    Tags.From(Tag.TenantId(tenant), Tag.UserId(userId)));
             }
             catch (ConcurrencyException)
             {
@@ -112,9 +120,12 @@ static class TenantEndpoints
 
         app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, IStateLoader loader) =>
         {
-            var tenantIdRegistered = State.TenantExists(tenantId);
-            var currentTenantName = State.CurrentTenantName(tenantId);
-            var tenantNameTaken = State.TenantNameTaken(request.Name);
+            var tenant = TenantId.Create(tenantId);
+            var newName = TenantName.Create(request.Name);
+
+            var tenantIdRegistered = State.TenantExists(tenant);
+            var currentTenantName = State.CurrentTenantName(tenant);
+            var tenantNameTaken = State.TenantNameTaken(newName);
 
             var context = await loader.LoadAsync(tenantIdRegistered, currentTenantName, tenantNameTaken);
 
@@ -123,8 +134,8 @@ static class TenantEndpoints
                 return Results.NotFound("Tenant not found.");
 
             // Case-insensitive no-op: renaming to the same name (any casing) changes nothing.
-            var canonicalName = request.Name.CanonicalName();
-            if (currentTenantName.State.CanonicalName() == canonicalName)
+            var currentName = TenantName.Create(currentTenantName.State);
+            if (currentName.Canonical == newName.Canonical)
                 return Results.Ok();
 
             if (tenantNameTaken)
@@ -135,9 +146,9 @@ static class TenantEndpoints
             try
             {
                 await context.AppendAsync(new TenantRenamed(tenantId, request.Name), Tags.From(
-                    Tag.TenantId(tenantId),
-                    Tag.TenantName(currentTenantName.State.CanonicalName()),
-                    Tag.TenantName(canonicalName)));
+                    Tag.TenantId(tenant),
+                    Tag.TenantName(currentName),
+                    Tag.TenantName(newName)));
             }
             catch (ConcurrencyException)
             {

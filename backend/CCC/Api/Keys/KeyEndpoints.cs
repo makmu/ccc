@@ -1,20 +1,26 @@
-using CCC.Domain.State;
 using CCC.Domain.Events;
+using CCC.Domain.State;
+using CCC.Domain.ValueObjects;
 using CCC.EventStore;
 
 namespace CCC.Api.Keys;
 
 static class KeyEndpoints
 {
-    public static void MapKeyEndpoints(this WebApplication app)
+    public static void MapKeyEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys", async (Guid teamId, Guid projectId, AddKeyRequest request, IStateLoader loader) =>
         {
-            var teamSubscription = State.TeamSubscription(teamId);
-            var projectAdded = State.ProjectInTeam(teamId, projectId);
-            var keyIdTaken = State.KeyExists(teamId, projectId, request.Id);
-            var keyNameTaken = State.KeyNameTaken(projectId, request.Name);
-            var teamKeyCount = State.TeamKeyCount(teamId);
+            var team = TeamId.Create(teamId);
+            var project = ProjectId.Create(projectId);
+            var keyId = KeyId.Create(request.Id);
+            var keyName = KeyName.Create(request.Name);
+
+            var teamSubscription = State.TeamSubscription(team);
+            var projectAdded = State.ProjectInTeam(team, project);
+            var keyIdTaken = State.KeyExists(team, project, keyId);
+            var keyNameTaken = State.KeyNameTaken(project, keyName);
+            var teamKeyCount = State.TeamKeyCount(team);
 
             var context = await loader.LoadAsync(
                 teamSubscription, projectAdded, keyIdTaken, keyNameTaken, teamKeyCount);
@@ -35,7 +41,7 @@ static class KeyEndpoints
             // read once the subscription id is known. KeyLimit is immutable, so it
             // does not need to be part of the (phase-1) append condition; the
             // team-id key count already is, which is what guards the invariant.
-            var keyLimit = State.KeyLimit(subscriptionModelId);
+            var keyLimit = State.KeyLimit(SubscriptionModelId.Create(subscriptionModelId));
             await loader.LoadAsync(keyLimit);
 
             if (teamKeyCount >= keyLimit)
@@ -45,10 +51,10 @@ static class KeyEndpoints
             {
                 await context.AppendAsync(new KeyAdded(request.Id, request.Name, projectId),
                     Tags.From(
-                        Tag.TeamId(teamId),
-                        Tag.ProjectId(projectId),
-                        Tag.KeyId(request.Id),
-                        Tag.KeyName(request.Name)));
+                        Tag.TeamId(team),
+                        Tag.ProjectId(project),
+                        Tag.KeyId(keyId),
+                        Tag.KeyName(keyName)));
             }
             catch (ConcurrencyException)
             {
@@ -61,10 +67,14 @@ static class KeyEndpoints
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/reference-text",
             async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, IStateLoader loader) =>
             {
-                var teamAdded = State.TeamExists(teamId);
-                var projectAdded = State.ProjectInTeam(teamId, projectId);
-                var keyExists = State.KeyExists(teamId, projectId, keyId);
-                var currentReferenceText = State.CurrentReferenceText(keyId);
+                var team = TeamId.Create(teamId);
+                var project = ProjectId.Create(projectId);
+                var key = KeyId.Create(keyId);
+
+                var teamAdded = State.TeamExists(team);
+                var projectAdded = State.ProjectInTeam(team, project);
+                var keyExists = State.KeyExists(team, project, key);
+                var currentReferenceText = State.CurrentReferenceText(key);
 
                 var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentReferenceText);
 
@@ -85,7 +95,7 @@ static class KeyEndpoints
                 try
                 {
                     await context.AppendAsync(new ReferenceTextProvided(keyId, projectId, request.Text),
-                        Tags.From(Tag.KeyId(keyId)));
+                        Tags.From(Tag.KeyId(key)));
                 }
                 catch (ConcurrencyException)
                 {
@@ -98,12 +108,17 @@ static class KeyEndpoints
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/translations",
             async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, IStateLoader loader) =>
             {
-                var teamAdded = State.TeamExists(teamId);
-                var projectAdded = State.ProjectInTeam(teamId, projectId);
-                var keyExists = State.KeyExists(teamId, projectId, keyId);
-                var languageAdded = State.LanguageInProject(projectId, request.LanguageCode);
+                var team = TeamId.Create(teamId);
+                var project = ProjectId.Create(projectId);
+                var key = KeyId.Create(keyId);
+                var languageCode = LanguageCode.Create(request.LanguageCode);
 
-                var currentTranslation = State.CurrentTranslation(keyId, request.LanguageCode);
+                var teamAdded = State.TeamExists(team);
+                var projectAdded = State.ProjectInTeam(team, project);
+                var keyExists = State.KeyExists(team, project, key);
+                var languageAdded = State.LanguageInProject(project, languageCode);
+
+                var currentTranslation = State.CurrentTranslation(key, languageCode);
 
                 var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, languageAdded, currentTranslation);
 
@@ -125,7 +140,7 @@ static class KeyEndpoints
                 try
                 {
                     await context.AppendAsync(new TranslationProvided(keyId, projectId, request.LanguageCode, request.Text),
-                        Tags.From(Tag.KeyId(keyId), Tag.LanguageCode(request.LanguageCode)));
+                        Tags.From(Tag.KeyId(key), Tag.LanguageCode(languageCode)));
                 }
                 catch (ConcurrencyException)
                 {
@@ -137,11 +152,16 @@ static class KeyEndpoints
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename", async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, IStateLoader loader) =>
         {
-            var teamAdded = State.TeamExists(teamId);
-            var projectAdded = State.ProjectInTeam(teamId, projectId);
-            var keyExists = State.KeyExists(teamId, projectId, keyId);
-            var currentKeyName = State.CurrentKeyName(keyId);
-            var keyNameTaken = State.KeyNameTaken(projectId, request.Name);
+            var team = TeamId.Create(teamId);
+            var project = ProjectId.Create(projectId);
+            var key = KeyId.Create(keyId);
+            var newName = KeyName.Create(request.Name);
+
+            var teamAdded = State.TeamExists(team);
+            var projectAdded = State.ProjectInTeam(team, project);
+            var keyExists = State.KeyExists(team, project, key);
+            var currentKeyName = State.CurrentKeyName(key);
+            var keyNameTaken = State.KeyNameTaken(project, newName);
 
             var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentKeyName, keyNameTaken);
 
@@ -157,15 +177,16 @@ static class KeyEndpoints
             if (keyNameTaken)
                 return Results.Conflict("A key with this name already exists in this project.");
 
-            if (currentKeyName == request.Name)
+            var currentName = KeyName.Create(currentKeyName.State);
+            if (currentName == newName)
                 return Results.Ok();
 
             try
             {
                 await context.AppendAsync(new KeyRenamed(keyId, projectId, request.Name),
                     Tags.From(
-                        Tag.TeamId(teamId),
-                        Tag.KeyId(keyId), Tag.ProjectId(projectId), Tag.KeyName(currentKeyName.State), Tag.KeyName(request.Name)));
+                        Tag.TeamId(team),
+                        Tag.KeyId(key), Tag.ProjectId(project), Tag.KeyName(currentName), Tag.KeyName(newName)));
             }
             catch (ConcurrencyException)
             {
