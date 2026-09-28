@@ -6,7 +6,7 @@ public readonly record struct UserId
 
     private UserId(Guid value) => Value = value;
 
-    public static UserId Create(Guid value) =>
+    public static UserId From(Guid value) =>
         value == Guid.Empty
             ? throw new InvalidValueException("User id must not be empty.")
             : new UserId(value);

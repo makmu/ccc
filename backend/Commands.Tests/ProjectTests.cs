@@ -15,7 +15,7 @@ public class ProjectTests
         var (_, team) = await _fixture.GivenTeam();
         var project = NewProjectId();
 
-        var result = await _fixture.Handle(new AddProject(team, project, ProjectName.Create("Web"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddProject(team, project, ProjectName.From("Web"), LanguageCode.From("en")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new ProjectAdded(project.Value, "Web", team.Value, "en"), _fixture.LastEvent<ProjectAdded>());
@@ -26,7 +26,7 @@ public class ProjectTests
     [Fact]
     public async Task AddProject_rejects_an_unknown_team()
     {
-        var result = await _fixture.Handle(new AddProject(NewTeamId(), NewProjectId(), ProjectName.Create("Web"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddProject(NewTeamId(), NewProjectId(), ProjectName.From("Web"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Team not found.");
     }
@@ -36,7 +36,7 @@ public class ProjectTests
     {
         var (team, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddProject(team, project, ProjectName.Create("Other"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddProject(team, project, ProjectName.From("Other"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A project with this ID already exists.");
     }
@@ -46,7 +46,7 @@ public class ProjectTests
     {
         var (team, _) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddProject(team, NewProjectId(), ProjectName.Create("WEB"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddProject(team, NewProjectId(), ProjectName.From("WEB"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A project with this name already exists in this team.");
     }
@@ -56,7 +56,7 @@ public class ProjectTests
     {
         var (team, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.Create("de"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.From("de"), LanguageCode.From("en")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new LanguageAdded("de", "en", project.Value), _fixture.LastEvent<LanguageAdded>());
@@ -68,7 +68,7 @@ public class ProjectTests
         var (team, project) = await _fixture.GivenProject();
         await _fixture.GivenLanguage(team, project, "de");
 
-        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.Create("de-AT"), LanguageCode.Create("de")));
+        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.From("de-AT"), LanguageCode.From("de")));
 
         CommandAssert.Succeeded(result);
     }
@@ -79,7 +79,7 @@ public class ProjectTests
         var (team, _) = await _fixture.GivenProject();
         var (_, otherProject) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddLanguage(team, otherProject, LanguageCode.Create("de"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddLanguage(team, otherProject, LanguageCode.From("de"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Project not found in this team.");
     }
@@ -90,7 +90,7 @@ public class ProjectTests
         var (team, project) = await _fixture.GivenProject();
         await _fixture.GivenLanguage(team, project, "de");
 
-        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.Create("de"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.From("de"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "This language has already been added to the project.");
     }
@@ -100,7 +100,7 @@ public class ProjectTests
     {
         var (team, project) = await _fixture.GivenProject("en");
 
-        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.Create("en"), LanguageCode.Create("en")));
+        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.From("en"), LanguageCode.From("en")));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid, "The reference language cannot be added as a new language.");
     }
@@ -110,7 +110,7 @@ public class ProjectTests
     {
         var (team, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.Create("fr"), LanguageCode.Create("xx")));
+        var result = await _fixture.Handle(new AddLanguage(team, project, LanguageCode.From("fr"), LanguageCode.From("xx")));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid,
             "The parent language must be the project's reference language or a language already added to the project.");

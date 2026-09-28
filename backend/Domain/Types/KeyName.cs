@@ -8,7 +8,7 @@ public readonly record struct KeyName
 
     private KeyName(string value) => Value = value;
 
-    public static KeyName Create(string? value) =>
+    public static KeyName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Key name must not be empty.")
             : new KeyName(value);

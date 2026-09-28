@@ -7,14 +7,14 @@ public class TypeTests
     [Fact]
     public void Ids_reject_the_empty_guid()
     {
-        var error = Assert.Throws<InvalidValueException>(() => TenantId.Create(Guid.Empty));
+        var error = Assert.Throws<InvalidValueException>(() => TenantId.From(Guid.Empty));
         Assert.Equal("Tenant id must not be empty.", error.Message);
 
-        Assert.Throws<InvalidValueException>(() => TeamId.Create(Guid.Empty));
-        Assert.Throws<InvalidValueException>(() => ProjectId.Create(Guid.Empty));
-        Assert.Throws<InvalidValueException>(() => KeyId.Create(Guid.Empty));
-        Assert.Throws<InvalidValueException>(() => UserId.Create(Guid.Empty));
-        Assert.Throws<InvalidValueException>(() => SubscriptionModelId.Create(Guid.Empty));
+        Assert.Throws<InvalidValueException>(() => TeamId.From(Guid.Empty));
+        Assert.Throws<InvalidValueException>(() => ProjectId.From(Guid.Empty));
+        Assert.Throws<InvalidValueException>(() => KeyId.From(Guid.Empty));
+        Assert.Throws<InvalidValueException>(() => UserId.From(Guid.Empty));
+        Assert.Throws<InvalidValueException>(() => SubscriptionModelId.From(Guid.Empty));
     }
 
     [Theory]
@@ -23,12 +23,12 @@ public class TypeTests
     [InlineData("   ")]
     public void Names_and_codes_reject_blank_input(string? input)
     {
-        Assert.Throws<InvalidValueException>(() => TenantName.Create(input));
-        Assert.Throws<InvalidValueException>(() => TeamName.Create(input));
-        Assert.Throws<InvalidValueException>(() => ProjectName.Create(input));
-        Assert.Throws<InvalidValueException>(() => KeyName.Create(input));
-        Assert.Throws<InvalidValueException>(() => LanguageCode.Create(input));
-        Assert.Throws<InvalidValueException>(() => EmailAddress.Create(input));
+        Assert.Throws<InvalidValueException>(() => TenantName.From(input));
+        Assert.Throws<InvalidValueException>(() => TeamName.From(input));
+        Assert.Throws<InvalidValueException>(() => ProjectName.From(input));
+        Assert.Throws<InvalidValueException>(() => KeyName.From(input));
+        Assert.Throws<InvalidValueException>(() => LanguageCode.From(input));
+        Assert.Throws<InvalidValueException>(() => EmailAddress.From(input));
     }
 
     [Theory]
@@ -37,12 +37,12 @@ public class TypeTests
     [InlineData("ÄRGER", "ärger")]
     public void Names_keep_the_input_and_canonicalize_by_trimming_and_lowercasing(string input, string canonical)
     {
-        var name = TenantName.Create(input);
+        var name = TenantName.From(input);
 
         Assert.Equal(input, name.Value);
         Assert.Equal(canonical, name.Canonical);
-        Assert.Equal(canonical, TeamName.Create(input).Canonical);
-        Assert.Equal(canonical, ProjectName.Create(input).Canonical);
+        Assert.Equal(canonical, TeamName.From(input).Canonical);
+        Assert.Equal(canonical, ProjectName.From(input).Canonical);
     }
 
     [Theory]
@@ -50,7 +50,7 @@ public class TypeTests
     [InlineData("a@b")]
     public void EmailAddress_accepts_something_at_something(string input)
     {
-        Assert.Equal(input, EmailAddress.Create(input).Value);
+        Assert.Equal(input, EmailAddress.From(input).Value);
     }
 
     [Theory]
@@ -60,14 +60,14 @@ public class TypeTests
     [InlineData("alice @example.com")]
     public void EmailAddress_rejects_what_cannot_be_an_address(string input)
     {
-        var error = Assert.Throws<InvalidValueException>(() => EmailAddress.Create(input));
+        var error = Assert.Throws<InvalidValueException>(() => EmailAddress.From(input));
         Assert.Equal("Email address is not valid.", error.Message);
     }
 
     [Fact]
     public void KeyLimit_allows_zero_and_rejects_negative_values()
     {
-        Assert.Equal(0, KeyLimit.Create(0).Value);
-        Assert.Throws<InvalidValueException>(() => KeyLimit.Create(-1));
+        Assert.Equal(0, KeyLimit.From(0).Value);
+        Assert.Throws<InvalidValueException>(() => KeyLimit.From(-1));
     }
 }

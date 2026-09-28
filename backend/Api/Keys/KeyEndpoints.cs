@@ -12,10 +12,10 @@ static class KeyEndpoints
             async (Guid teamId, Guid projectId, AddKeyRequest request, ICommandHandler<AddKey> handler) =>
             {
                 var command = new AddKey(
-                    TeamId.Create(teamId),
-                    ProjectId.Create(projectId),
-                    KeyId.Create(request.Id),
-                    KeyName.Create(request.Name));
+                    TeamId.From(teamId),
+                    ProjectId.From(projectId),
+                    KeyId.From(request.Id),
+                    KeyName.From(request.Name));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
 
@@ -23,9 +23,9 @@ static class KeyEndpoints
             async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, ICommandHandler<ProvideReferenceText> handler) =>
             {
                 var command = new ProvideReferenceText(
-                    TeamId.Create(teamId),
-                    ProjectId.Create(projectId),
-                    KeyId.Create(keyId),
+                    TeamId.From(teamId),
+                    ProjectId.From(projectId),
+                    KeyId.From(keyId),
                     request.Text);
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
@@ -34,10 +34,10 @@ static class KeyEndpoints
             async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, ICommandHandler<ProvideTranslation> handler) =>
             {
                 var command = new ProvideTranslation(
-                    TeamId.Create(teamId),
-                    ProjectId.Create(projectId),
-                    KeyId.Create(keyId),
-                    LanguageCode.Create(request.LanguageCode),
+                    TeamId.From(teamId),
+                    ProjectId.From(projectId),
+                    KeyId.From(keyId),
+                    LanguageCode.From(request.LanguageCode),
                     request.Text);
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
@@ -46,10 +46,10 @@ static class KeyEndpoints
             async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, ICommandHandler<RenameKey> handler) =>
             {
                 var command = new RenameKey(
-                    TeamId.Create(teamId),
-                    ProjectId.Create(projectId),
-                    KeyId.Create(keyId),
-                    KeyName.Create(request.Name));
+                    TeamId.From(teamId),
+                    ProjectId.From(projectId),
+                    KeyId.From(keyId),
+                    KeyName.From(request.Name));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
     }

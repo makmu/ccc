@@ -18,7 +18,7 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
         if (!tenantIdRegistered)
             return CommandResult.NotFound("Tenant not found.");
 
-        var currentName = TenantName.Create(tenantName.State);
+        var currentName = TenantName.From(tenantName.State);
         if (currentName.Canonical == command.Name.Canonical)
             return CommandResult.Ok;
 

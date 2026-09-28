@@ -6,7 +6,7 @@ public readonly record struct ProjectId
 
     private ProjectId(Guid value) => Value = value;
 
-    public static ProjectId Create(Guid value) =>
+    public static ProjectId From(Guid value) =>
         value == Guid.Empty
             ? throw new InvalidValueException("Project id must not be empty.")
             : new ProjectId(value);

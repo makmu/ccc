@@ -6,7 +6,7 @@ public readonly record struct EmailAddress
 
     private EmailAddress(string value) => Value = value;
 
-    public static EmailAddress Create(string? value)
+    public static EmailAddress From(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new InvalidValueException("Email address must not be empty.");

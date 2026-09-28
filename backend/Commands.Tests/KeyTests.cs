@@ -15,7 +15,7 @@ public class KeyTests
         var (team, project) = await _fixture.GivenProject();
         var key = NewKeyId();
 
-        var result = await _fixture.Handle(new AddKey(team, project, key, KeyName.Create("Title")));
+        var result = await _fixture.Handle(new AddKey(team, project, key, KeyName.From("Title")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new KeyAdded(key.Value, "Title", project.Value), _fixture.LastEvent<KeyAdded>());
@@ -27,7 +27,7 @@ public class KeyTests
     {
         var (_, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddKey(NewTeamId(), project, NewKeyId(), KeyName.Create("title")));
+        var result = await _fixture.Handle(new AddKey(NewTeamId(), project, NewKeyId(), KeyName.From("title")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Team not found.");
     }
@@ -37,7 +37,7 @@ public class KeyTests
     {
         var (team, _) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new AddKey(team, NewProjectId(), NewKeyId(), KeyName.Create("title")));
+        var result = await _fixture.Handle(new AddKey(team, NewProjectId(), NewKeyId(), KeyName.From("title")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Project not found in this team.");
     }
@@ -47,7 +47,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey("title");
 
-        var result = await _fixture.Handle(new AddKey(team, project, key, KeyName.Create("other")));
+        var result = await _fixture.Handle(new AddKey(team, project, key, KeyName.From("other")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "Key ID already taken.");
     }
@@ -57,7 +57,7 @@ public class KeyTests
     {
         var (team, project, _) = await _fixture.GivenKey("title");
 
-        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.Create("title")));
+        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.From("title")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "Key name already taken.");
     }
@@ -66,9 +66,9 @@ public class KeyTests
     public async Task AddKey_enforces_the_key_limit_of_the_team_subscription()
     {
         var (team, project, _) = await _fixture.GivenKey("title", keyLimit: 2);
-        await _fixture.Given(new AddKey(team, project, NewKeyId(), KeyName.Create("subtitle")));
+        await _fixture.Given(new AddKey(team, project, NewKeyId(), KeyName.From("subtitle")));
 
-        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.Create("third")));
+        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.From("third")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "The key limit for this team's subscription model has been reached.");
     }
@@ -78,7 +78,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey("title");
 
-        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.Create("heading")));
+        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.From("heading")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new KeyRenamed(key.Value, project.Value, "heading"), _fixture.LastEvent<KeyRenamed>());
@@ -91,7 +91,7 @@ public class KeyTests
     {
         var (team, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new RenameKey(team, project, NewKeyId(), KeyName.Create("heading")));
+        var result = await _fixture.Handle(new RenameKey(team, project, NewKeyId(), KeyName.From("heading")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Key not found in this project.");
     }
@@ -100,9 +100,9 @@ public class KeyTests
     public async Task RenameKey_rejects_a_taken_name()
     {
         var (team, project, key) = await _fixture.GivenKey("title");
-        await _fixture.Given(new AddKey(team, project, NewKeyId(), KeyName.Create("subtitle")));
+        await _fixture.Given(new AddKey(team, project, NewKeyId(), KeyName.From("subtitle")));
 
-        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.Create("subtitle")));
+        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.From("subtitle")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A key with this name already exists in this project.");
     }
@@ -114,7 +114,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey("title");
 
-        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.Create("title")));
+        var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.From("title")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A key with this name already exists in this project.");
     }
@@ -159,7 +159,7 @@ public class KeyTests
         var (team, project, key) = await _fixture.GivenKey();
         await _fixture.GivenLanguage(team, project, "de");
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.Create("de"), "Hallo"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new TranslationProvided(key.Value, project.Value, "de", "Hallo"), _fixture.LastEvent<TranslationProvided>());
@@ -170,10 +170,10 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey();
         await _fixture.GivenLanguage(team, project, "de");
-        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.Create("de"), "Hallo"));
+        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
         var eventsBefore = _fixture.Store.Events.Count;
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.Create("de"), "Hallo"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
@@ -184,7 +184,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey();
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.Create("fr"), "Bonjour"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("fr"), "Bonjour"));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid, "The specified language has not been added to this project.");
     }

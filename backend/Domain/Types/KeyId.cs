@@ -6,7 +6,7 @@ public readonly record struct KeyId
 
     private KeyId(Guid value) => Value = value;
 
-    public static KeyId Create(Guid value) =>
+    public static KeyId From(Guid value) =>
         value == Guid.Empty
             ? throw new InvalidValueException("Key id must not be empty.")
             : new KeyId(value);

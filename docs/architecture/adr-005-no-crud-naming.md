@@ -13,7 +13,7 @@ CRUD verbs (`Create`, `Read`, `Update`, `Delete`) are **forbidden** in the names
 | `DeleteKey` | `RemoveKey`, `ArchiveKey` |
 | `CreateTranslation` | `PublishTranslation`, `ProvideTranslation` |
 
-This convention applies to all C# record and class names for requests, commands, and events, as well as to event type strings written to the event store.
+This convention applies to all C# record and class names for requests, commands, and events, as well as to event type strings written to the event store. It also applies, wherever possible, to members of domain types: value objects are built with `From(...)`, not `Create(...)`.
 
 ## Context
 

@@ -8,7 +8,7 @@ public readonly record struct ProjectName
 
     private ProjectName(string value) => Value = value;
 
-    public static ProjectName Create(string? value) =>
+    public static ProjectName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Project name must not be empty.")
             : new ProjectName(value);

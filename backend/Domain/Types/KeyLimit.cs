@@ -6,7 +6,7 @@ public readonly record struct KeyLimit
 
     private KeyLimit(int value) => Value = value;
 
-    public static KeyLimit Create(int value) =>
+    public static KeyLimit From(int value) =>
         value < 0
             ? throw new InvalidValueException("Key limit must not be negative.")
             : new KeyLimit(value);

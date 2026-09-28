@@ -15,7 +15,7 @@ public class TenantTests
         var subscription = await _fixture.GivenSubscriptionModel();
         var id = NewTenantId();
 
-        var result = await _fixture.Handle(new RegisterTenant(id, TenantName.Create(" Acme "), [subscription]));
+        var result = await _fixture.Handle(new RegisterTenant(id, TenantName.From(" Acme "), [subscription]));
 
         CommandAssert.Succeeded(result);
         var registered = _fixture.LastEvent<TenantRegistered>();
@@ -27,7 +27,7 @@ public class TenantTests
     [Fact]
     public async Task RegisterTenant_requires_a_subscription_model_before_loading_anything()
     {
-        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.Create("Acme"), []));
+        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From("Acme"), []));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid, "At least one subscription model must be referenced.");
         Assert.Empty(_fixture.Store.Events);
@@ -38,7 +38,7 @@ public class TenantTests
     {
         var (tenant, subscription) = await _fixture.GivenTenant("Acme");
 
-        var result = await _fixture.Handle(new RegisterTenant(tenant, TenantName.Create("Other"), [subscription]));
+        var result = await _fixture.Handle(new RegisterTenant(tenant, TenantName.From("Other"), [subscription]));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A tenant with this id already exists.");
     }
@@ -48,7 +48,7 @@ public class TenantTests
     {
         var (_, subscription) = await _fixture.GivenTenant("Acme");
 
-        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.Create(" ACME "), [subscription]));
+        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From(" ACME "), [subscription]));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A tenant with this name already exists.");
     }
@@ -58,7 +58,7 @@ public class TenantTests
     {
         var known = await _fixture.GivenSubscriptionModel();
 
-        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.Create("Acme"), [known, NewSubscriptionModelId()]));
+        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From("Acme"), [known, NewSubscriptionModelId()]));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "One or more subscription models were not found.");
     }
@@ -66,7 +66,7 @@ public class TenantTests
     [Fact]
     public async Task RenameTenant_rejects_an_unknown_tenant()
     {
-        var result = await _fixture.Handle(new RenameTenant(NewTenantId(), TenantName.Create("Acme")));
+        var result = await _fixture.Handle(new RenameTenant(NewTenantId(), TenantName.From("Acme")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Tenant not found.");
     }
@@ -77,7 +77,7 @@ public class TenantTests
         var (tenant, _) = await _fixture.GivenTenant("Acme");
         var eventsBefore = _fixture.Store.Events.Count;
 
-        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.Create("ACME")));
+        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.From("ACME")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
@@ -89,7 +89,7 @@ public class TenantTests
         var (tenant, _) = await _fixture.GivenTenant("Acme");
         await _fixture.GivenTenant("Globex");
 
-        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.Create("globex")));
+        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.From("globex")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A tenant with this name already exists.");
     }
@@ -99,13 +99,13 @@ public class TenantTests
     {
         var (tenant, subscription) = await _fixture.GivenTenant("Acme");
 
-        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.Create("Acme Corp")));
+        var result = await _fixture.Handle(new RenameTenant(tenant, TenantName.From("Acme Corp")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new TenantRenamed(tenant.Value, "Acme Corp"), _fixture.LastEvent<TenantRenamed>());
         Assert.Equal([$"tenant-id={tenant}", "tenant-name=acme", "tenant-name=acme corp"], _fixture.LastTags());
 
-        var reuse = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.Create("Acme"), [subscription]));
+        var reuse = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From("Acme"), [subscription]));
         CommandAssert.Succeeded(reuse);
     }
 
@@ -115,7 +115,7 @@ public class TenantTests
         var (tenant, subscription) = await _fixture.GivenTenant();
         var team = NewTeamId();
 
-        var result = await _fixture.Handle(new AddTeam(tenant, team, TeamName.Create("Team A"), subscription));
+        var result = await _fixture.Handle(new AddTeam(tenant, team, TeamName.From("Team A"), subscription));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new TeamAdded(team.Value, "Team A", tenant.Value, subscription.Value), _fixture.LastEvent<TeamAdded>());
@@ -126,7 +126,7 @@ public class TenantTests
     {
         var subscription = await _fixture.GivenSubscriptionModel();
 
-        var result = await _fixture.Handle(new AddTeam(NewTenantId(), NewTeamId(), TeamName.Create("Team A"), subscription));
+        var result = await _fixture.Handle(new AddTeam(NewTenantId(), NewTeamId(), TeamName.From("Team A"), subscription));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Tenant not found.");
     }
@@ -137,7 +137,7 @@ public class TenantTests
         var (tenant, _) = await _fixture.GivenTenant();
         var otherSubscription = await _fixture.GivenSubscriptionModel();
 
-        var result = await _fixture.Handle(new AddTeam(tenant, NewTeamId(), TeamName.Create("Team A"), otherSubscription));
+        var result = await _fixture.Handle(new AddTeam(tenant, NewTeamId(), TeamName.From("Team A"), otherSubscription));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid, "The specified subscription model is not available in this tenant.");
     }
@@ -146,9 +146,9 @@ public class TenantTests
     public async Task AddTeam_compares_names_canonically()
     {
         var (tenant, subscription) = await _fixture.GivenTenant();
-        await _fixture.Given(new AddTeam(tenant, NewTeamId(), TeamName.Create("Team A"), subscription));
+        await _fixture.Given(new AddTeam(tenant, NewTeamId(), TeamName.From("Team A"), subscription));
 
-        var result = await _fixture.Handle(new AddTeam(tenant, NewTeamId(), TeamName.Create("team a"), subscription));
+        var result = await _fixture.Handle(new AddTeam(tenant, NewTeamId(), TeamName.From("team a"), subscription));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A team with this id or name already exists in this tenant.");
     }

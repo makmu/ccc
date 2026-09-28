@@ -33,7 +33,7 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         // The limit sits behind the team's subscription, so it needs a second read.
         // It stays out of the append condition because it never changes. The team's
         // key count is in the condition, and that is what guards the limit.
-        var keyLimit = Subscription.KeyLimit(SubscriptionModelId.Create(subscriptionModelId));
+        var keyLimit = Subscription.KeyLimit(SubscriptionModelId.From(subscriptionModelId));
         await loader.LoadAsync(keyLimit);
 
         if (teamKeyCount >= keyLimit)

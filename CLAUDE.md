@@ -49,7 +49,7 @@ dotnet run --project backend/Api/Api.csproj
 - React (frontend, separate project)
 
 ## Naming Conventions
-- **Never use CRUD terminology** in request, command, or event names (no `Create`, `Read`, `Update`, `Delete`)
+- **Never use CRUD terminology** in request, command, or event names (no `Create`, `Read`, `Update`, `Delete`), and avoid it wherever else the domain is concerned, such as methods on domain types: value objects are built with `From(...)`, not `Create(...)`
 - Use intent-revealing, domain language instead — e.g. `AddUser`, `RegisterUser`, `ArchiveProject`, `PublishTranslation`
 
 ## Code Comments

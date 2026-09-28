@@ -10,7 +10,7 @@ CCC is a lightweight approach to event sourcing that avoids the complexity of tr
 
 The model works as follows:
 
-- **Command** — an intent to change the system (e.g. `CreateTenant`, `AddTranslation`). Commands are the entry point for all mutations.
+- **Command** — an intent to change the system (e.g. `RegisterTenant`, `AddTranslation`). Commands are the entry point for all mutations.
 - **Context** — a minimal, locally-scoped projection of past events, built on-demand for the specific decision a command must make. No shared aggregates, no global state.
 - **Consistency** — enforced per command by reading the relevant slice of the event log and writing new events atomically. The event log is the single source of truth.
 

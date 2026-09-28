@@ -29,7 +29,7 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
         if (keyNameTaken)
             return CommandResult.Conflict("A key with this name already exists in this project.");
 
-        var currentName = KeyName.Create(keyName.State);
+        var currentName = KeyName.From(keyName.State);
         if (currentName == command.Name)
             return CommandResult.Ok;
 

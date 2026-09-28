@@ -27,7 +27,7 @@ Three further decisions shape the code:
 
 1. **`StateModel<T>` lives in `EventStore`.** `StateModel<T>`, `IStateModel` and `Tags` contain nothing domain-specific, so they belong with the event store. As a result `Domain` references `EventStore` to define its state models.
 2. **Events keep primitive types.** Event records use `Guid` and `string`, not value objects. Stored JSON payloads therefore didn't change, and no JSON converters are needed. Handlers unwrap value objects when they build an event.
-3. **Value objects check format, handlers check business rules.** A value object's `Create` throws `InvalidValueException` on malformed input, such as an empty id or a blank name. An endpoint filter turns that exception into a 400 before any command exists. Handlers check the rules that need the event log, such as existence, uniqueness and limits.
+3. **Value objects check format, handlers check business rules.** A value object's `From` throws `InvalidValueException` on malformed input, such as an empty id or a blank name. An endpoint filter turns that exception into a 400 before any command exists. Handlers check the rules that need the event log, such as existence, uniqueness and limits.
 
 ## Context
 
@@ -64,6 +64,6 @@ Names were canonicalized by calling a string extension before each tag was built
    - *Advantages:* Type safety all the way into the event log.
    - *Disadvantages:* The stored JSON shape would change or would need custom converters, and every existing event would have to keep deserializing correctly. Keeping value objects at the command boundary was simpler.
 
-4. **`TryCreate` or a `Result<T>` instead of exceptions for malformed input**
+4. **`TryFrom` or a `Result<T>` instead of exceptions for malformed input**
    - *Advantages:* No exceptions for expected input errors.
    - *Disadvantages:* Every endpoint would need one check per field. `AddKey` alone builds four value objects. The exception never gets past the endpoint filter, so it doesn't leak into the rest of the code.

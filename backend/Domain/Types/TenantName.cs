@@ -8,7 +8,7 @@ public readonly record struct TenantName
 
     private TenantName(string value) => Value = value;
 
-    public static TenantName Create(string? value) =>
+    public static TenantName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Tenant name must not be empty.")
             : new TenantName(value);

@@ -6,7 +6,7 @@ public readonly record struct SubscriptionModelId
 
     private SubscriptionModelId(Guid value) => Value = value;
 
-    public static SubscriptionModelId Create(Guid value) =>
+    public static SubscriptionModelId From(Guid value) =>
         value == Guid.Empty
             ? throw new InvalidValueException("Subscription model id must not be empty.")
             : new SubscriptionModelId(value);

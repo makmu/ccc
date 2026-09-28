@@ -10,7 +10,7 @@ static class UserEndpoints
     {
         app.MapPost("/users", async (AddUserRequest request, ICommandHandler<AddUser> handler) =>
         {
-            var command = new AddUser(UserId.Create(request.Id), request.Name, EmailAddress.Create(request.Email));
+            var command = new AddUser(UserId.From(request.Id), request.Name, EmailAddress.From(request.Email));
             return (await handler.HandleAsync(command)).ToHttpResult();
         });
     }

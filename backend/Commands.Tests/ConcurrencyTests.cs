@@ -21,10 +21,10 @@ public class ConcurrencyTests
         {
             _fixture.Store.BeforeConditionalAppend = null;
             _fixture.Store.Append(new KeyAdded(competingKey.Value, "title", project.Value),
-                Tags.From(Tag.TeamId(team), Tag.ProjectId(project), Tag.KeyId(competingKey), Tag.KeyName(KeyName.Create("title"))));
+                Tags.From(Tag.TeamId(team), Tag.ProjectId(project), Tag.KeyId(competingKey), Tag.KeyName(KeyName.From("title"))));
         };
 
-        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.Create("title")));
+        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.From("title")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A concurrent operation modified the event store. Please retry.");
         Assert.Equal(competingKey.Value, _fixture.LastEvent<KeyAdded>().Id);
@@ -43,7 +43,7 @@ public class ConcurrencyTests
                 Tags.From(Tag.KeyId(NewKeyId())));
         };
 
-        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.Create("title")));
+        var result = await _fixture.Handle(new AddKey(team, project, NewKeyId(), KeyName.From("title")));
 
         CommandAssert.Succeeded(result);
     }
