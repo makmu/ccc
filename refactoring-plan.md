@@ -183,10 +183,10 @@ Each command is a record of value objects. Each handler takes over the logic of 
 
 ## Phase 6: Check the boundaries
 
-- [ ] Search `CCC.Api` for `using CCC.EventStore` and `using CCC.Domain.State`. Only `Program.cs` should reference the event store, and only to register it
-- [ ] Search `CCC.Commands` for `Microsoft.AspNetCore`. There should be no hits
-- [ ] Search `CCC.EventStore` for `CCC.Domain` and `CCC.Commands`. There should be no hits
-- [ ] Optionally add an architecture test with `NetArchTest.Rules`, so these rules don't depend on someone remembering to grep
+- [x] Search `CCC.Api` for `using CCC.EventStore` and `using CCC.Domain.State`. Only `Program.cs` should reference the event store, and only to register it
+- [x] Search `CCC.Commands` for `Microsoft.AspNetCore`. There should be no hits
+- [x] Search `CCC.EventStore` for `CCC.Domain` and `CCC.Commands`. There should be no hits
+- [x] Optionally add an architecture test with `NetArchTest.Rules`, so these rules don't depend on someone remembering to grep. Done as `backend/CCC.Architecture.Tests`. A deliberately added `IStateLoader` parameter in an endpoint makes it fail, naming the endpoint class
 
 ## Phase 7: Tests
 
