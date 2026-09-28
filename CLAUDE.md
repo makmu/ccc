@@ -21,6 +21,7 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
 
 - `Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
 - `Commands` — one command record and one handler per use case. Handlers load state, run the business checks, and append events or return a `CommandResult` error
+- One file per use case in `Api` and `Commands`, named after the command and in matching folders: `Api/Keys/AddKey.cs` holds `AddKeyEndpoint` with its nested `AddKeyRequest` and a `MapAddKey` extension, `Commands/Keys/AddKey.cs` holds the `AddKey` record and `AddKeyHandler`. `Program.cs` maps every endpoint explicitly
 - `Domain` — domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`Types/`)
   - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeysAdded(teamId)`
   - A state model answers a question with a `bool` (`Tenant.IsNamed(tenantId, name)`, `Key.HasTranslation(...)`) or returns a domain type (`Team.Subscription` → `SubscriptionModelId?`). Comparisons belong in a state model, not in the handler. The one exception is the key limit, which spans two loads, so `KeyCount >= KeyLimit` stays in `AddKeyHandler`

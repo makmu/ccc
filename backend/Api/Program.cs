@@ -31,10 +31,17 @@ app.UseHttpsRedirection();
 await EventStoreSchema.CreateAsync(connectionString);
 
 var api = app.MapGroup("").AddEndpointFilter<InvalidValueFilter>();
-api.MapKeyEndpoints();
-api.MapTenantEndpoints();
-api.MapProjectEndpoints();
-api.MapSubscriptionModelEndpoints();
-api.MapUserEndpoints();
+api.MapAddSubscriptionModel();
+api.MapAddUser();
+api.MapRegisterTenant();
+api.MapAddTeam();
+api.MapAssignTenantOwner();
+api.MapRenameTenant();
+api.MapAddProject();
+api.MapAddLanguage();
+api.MapAddKey();
+api.MapProvideReferenceText();
+api.MapProvideTranslation();
+api.MapRenameKey();
 
 app.Run();
