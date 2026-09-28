@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
 // Postgres text[] <-> string[]. Dapper does not map array columns on its own (it
 // sees the reader's field type as System.Array and refuses to bind the

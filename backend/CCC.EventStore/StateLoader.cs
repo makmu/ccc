@@ -1,6 +1,6 @@
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
-class StateLoader(EventStore eventStore)
+public class StateLoader(IEventStore eventStore) : IStateLoader
 {
     // One query for all models, filtered by the union of their filters, so every
     // model is folded from the same snapshot of the event log — loading them one by

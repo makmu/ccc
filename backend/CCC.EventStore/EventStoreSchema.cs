@@ -1,9 +1,9 @@
 using Dapper;
 using Npgsql;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
-static class EventStoreSchema
+public static class EventStoreSchema
 {
     public static async Task CreateAsync(string connectionString)
     {

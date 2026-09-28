@@ -84,25 +84,25 @@ Stored events and the HTTP contract have to be identical before and after. Treat
 
 ## Phase 1: Extract `CCC.EventStore`
 
-- [ ] Create `backend/CCC.EventStore/CCC.EventStore.csproj`, a class library. It inherits `net10.0`, `Nullable` and `ImplicitUsings` from `Directory.Build.props`
-- [ ] Move the `Dapper` and `Npgsql` package references from `CCC.csproj` into the new project
-- [ ] Move every file in `CCC/Infrastructure/EventStore/` into `CCC.EventStore/`:
+- [x] Create `backend/CCC.EventStore/CCC.EventStore.csproj`, a class library. It inherits `net10.0`, `Nullable` and `ImplicitUsings` from `Directory.Build.props`
+- [x] Move the `Dapper` and `Npgsql` package references from `CCC.csproj` into the new project
+- [x] Move every file in `CCC/Infrastructure/EventStore/` into `CCC.EventStore/`:
   - `EventStore.cs`, `EventRecord.cs`, `EventFilter.cs`, `EventStoreSchema.cs`, `Tags.cs`
   - `StateModel.cs`, `IStateModel.cs`, `StateLoader.cs`
   - `CommandContext.cs`, renamed to `StateContext.cs` so the file name matches its class
   - `ConcurrencyException.cs`, `DateTimeOffsetTypeHandler.cs`, `StringArrayTypeHandler.cs`
-- [ ] Change the namespace from `CCC.Infrastructure.EventStore` to `CCC.EventStore`
-- [ ] Make public the types other projects need. Everything is internal today. That covers `StateModel`, `StateModel<T>`, `IStateModel`, `StateLoader`, `StateContext`, `Tags`, `ConcurrencyException`, `EventFilter`, `EventRecord` and `EventStoreSchema`. Leave the Dapper type handlers and `EventFilter.Entry` internal if you can
-- [ ] Add an `IEventStore` interface with both `AppendAsync` overloads, `LoadAsync(EventFilter)` and `ReadAsync(fromPosition, types)`
-- [ ] Rename the class `EventStore` to `PostgresEventStore` and have it implement `IEventStore`. The rename also ends the clash between the class name and its namespace
-- [ ] Change `StateLoader` and `StateContext` to depend on `IEventStore` instead of the concrete class
-- [ ] Add an `IStateLoader` interface with `LoadAsync(params IStateModel[])`. Handlers will depend on it, so tests can swap in a fake
-- [ ] Add `AddEventStore(this IServiceCollection, string connectionString)` in `ServiceCollectionExtensions`. It registers the Dapper type handlers, which move here from `Program.cs`. It also registers `PostgresEventStore` as the singleton `IEventStore` and `StateLoader` as the transient `IStateLoader`. This needs the `Microsoft.Extensions.DependencyInjection.Abstractions` package
-- [ ] Make `EventStoreSchema.CreateAsync` public so the API can still call it at startup
-- [ ] Add `CCC.EventStore` to `CCC.sln` and reference it from `CCC.csproj`
-- [ ] Update `Program.cs` and all endpoints to the new namespace and registrations
-- [ ] Delete the empty `CCC/Infrastructure/` folder
-- [ ] Build and rerun the smoke test. The results must match the baseline
+- [x] Change the namespace from `CCC.Infrastructure.EventStore` to `CCC.EventStore`
+- [x] Make public the types other projects need. Everything is internal today. That covers `StateModel`, `StateModel<T>`, `IStateModel`, `StateLoader`, `StateContext`, `Tags`, `ConcurrencyException`, `EventFilter`, `EventRecord` and `EventStoreSchema`. The Dapper type handlers and `PostgresEventStore` stay internal. `EventFilter.Entry` had to become public, because the public `EventFilter` takes a list of entries in its constructor
+- [x] Add an `IEventStore` interface with both `AppendAsync` overloads, `LoadAsync(EventFilter)` and `ReadAsync(fromPosition, types)`
+- [x] Rename the class `EventStore` to `PostgresEventStore` and have it implement `IEventStore`. The rename also ends the clash between the class name and its namespace
+- [x] Change `StateLoader` and `StateContext` to depend on `IEventStore` instead of the concrete class
+- [x] Add an `IStateLoader` interface with `LoadAsync(params IStateModel[])`. Handlers will depend on it, so tests can swap in a fake
+- [x] Add `AddEventStore(this IServiceCollection, string connectionString)` in `ServiceCollectionExtensions`. It registers the Dapper type handlers, which move here from `Program.cs`. It also registers `PostgresEventStore` as the singleton `IEventStore` and `StateLoader` as the transient `IStateLoader`. This needs the `Microsoft.Extensions.DependencyInjection.Abstractions` package
+- [x] Make `EventStoreSchema.CreateAsync` public so the API can still call it at startup
+- [x] Add `CCC.EventStore` to `CCC.sln` and reference it from `CCC.csproj`
+- [x] Update `Program.cs` and all endpoints to the new namespace and registrations
+- [x] Delete the empty `CCC/Infrastructure/` folder
+- [x] Build and rerun the smoke test. The results must match the baseline
 
 ## Phase 2: Create `CCC.Domain` with events and state
 

@@ -1,8 +1,8 @@
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
-record EventFilter(IReadOnlyList<EventFilter.Entry> Entries)
+public record EventFilter(IReadOnlyList<EventFilter.Entry> Entries)
 {
-    internal record Entry(
+    public record Entry(
         string Type,
         IReadOnlyList<string> Tags);
 

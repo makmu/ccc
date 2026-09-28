@@ -1,7 +1,7 @@
 using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Helpers;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Api.Projects;
 
@@ -9,7 +9,7 @@ static class ProjectEndpoints
 {
     public static void MapProjectEndpoints(this WebApplication app)
     {
-        app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, StateLoader loader) =>
+        app.MapPost("/teams/{teamId}/projects", async (Guid teamId, AddProjectRequest request, IStateLoader loader) =>
         {
             var teamAdded = State.TeamExists(teamId);
             var projectedIdTaken = State.ProjectIdTaken(request.Id);
@@ -41,7 +41,7 @@ static class ProjectEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, StateLoader loader) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/languages", async (Guid teamId, Guid projectId, AddLanguageRequest request, IStateLoader loader) =>
         {
             var teamAdded = State.TeamExists(teamId);
             var projectAdded = State.ProjectInTeam(teamId, projectId);

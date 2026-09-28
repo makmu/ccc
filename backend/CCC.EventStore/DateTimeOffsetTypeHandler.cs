@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
 class DateTimeOffsetTypeHandler : SqlMapper.TypeHandler<DateTimeOffset>
 {

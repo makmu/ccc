@@ -1,6 +1,6 @@
 using CCC.Domain;
 using CCC.Domain.Events;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Api.Keys;
 
@@ -8,7 +8,7 @@ static class KeyEndpoints
 {
     public static void MapKeyEndpoints(this WebApplication app)
     {
-        app.MapPost("/teams/{teamId}/projects/{projectId}/keys", async (Guid teamId, Guid projectId, AddKeyRequest request, StateLoader loader) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/keys", async (Guid teamId, Guid projectId, AddKeyRequest request, IStateLoader loader) =>
         {
             var teamSubscription = State.TeamSubscription(teamId);
             var projectAdded = State.ProjectInTeam(teamId, projectId);
@@ -59,7 +59,7 @@ static class KeyEndpoints
         });
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/reference-text",
-            async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, StateLoader loader) =>
+            async (Guid teamId, Guid projectId, Guid keyId, ProvideReferenceTextRequest request, IStateLoader loader) =>
             {
                 var teamAdded = State.TeamExists(teamId);
                 var projectAdded = State.ProjectInTeam(teamId, projectId);
@@ -96,7 +96,7 @@ static class KeyEndpoints
             });
 
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/translations",
-            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, StateLoader loader) =>
+            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, IStateLoader loader) =>
             {
                 var teamAdded = State.TeamExists(teamId);
                 var projectAdded = State.ProjectInTeam(teamId, projectId);
@@ -135,7 +135,7 @@ static class KeyEndpoints
                 return Results.Ok();
             });
 
-        app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename", async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, StateLoader loader) =>
+        app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename", async (Guid teamId, Guid projectId, Guid keyId, RenameKeyRequest request, IStateLoader loader) =>
         {
             var teamAdded = State.TeamExists(teamId);
             var projectAdded = State.ProjectInTeam(teamId, projectId);

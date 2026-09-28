@@ -1,7 +1,7 @@
 using CCC.Domain;
 using CCC.Domain.Events;
 using CCC.Helpers;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Api.Tenants;
 
@@ -10,7 +10,7 @@ static class TenantEndpoints
 
     public static void MapTenantEndpoints(this WebApplication app)
     {
-        app.MapPost("/tenants", async (RegisterTenantRequest request, StateLoader loader) =>
+        app.MapPost("/tenants", async (RegisterTenantRequest request, IStateLoader loader) =>
         {
             if (request.SubscriptionModelIds.Count == 0)
                 return Results.BadRequest("At least one subscription model must be referenced.");
@@ -47,7 +47,7 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, StateLoader loader) =>
+        app.MapPost("/tenants/{tenantId}/teams", async (Guid tenantId, AddTeamRequest request, IStateLoader loader) =>
         {
             var tenantIdRegistered = State.TenantExists(tenantId);
             var tenantSubscriptions = State.TenantSubscriptions(tenantId);
@@ -80,7 +80,7 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, StateLoader loader) =>
+        app.MapPost("/tenants/{tenantId}/owners", async (Guid tenantId, AssignTenantOwnerRequest request, IStateLoader loader) =>
         {
             var tenantIdRegistered = State.TenantExists(tenantId);
             var userAdded = State.UserExists(request.UserId);
@@ -110,7 +110,7 @@ static class TenantEndpoints
             return Results.Ok();
         });
 
-        app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, StateLoader loader) =>
+        app.MapPost("/tenants/{tenantId}/rename", async (Guid tenantId, RenameTenantRequest request, IStateLoader loader) =>
         {
             var tenantIdRegistered = State.TenantExists(tenantId);
             var currentTenantName = State.CurrentTenantName(tenantId);

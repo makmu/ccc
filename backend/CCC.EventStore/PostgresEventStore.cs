@@ -3,9 +3,9 @@ using System.Text.Json;
 using Dapper;
 using Npgsql;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
-class EventStore(string connectionString)
+class PostgresEventStore(string connectionString) : IEventStore
 {
     // The global log has no per-boundary unique constraint, so the conditional
     // append's MAX(position) guard must be evaluated atomically against concurrent

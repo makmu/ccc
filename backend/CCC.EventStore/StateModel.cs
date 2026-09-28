@@ -1,10 +1,10 @@
 using System.Text.Json;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
 // Non-generic factory so callers write StateModel.Init(false) and let the
 // compiler infer the state type.
-static class StateModel
+public static class StateModel
 {
     public static StateModel<T> Init<T>(T initialState) => new(initialState);
 }
@@ -12,7 +12,7 @@ static class StateModel
 // A single decision/read model: an initial state folded forward over the events
 // matching its tags and handled event types. State is exposed strongly typed;
 // the fold happens through the erased IStateModel.Apply.
-sealed class StateModel<T>(T initialState) : IStateModel
+public sealed class StateModel<T>(T initialState) : IStateModel
 {
     private readonly List<(string Key, string Value)> _tags = [];
     private readonly Dictionary<string, Func<EventRecord, T, T>> _reducers = [];

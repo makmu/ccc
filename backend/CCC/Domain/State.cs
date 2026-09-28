@@ -1,6 +1,6 @@
 using CCC.Domain.Events;
 using CCC.Helpers;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Domain;
 

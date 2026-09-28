@@ -1,6 +1,6 @@
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
-class ConcurrencyException : Exception
+public class ConcurrencyException : Exception
 {
     public ConcurrencyException(string message) : base(message) { }
 

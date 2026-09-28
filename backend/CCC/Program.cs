@@ -3,11 +3,7 @@ using CCC.Api.Projects;
 using CCC.Api.SubscriptionModels;
 using CCC.Api.Tenants;
 using CCC.Api.Users;
-using CCC.Infrastructure.EventStore;
-using Dapper;
-
-SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
-SqlMapper.AddTypeHandler(new StringArrayTypeHandler());
+using CCC.EventStore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +15,7 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
 
-builder.Services.AddSingleton(new EventStore(connectionString));
-builder.Services.AddTransient<StateLoader>();
+builder.Services.AddEventStore(connectionString);
 
 var app = builder.Build();
 

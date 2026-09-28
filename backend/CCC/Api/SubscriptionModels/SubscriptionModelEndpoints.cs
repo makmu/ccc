@@ -1,6 +1,6 @@
 using CCC.Domain;
 using CCC.Domain.Events;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Api.SubscriptionModels;
 
@@ -8,7 +8,7 @@ static class SubscriptionModelEndpoints
 {
     public static void MapSubscriptionModelEndpoints(this WebApplication app)
     {
-        app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, StateLoader loader) =>
+        app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, IStateLoader loader) =>
         {
             var subscriptionIdTaken = State.SubscriptionExists(request.Id);
 

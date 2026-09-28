@@ -1,12 +1,12 @@
 using System.Text.RegularExpressions;
 
-namespace CCC.Infrastructure.EventStore;
+namespace CCC.EventStore;
 
 // A set of "key=value" identity tags attached to an event, orthogonal to its
 // payload and type. Matching is a subset check (a filter matches an event when
 // every one of the filter's entries is present on the event). Entries are sorted
 // on construction so equality and hashing are order-insensitive (set semantics).
-sealed partial class Tags : IEquatable<Tags>
+public sealed partial class Tags : IEquatable<Tags>
 {
     private readonly string[] _values; // sorted "key=value" entries
 

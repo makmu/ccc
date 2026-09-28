@@ -1,6 +1,6 @@
 using CCC.Domain;
 using CCC.Domain.Events;
-using CCC.Infrastructure.EventStore;
+using CCC.EventStore;
 
 namespace CCC.Api.Users;
 
@@ -8,7 +8,7 @@ static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        app.MapPost("/users", async (AddUserRequest request, StateLoader loader) =>
+        app.MapPost("/users", async (AddUserRequest request, IStateLoader loader) =>
         {
             var idTaken = State.UserExists(request.Id);
             var emailTaken = State.UserEmailTaken(request.Email);
