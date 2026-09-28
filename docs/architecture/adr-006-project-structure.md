@@ -6,26 +6,26 @@ The backend is split into four projects, each with one job. All four live in `ba
 
 | Project | Contains |
 |---------|----------|
-| `CCC.Api` | ASP.NET Core endpoints, request DTOs, mapping requests to value objects, mapping command results to HTTP, startup |
-| `CCC.Commands` | One command record and one handler per use case. A handler loads state, runs the business checks, and appends events or returns an error |
-| `CCC.Domain` | Domain events, state model definitions and the tag vocabulary, value objects |
-| `CCC.EventStore` | `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup |
+| `Api` | ASP.NET Core endpoints, request DTOs, mapping requests to value objects, mapping command results to HTTP, startup |
+| `Commands` | One command record and one handler per use case. A handler loads state, runs the business checks, and appends events or returns an error |
+| `Domain` | Domain events, state model definitions and the tag vocabulary, value objects |
+| `EventStore` | `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup |
 
 References point one way only:
 
 ```
-CCC.Api ──► CCC.Commands ──► CCC.Domain ──► CCC.EventStore
+Api ──► Commands ──► Domain ──► EventStore
 ```
 
-`CCC.Api` and `CCC.Commands` also reference the projects further down directly. Nothing references back up. `CCC.Architecture.Tests` enforces the rules that project references alone can't:
+`Api` and `Commands` also reference the projects further down directly. Nothing references back up. `Architecture.Tests` enforces the rules that project references alone can't:
 
-- `CCC.EventStore` knows nothing about tenants, keys or any other domain concept.
-- `CCC.Domain` and `CCC.Commands` don't use ASP.NET Core. Handlers return a `CommandResult` (success, `NotFound`, `Conflict` or `Invalid`) and the API maps it to 200, 404, 409 or 400.
-- Endpoints don't touch the state models in `CCC.Domain.State`, `Tag` or the event store. Only `Program.cs` references `CCC.EventStore`, to register it.
+- `EventStore` knows nothing about tenants, keys or any other domain concept.
+- `Domain` and `Commands` don't use ASP.NET Core. Handlers return a `CommandResult` (success, `NotFound`, `Conflict` or `Invalid`) and the API maps it to 200, 404, 409 or 400.
+- Endpoints don't touch the state models in `CCC.Domain.State`, `Tag` or the event store. Only `Program.cs` references `EventStore`, to register it.
 
 Three further decisions shape the code:
 
-1. **`StateModel<T>` lives in `CCC.EventStore`.** `StateModel<T>`, `IStateModel` and `Tags` contain nothing domain-specific, so they belong with the event store. As a result `CCC.Domain` references `CCC.EventStore` to define its state models.
+1. **`StateModel<T>` lives in `EventStore`.** `StateModel<T>`, `IStateModel` and `Tags` contain nothing domain-specific, so they belong with the event store. As a result `Domain` references `EventStore` to define its state models.
 2. **Events keep primitive types.** Event records use `Guid` and `string`, not value objects. Stored JSON payloads therefore didn't change, and no JSON converters are needed. Handlers unwrap value objects when they build an event.
 3. **Value objects check format, handlers check business rules.** A value object's `Create` throws `InvalidValueException` on malformed input, such as an empty id or a blank name. An endpoint filter turns that exception into a 400 before any command exists. Handlers check the rules that need the event log, such as existence, uniqueness and limits.
 
@@ -38,15 +38,15 @@ Names were canonicalized by calling a string extension before each tag was built
 ## Consequences
 
 **Positive:**
-- Business rules can be tested without HTTP or PostgreSQL. `CCC.Commands.Tests` runs every handler against an in-memory `IEventStore`.
+- Business rules can be tested without HTTP or PostgreSQL. `Commands.Tests` runs every handler against an in-memory `IEventStore`.
 - Each endpoint is a few lines long: build value objects, send the command, map the result.
 - `Tag` factories take value objects, so a name can't reach a tag without being canonicalized.
 - Concurrency conflicts are turned into a `Conflict` result in one place, `StateContext.TryAppendAsync`.
-- The planned read model slices can reference `CCC.Domain` for event types without depending on the API.
+- The planned read model slices can reference `Domain` for event types without depending on the API.
 
 **Negative:**
 - Four projects plus two test projects is more structure than twelve endpoints strictly need.
-- `CCC.Domain` depends on `CCC.EventStore`, so the domain is not free of infrastructure types.
+- `Domain` depends on `EventStore`, so the domain is not free of infrastructure types.
 - Types used across projects must be public, which exposes more of the event store than before. `PostgresEventStore` and the handler classes stay internal.
 - Event records must never be renamed, because the stored event type is the record's class name. This held before the split too, but events now live far from the code that stores them, so the rule is easier to forget.
 
@@ -56,9 +56,9 @@ Names were canonicalized by calling a string extension before each tag was built
    - *Advantages:* No project references to manage, and nothing needs to be public.
    - *Disadvantages:* Nothing enforces the boundaries. The single project was already organized into folders, and endpoints still mixed HTTP, business rules and persistence.
 
-2. **A separate `CCC.EventStore.Abstractions` project for `StateModel<T>` and `Tags`**
+2. **A separate `EventStore.Abstractions` project for `StateModel<T>` and `Tags`**
    - *Advantages:* The domain would depend only on abstractions, not on the Dapper/Npgsql implementation.
-   - *Disadvantages:* One more project for little gain. `CCC.EventStore` has no domain dependencies, so the domain's reference to it can't create a cycle. Worth revisiting if the event store gets a second implementation.
+   - *Disadvantages:* One more project for little gain. `EventStore` has no domain dependencies, so the domain's reference to it can't create a cycle. Worth revisiting if the event store gets a second implementation.
 
 3. **Value objects inside events**
    - *Advantages:* Type safety all the way into the event log.

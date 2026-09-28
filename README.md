@@ -22,7 +22,7 @@ The repository is not intended to be a generic content management system. Its ma
 ```bash
 dotnet build backend/CCC.sln
 dotnet test backend/CCC.sln
-dotnet run --project backend/CCC.Api/CCC.Api.csproj
+dotnet run --project backend/Api/Api.csproj
 ```
 
 Swagger UI is available at `http://localhost:5039/swagger` in development.

@@ -1,16 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Api", "CCC.Api\CCC.Api.csproj", "{0966B017-281B-4517-96DC-30280C070D45}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{0966B017-281B-4517-96DC-30280C070D45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.EventStore", "CCC.EventStore\CCC.EventStore.csproj", "{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventStore", "EventStore\EventStore.csproj", "{C9751EDD-7A53-4F1A-AF68-FA986DE0DBA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Domain", "CCC.Domain\CCC.Domain.csproj", "{FC34E617-8DAA-44F4-8158-CDCD82859840}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{FC34E617-8DAA-44F4-8158-CDCD82859840}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Commands", "CCC.Commands\CCC.Commands.csproj", "{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commands", "Commands\Commands.csproj", "{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Architecture.Tests", "CCC.Architecture.Tests\CCC.Architecture.Tests.csproj", "{410C7AEA-C524-40FB-B752-32809BD644E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Architecture.Tests", "Architecture.Tests\Architecture.Tests.csproj", "{410C7AEA-C524-40FB-B752-32809BD644E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Commands.Tests", "CCC.Commands.Tests\CCC.Commands.Tests.csproj", "{FDA43B22-4975-46C3-97BD-DE80702E1180}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Commands.Tests", "Commands.Tests\Commands.Tests.csproj", "{FDA43B22-4975-46C3-97BD-DE80702E1180}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

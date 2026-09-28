@@ -5,27 +5,27 @@ namespace CCC.Architecture.Tests;
 
 public class DependencyRuleTests
 {
-    private static readonly Assembly Api = Assembly.Load("CCC.Api");
-    private static readonly Assembly Commands = Assembly.Load("CCC.Commands");
-    private static readonly Assembly Domain = Assembly.Load("CCC.Domain");
-    private static readonly Assembly EventStore = Assembly.Load("CCC.EventStore");
+    private static readonly Assembly Api = Assembly.Load("Api");
+    private static readonly Assembly Commands = Assembly.Load("Commands");
+    private static readonly Assembly Domain = Assembly.Load("Domain");
+    private static readonly Assembly EventStore = Assembly.Load("EventStore");
 
     [Fact]
     public void EventStore_knows_nothing_about_the_domain()
     {
-        AssertNoDependency(Types.InAssembly(EventStore), "CCC.Domain", "CCC.Commands", "CCC.Api");
+        AssertNoDependency(Types.InAssembly(EventStore), "Domain", "Commands", "Api");
     }
 
     [Fact]
     public void Domain_depends_on_nothing_but_the_event_store()
     {
-        AssertNoDependency(Types.InAssembly(Domain), "CCC.Commands", "CCC.Api", "Microsoft.AspNetCore");
+        AssertNoDependency(Types.InAssembly(Domain), "Commands", "Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void Commands_do_not_depend_on_ASP_NET_Core()
     {
-        AssertNoDependency(Types.InAssembly(Commands), "CCC.Api", "Microsoft.AspNetCore");
+        AssertNoDependency(Types.InAssembly(Commands), "Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class DependencyRuleTests
     {
         AssertNoDependency(
             Types.InAssembly(Api).That().DoNotHaveName("Program"),
-            "CCC.EventStore", "CCC.Domain.State");
+            "EventStore", "Domain.State");
     }
 
     private static void AssertNoDependency(PredicateList types, params string[] namespaces) =>
