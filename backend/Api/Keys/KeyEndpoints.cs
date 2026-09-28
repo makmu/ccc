@@ -26,7 +26,7 @@ static class KeyEndpoints
                     TeamId.From(teamId),
                     ProjectId.From(projectId),
                     KeyId.From(keyId),
-                    request.Text);
+                    Text.From(request.Text));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
 
@@ -38,7 +38,7 @@ static class KeyEndpoints
                     ProjectId.From(projectId),
                     KeyId.From(keyId),
                     LanguageCode.From(request.LanguageCode),
-                    request.Text);
+                    Text.From(request.Text));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
 

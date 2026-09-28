@@ -8,27 +8,26 @@ sealed class AddLanguageHandler(IStateLoader loader) : ICommandHandler<AddLangua
 {
     public async Task<CommandResult> HandleAsync(AddLanguage command)
     {
-        var teamAdded = Team.Exists(command.TeamId);
-        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
-        var languageAdded = Language.InProject(command.ProjectId, command.LanguageCode);
-        var validParentLanguage = Language.ValidParent(command.ProjectId, command.ParentLanguageCode);
-        var isReferenceLanguage = Language.IsReference(command.ProjectId, command.LanguageCode);
+        var (teamExists, projectInTeam, languageAdded, validParent, isReference, context) = await loader.LoadAsync(
+            Team.Exists(command.TeamId),
+            Project.InTeam(command.TeamId, command.ProjectId),
+            Language.InProject(command.ProjectId, command.LanguageCode),
+            Language.ValidParent(command.ProjectId, command.ParentLanguageCode),
+            Language.IsReference(command.ProjectId, command.LanguageCode));
 
-        var context = await loader.LoadAsync(teamAdded, projectAdded, languageAdded, validParentLanguage, isReferenceLanguage);
-
-        if (!teamAdded)
+        if (!teamExists)
             return CommandResult.NotFound("Team not found.");
 
-        if (!projectAdded)
+        if (!projectInTeam)
             return CommandResult.NotFound("Project not found in this team.");
 
         if (languageAdded)
             return CommandResult.Conflict("This language has already been added to the project.");
 
-        if (isReferenceLanguage)
+        if (isReference)
             return CommandResult.Invalid("The reference language cannot be added as a new language.");
 
-        if (!validParentLanguage)
+        if (!validParent)
             return CommandResult.Invalid("The parent language must be the project's reference language or a language already added to the project.");
 
         return await context.TryAppendAsync(

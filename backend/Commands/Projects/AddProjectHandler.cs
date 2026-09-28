@@ -8,19 +8,18 @@ sealed class AddProjectHandler(IStateLoader loader) : ICommandHandler<AddProject
 {
     public async Task<CommandResult> HandleAsync(AddProject command)
     {
-        var teamAdded = Team.Exists(command.TeamId);
-        var projectIdTaken = Project.IdTaken(command.Id);
-        var projectNameTaken = Project.NameTaken(command.TeamId, command.Name);
+        var (teamExists, idTaken, nameTaken, context) = await loader.LoadAsync(
+            Team.Exists(command.TeamId),
+            Project.IdTaken(command.Id),
+            Project.NameTaken(command.TeamId, command.Name));
 
-        var context = await loader.LoadAsync(teamAdded, projectIdTaken, projectNameTaken);
-
-        if (!teamAdded)
+        if (!teamExists)
             return CommandResult.NotFound("Team not found.");
 
-        if (projectIdTaken)
+        if (idTaken)
             return CommandResult.Conflict("A project with this ID already exists.");
 
-        if (projectNameTaken)
+        if (nameTaken)
             return CommandResult.Conflict("A project with this name already exists in this team.");
 
         return await context.TryAppendAsync(

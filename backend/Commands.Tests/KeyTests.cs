@@ -124,7 +124,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey();
 
-        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, "Hello"));
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, Text.From("Hello")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new ReferenceTextProvided(key.Value, project.Value, "Hello"), _fixture.LastEvent<ReferenceTextProvided>());
@@ -134,10 +134,22 @@ public class KeyTests
     public async Task ProvideReferenceText_with_unchanged_text_appends_nothing()
     {
         var (team, project, key) = await _fixture.GivenKey();
-        await _fixture.Given(new ProvideReferenceText(team, project, key, "Hello"));
+        await _fixture.Given(new ProvideReferenceText(team, project, key, Text.From("Hello")));
         var eventsBefore = _fixture.Store.Events.Count;
 
-        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, "Hello"));
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, Text.From("Hello")));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
+    }
+
+    [Fact]
+    public async Task ProvideReferenceText_with_empty_text_for_a_key_without_one_appends_nothing()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+        var eventsBefore = _fixture.Store.Events.Count;
+
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, Text.From("")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
@@ -148,7 +160,7 @@ public class KeyTests
     {
         var (team, project) = await _fixture.GivenProject();
 
-        var result = await _fixture.Handle(new ProvideReferenceText(team, project, NewKeyId(), "Hello"));
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, NewKeyId(), Text.From("Hello")));
 
         CommandAssert.Failed(result, CommandErrorKind.NotFound, "Key not found in this project.");
     }
@@ -159,7 +171,7 @@ public class KeyTests
         var (team, project, key) = await _fixture.GivenKey();
         await _fixture.GivenLanguage(team, project, "de");
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new TranslationProvided(key.Value, project.Value, "de", "Hallo"), _fixture.LastEvent<TranslationProvided>());
@@ -170,10 +182,10 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey();
         await _fixture.GivenLanguage(team, project, "de");
-        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
+        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
         var eventsBefore = _fixture.Store.Events.Count;
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), "Hallo"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
@@ -184,7 +196,7 @@ public class KeyTests
     {
         var (team, project, key) = await _fixture.GivenKey();
 
-        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("fr"), "Bonjour"));
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("fr"), Text.From("Bonjour")));
 
         CommandAssert.Failed(result, CommandErrorKind.Invalid, "The specified language has not been added to this project.");
     }

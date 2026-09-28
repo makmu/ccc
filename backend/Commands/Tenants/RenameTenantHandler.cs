@@ -1,6 +1,5 @@
 using CCC.Domain.Events;
 using CCC.Domain.State;
-using CCC.Domain.Types;
 using CCC.EventStore;
 
 namespace CCC.Commands.Tenants;
@@ -9,20 +8,18 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
 {
     public async Task<CommandResult> HandleAsync(RenameTenant command)
     {
-        var tenantIdRegistered = Tenant.Exists(command.TenantId);
-        var tenantName = Tenant.Name(command.TenantId);
-        var tenantNameTaken = Tenant.NameTaken(command.Name);
+        var (name, alreadyNamed, nameTaken, context) = await loader.LoadAsync(
+            Tenant.Name(command.TenantId),
+            Tenant.IsNamed(command.TenantId, command.Name),
+            Tenant.NameTaken(command.Name));
 
-        var context = await loader.LoadAsync(tenantIdRegistered, tenantName, tenantNameTaken);
-
-        if (!tenantIdRegistered)
+        if (name is not { } currentName)
             return CommandResult.NotFound("Tenant not found.");
 
-        var currentName = TenantName.From(tenantName.State);
-        if (currentName.Canonical == command.Name.Canonical)
+        if (alreadyNamed)
             return CommandResult.Ok;
 
-        if (tenantNameTaken)
+        if (nameTaken)
             return CommandResult.Conflict("A tenant with this name already exists.");
 
         // Tag both names under the same key, so later name lookups match this

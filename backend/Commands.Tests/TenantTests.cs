@@ -54,6 +54,18 @@ public class TenantTests
     }
 
     [Fact]
+    public async Task RegisterTenant_accepts_several_known_subscription_models()
+    {
+        var first = await _fixture.GivenSubscriptionModel();
+        var second = await _fixture.GivenSubscriptionModel();
+
+        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From("Acme"), [first, second]));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal([first.Value, second.Value], _fixture.LastEvent<TenantRegistered>().SubscriptionModelIds);
+    }
+
+    [Fact]
     public async Task RegisterTenant_rejects_an_unknown_subscription_model()
     {
         var known = await _fixture.GivenSubscriptionModel();

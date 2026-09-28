@@ -23,13 +23,13 @@ public static class Team
             .Where(Tag.TeamName(name))
             .When<TeamAdded>((_, _) => true);
 
-    public static StateModel<Guid?> Subscription(TeamId teamId) =>
-        StateModel.Init<Guid?>(null)
+    public static StateModel<SubscriptionModelId?> Subscription(TeamId teamId) =>
+        StateModel.Init<SubscriptionModelId?>(null)
             .Where(Tag.TeamId(teamId))
-            .When<TeamAdded>((e, _) => e.SubscriptionModelId);
+            .When<TeamAdded>((e, _) => SubscriptionModelId.From(e.SubscriptionModelId));
 
-    public static StateModel<int> KeyCount(TeamId teamId) =>
-        StateModel.Init(0)
+    public static StateModel<KeyCount> KeysAdded(TeamId teamId) =>
+        StateModel.Init(KeyCount.Zero)
             .Where(Tag.TeamId(teamId))
-            .When<KeyAdded>((_, count) => count + 1);
+            .When<KeyAdded>((_, count) => count.Increment());
 }

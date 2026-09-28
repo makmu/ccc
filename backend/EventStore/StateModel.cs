@@ -5,16 +5,16 @@ namespace CCC.EventStore;
 public static class StateModel
 {
     public static StateModel<T> Init<T>(T initialState) => new(initialState);
+
+    public static IStateModel<bool> All(IEnumerable<IStateModel<bool>> models) => new AllStateModel(models.ToArray());
 }
 
-public sealed class StateModel<T>(T initialState) : IStateModel
+public sealed class StateModel<T>(T initialState) : IStateModel<T>
 {
     private readonly List<(string Key, string Value)> _tags = [];
     private readonly Dictionary<string, Func<EventRecord, T, T>> _reducers = [];
 
     public T State { get; private set; } = initialState;
-
-    public static implicit operator T(StateModel<T> model) => model.State;
 
     public StateModel<T> Where(string key, string value)
     {

@@ -22,7 +22,10 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
 - `Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
 - `Commands` — one command record and one handler per use case. Handlers load state, run the business checks, and append events or return a `CommandResult` error
 - `Domain` — domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`Types/`)
-  - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeyCount(teamId)`
+  - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeysAdded(teamId)`
+  - A state model answers a question with a `bool` (`Tenant.IsNamed(tenantId, name)`, `Key.HasTranslation(...)`) or returns a domain type (`Team.Subscription` → `SubscriptionModelId?`). Comparisons belong in a state model, not in the handler. The one exception is the key limit, which spans two loads, so `KeyCount >= KeyLimit` stays in `AddKeyHandler`
+  - Reducers turn stored values into domain types with the regular `From`. All stored events are assumed to have passed today's validation, so there is no separate unvalidated path
+  - Handlers load all their state in one call and deconstruct the values with the context: `var (idTaken, emailTaken, context) = await loader.LoadAsync(User.Exists(...), User.EmailTaken(...))`
 - `EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup
 - `Commands.Tests` — handler and value object tests against an in-memory `IEventStore`
 - `Architecture.Tests` — checks the dependency rules below

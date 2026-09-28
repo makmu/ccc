@@ -8,20 +8,19 @@ sealed class AddTeamHandler(IStateLoader loader) : ICommandHandler<AddTeam>
 {
     public async Task<CommandResult> HandleAsync(AddTeam command)
     {
-        var tenantIdRegistered = Tenant.Exists(command.TenantId);
-        var tenantSubscriptions = Tenant.Subscriptions(command.TenantId);
-        var teamIdTaken = Team.IdTaken(command.TenantId, command.Id);
-        var teamNameConflict = Team.NameTaken(command.TenantId, command.Name);
+        var (tenantExists, hasSubscription, idTaken, nameTaken, context) = await loader.LoadAsync(
+            Tenant.Exists(command.TenantId),
+            Tenant.HasSubscription(command.TenantId, command.SubscriptionModelId),
+            Team.IdTaken(command.TenantId, command.Id),
+            Team.NameTaken(command.TenantId, command.Name));
 
-        var context = await loader.LoadAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
-
-        if (!tenantIdRegistered)
+        if (!tenantExists)
             return CommandResult.NotFound("Tenant not found.");
 
-        if (!tenantSubscriptions.State.Contains(command.SubscriptionModelId.Value))
+        if (!hasSubscription)
             return CommandResult.Invalid("The specified subscription model is not available in this tenant.");
 
-        if (teamIdTaken || teamNameConflict)
+        if (idTaken || nameTaken)
             return CommandResult.Conflict("A team with this id or name already exists in this tenant.");
 
         return await context.TryAppendAsync(

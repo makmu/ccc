@@ -1,6 +1,5 @@
 using CCC.Domain.Events;
 using CCC.Domain.State;
-using CCC.Domain.Types;
 using CCC.EventStore;
 
 namespace CCC.Commands.Keys;
@@ -9,34 +8,31 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
 {
     public async Task<CommandResult> HandleAsync(AddKey command)
     {
-        var teamSubscription = Team.Subscription(command.TeamId);
-        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
-        var keyIdTaken = Key.Exists(command.TeamId, command.ProjectId, command.Id);
-        var keyNameTaken = Key.NameTaken(command.ProjectId, command.Name);
-        var teamKeyCount = Team.KeyCount(command.TeamId);
+        var (subscription, projectInTeam, idTaken, nameTaken, keysAdded, context) = await loader.LoadAsync(
+            Team.Subscription(command.TeamId),
+            Project.InTeam(command.TeamId, command.ProjectId),
+            Key.Exists(command.TeamId, command.ProjectId, command.Id),
+            Key.NameTaken(command.ProjectId, command.Name),
+            Team.KeysAdded(command.TeamId));
 
-        var context = await loader.LoadAsync(
-            teamSubscription, projectAdded, keyIdTaken, keyNameTaken, teamKeyCount);
-
-        if (teamSubscription.State is not { } subscriptionModelId)
+        if (subscription is not { } subscriptionModelId)
             return CommandResult.NotFound("Team not found.");
 
-        if (!projectAdded)
+        if (!projectInTeam)
             return CommandResult.NotFound("Project not found in this team.");
 
-        if (keyIdTaken)
+        if (idTaken)
             return CommandResult.Conflict("Key ID already taken.");
 
-        if (keyNameTaken)
+        if (nameTaken)
             return CommandResult.Conflict("Key name already taken.");
 
         // The limit sits behind the team's subscription, so it needs a second read.
         // It stays out of the append condition because it never changes. The team's
         // key count is in the condition, and that is what guards the limit.
-        var keyLimit = Subscription.KeyLimit(SubscriptionModelId.From(subscriptionModelId));
-        await loader.LoadAsync(keyLimit);
+        var (keyLimit, _) = await loader.LoadAsync(Subscription.KeyLimit(subscriptionModelId));
 
-        if (teamKeyCount >= keyLimit)
+        if (keysAdded >= keyLimit)
             return CommandResult.Conflict("The key limit for this team's subscription model has been reached.");
 
         return await context.TryAppendAsync(

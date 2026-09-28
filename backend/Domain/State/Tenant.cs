@@ -17,14 +17,20 @@ public static class Tenant
             .When<TenantRegistered>((_, _) => true)
             .When<TenantRenamed>((e, _) => CanonicalForm.Of(e.Name) == name.Canonical);
 
-    public static StateModel<Guid[]> Subscriptions(TenantId tenantId) =>
-        StateModel.Init(Array.Empty<Guid>())
+    public static StateModel<TenantName?> Name(TenantId tenantId) =>
+        StateModel.Init<TenantName?>(null)
             .Where(Tag.TenantId(tenantId))
-            .When<TenantRegistered>((e, _) => e.SubscriptionModelIds.ToArray());
+            .When<TenantRegistered>((e, _) => TenantName.From(e.Name))
+            .When<TenantRenamed>((e, _) => TenantName.From(e.Name));
 
-    public static StateModel<string> Name(TenantId tenantId) =>
-        StateModel.Init(string.Empty)
+    public static StateModel<bool> IsNamed(TenantId tenantId, TenantName name) =>
+        StateModel.Init(false)
             .Where(Tag.TenantId(tenantId))
-            .When<TenantRegistered>((e, _) => e.Name)
-            .When<TenantRenamed>((e, _) => e.Name);
+            .When<TenantRegistered>((e, _) => CanonicalForm.Of(e.Name) == name.Canonical)
+            .When<TenantRenamed>((e, _) => CanonicalForm.Of(e.Name) == name.Canonical);
+
+    public static StateModel<bool> HasSubscription(TenantId tenantId, SubscriptionModelId subscriptionModelId) =>
+        StateModel.Init(false)
+            .Where(Tag.TenantId(tenantId))
+            .When<TenantRegistered>((e, _) => e.SubscriptionModelIds.Contains(subscriptionModelId.Value));
 }

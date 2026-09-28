@@ -70,4 +70,29 @@ public class TypeTests
         Assert.Equal(0, KeyLimit.From(0).Value);
         Assert.Throws<InvalidValueException>(() => KeyLimit.From(-1));
     }
+
+    [Fact]
+    public void KeyCount_starts_at_zero_and_rejects_negative_values()
+    {
+        Assert.Equal(0, KeyCount.Zero.Value);
+        Assert.Equal(2, KeyCount.Zero.Increment().Increment().Value);
+        Assert.Throws<InvalidValueException>(() => KeyCount.From(-1));
+    }
+
+    [Theory]
+    [InlineData(1, 2, false)]
+    [InlineData(2, 2, true)]
+    [InlineData(3, 2, true)]
+    public void KeyCount_reaches_a_key_limit_at_or_above_it(int count, int limit, bool reached)
+    {
+        Assert.Equal(reached, KeyCount.From(count) >= KeyLimit.From(limit));
+    }
+
+    [Fact]
+    public void Text_allows_empty_text_but_not_a_missing_one()
+    {
+        Assert.Equal("", Text.From("").Value);
+        var error = Assert.Throws<InvalidValueException>(() => Text.From(null));
+        Assert.Equal("Text must be provided.", error.Message);
+    }
 }
