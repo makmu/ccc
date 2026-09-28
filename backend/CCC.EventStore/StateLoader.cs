@@ -15,7 +15,7 @@ public class StateLoader(IEventStore eventStore) : IStateLoader
 
         if (union.Entries.Count > 0)
         {
-            foreach (var record in await eventStore.LoadAsync(union)) // ordered by position
+            foreach (var record in await eventStore.LoadAsync(union))
             {
                 for (var i = 0; i < models.Length; i++)
                 {

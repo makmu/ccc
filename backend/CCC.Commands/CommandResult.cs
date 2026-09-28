@@ -4,7 +4,6 @@ public sealed record CommandResult
 {
     private CommandResult(CommandError? error) => Error = error;
 
-    // Null when the command succeeded.
     public CommandError? Error { get; }
 
     public bool Succeeded => Error is null;

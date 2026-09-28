@@ -18,7 +18,6 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
         if (!tenantIdRegistered)
             return CommandResult.NotFound("Tenant not found.");
 
-        // Case-insensitive no-op: renaming to the same name in any casing changes nothing.
         var currentName = TenantName.Create(tenantName.State);
         if (currentName.Canonical == command.Name.Canonical)
             return CommandResult.Ok;

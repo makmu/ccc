@@ -10,9 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Commands.Tests;
 
-// Resolves handlers the way the API does, over an in-memory event store.
-// The Given* helpers build state by running real commands, so the setup
-// carries exactly the tags the handlers write.
 sealed class CommandFixture
 {
     private readonly ServiceProvider _services;
@@ -67,7 +64,6 @@ sealed class CommandFixture
         return id;
     }
 
-    // Tenant names are unique across all tenants, so the default name is too.
     public async Task<(TenantId Tenant, SubscriptionModelId Subscription)> GivenTenant(string? name = null, int keyLimit = 10)
     {
         var subscription = await GivenSubscriptionModel(keyLimit);

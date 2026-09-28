@@ -2,10 +2,8 @@ namespace CCC.Domain.Types;
 
 public readonly record struct TenantName
 {
-    // As entered. This is what events store.
     public string Value { get; }
 
-    // What uniqueness checks and tags compare.
     public string Canonical => CanonicalForm.Of(Value);
 
     private TenantName(string value) => Value = value;

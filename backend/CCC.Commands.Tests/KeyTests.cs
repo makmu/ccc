@@ -19,7 +19,6 @@ public class KeyTests
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new KeyAdded(key.Value, "Title", project.Value), _fixture.LastEvent<KeyAdded>());
-        // Key names are tagged as entered, not canonicalized.
         Assert.Contains("key-name=Title", _fixture.LastTags());
     }
 

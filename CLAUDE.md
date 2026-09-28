@@ -52,5 +52,9 @@ dotnet run --project backend/CCC.Api/CCC.Api.csproj
 - **Never use CRUD terminology** in request, command, or event names (no `Create`, `Read`, `Update`, `Delete`)
 - Use intent-revealing, domain language instead — e.g. `AddUser`, `RegisterUser`, `ArchiveProject`, `PublishTranslation`
 
+## Code Comments
+- Keep comments to a minimum. Only comment code that would otherwise be very confusing, such as a non-obvious concurrency guarantee, a workaround for library behaviour, or a constraint that breaks stored data if changed
+- Don't restate what the code, a name or a test name already says. No template, section or banner comments
+
 ## Architectural Decisions
 If and only if architectural context is needed, consult the `docs/architecture/` folder for ADRs (Architecture Decision Records) and other architectural conventions.

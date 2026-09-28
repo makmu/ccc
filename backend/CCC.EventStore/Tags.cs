@@ -2,13 +2,9 @@ using System.Text.RegularExpressions;
 
 namespace CCC.EventStore;
 
-// A set of "key=value" identity tags attached to an event, orthogonal to its
-// payload and type. Matching is a subset check (a filter matches an event when
-// every one of the filter's entries is present on the event). Entries are sorted
-// on construction so equality and hashing are order-insensitive (set semantics).
 public sealed partial class Tags : IEquatable<Tags>
 {
-    private readonly string[] _values; // sorted "key=value" entries
+    private readonly string[] _values;
 
     private Tags(string[] values) => _values = values;
 
@@ -22,8 +18,6 @@ public sealed partial class Tags : IEquatable<Tags>
         for (var i = 0; i < tags.Length; i++)
         {
             var (key, value) = tags[i];
-            // Keys are code-defined identifiers (no whitespace); values are
-            // caller data (e.g. a tenant name) and may contain spaces.
             if (!Valid().IsMatch(key))
                 throw new ArgumentException($"Invalid tag key: \"{key}\"");
             if (string.IsNullOrWhiteSpace(value))

@@ -17,7 +17,6 @@ public class ConcurrencyTests
         var (team, project) = await _fixture.GivenProject();
         var competingKey = NewKeyId();
 
-        // Another writer takes the same key name after AddKey has loaded its state.
         _fixture.Store.BeforeConditionalAppend = () =>
         {
             _fixture.Store.BeforeConditionalAppend = null;
@@ -37,7 +36,6 @@ public class ConcurrencyTests
         var (team, project) = await _fixture.GivenProject();
         var (_, otherProject) = await _fixture.GivenProject();
 
-        // A key in an unrelated project touches none of the tags AddKey loaded.
         _fixture.Store.BeforeConditionalAppend = () =>
         {
             _fixture.Store.BeforeConditionalAppend = null;

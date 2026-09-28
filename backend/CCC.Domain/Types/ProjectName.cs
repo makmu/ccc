@@ -2,10 +2,8 @@ namespace CCC.Domain.Types;
 
 public readonly record struct ProjectName
 {
-    // As entered. This is what events store.
     public string Value { get; }
 
-    // What uniqueness checks and tags compare.
     public string Canonical => CanonicalForm.Of(Value);
 
     private ProjectName(string value) => Value = value;

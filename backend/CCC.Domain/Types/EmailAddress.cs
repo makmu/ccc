@@ -1,6 +1,5 @@
 namespace CCC.Domain.Types;
 
-// Tagged exactly as entered, so there is no canonical form.
 public readonly record struct EmailAddress
 {
     public string Value { get; }
@@ -12,8 +11,6 @@ public readonly record struct EmailAddress
         if (string.IsNullOrWhiteSpace(value))
             throw new InvalidValueException("Email address must not be empty.");
 
-        // Only rules out input that can't be an address at all. Deliverability
-        // is not this type's concern.
         var at = value.IndexOf('@');
         if (at <= 0 || at == value.Length - 1 || value.Any(char.IsWhiteSpace))
             throw new InvalidValueException("Email address is not valid.");

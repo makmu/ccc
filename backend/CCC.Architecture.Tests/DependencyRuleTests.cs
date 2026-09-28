@@ -3,9 +3,6 @@ using NetArchTest.Rules;
 
 namespace CCC.Architecture.Tests;
 
-// The dependency rules from refactoring-plan.md. Project references already
-// stop most violations; these catch the ones a reference can't, like a new
-// package or an endpoint reaching past the command handlers.
 public class DependencyRuleTests
 {
     private static readonly Assembly Api = Assembly.Load("CCC.Api");
@@ -31,7 +28,6 @@ public class DependencyRuleTests
         AssertNoDependency(Types.InAssembly(Commands), "CCC.Api", "Microsoft.AspNetCore");
     }
 
-    // Program.cs registers the event store, which is the one exception.
     [Fact]
     public void Endpoints_go_through_command_handlers()
     {

@@ -2,16 +2,11 @@ using System.Text.Json;
 
 namespace CCC.EventStore;
 
-// Non-generic factory so callers write StateModel.Init(false) and let the
-// compiler infer the state type.
 public static class StateModel
 {
     public static StateModel<T> Init<T>(T initialState) => new(initialState);
 }
 
-// A single decision/read model: an initial state folded forward over the events
-// matching its tags and handled event types. State is exposed strongly typed;
-// the fold happens through the erased IStateModel.Apply.
 public sealed class StateModel<T>(T initialState) : IStateModel
 {
     private readonly List<(string Key, string Value)> _tags = [];
@@ -27,8 +22,6 @@ public sealed class StateModel<T>(T initialState) : IStateModel
         return this;
     }
 
-    // Tuple overload so a Tag factory result flows straight in:
-    // .Where(Tag.TeamId(id)) instead of .Where(TagKeys.TeamId, id.ToString()).
     public StateModel<T> Where((string Key, string Value) tag)
     {
         _tags.Add(tag);
@@ -37,8 +30,6 @@ public sealed class StateModel<T>(T initialState) : IStateModel
 
     public StateModel<T> When<TEvent>(Func<TEvent, T, T> reduce)
     {
-        // Capture TEvent here so Apply can stay type-erased: it deserializes the
-        // stored payload to the right event type before invoking the reducer.
         _reducers[typeof(TEvent).Name] =
             (record, state) =>
             {
@@ -51,8 +42,6 @@ public sealed class StateModel<T>(T initialState) : IStateModel
         return this;
     }
 
-    // One filter entry per handled event type, each carrying this model's tags.
-    // The union of every model's entries becomes the append condition.
     public EventFilter Filter
     {
         get

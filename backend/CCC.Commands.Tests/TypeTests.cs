@@ -31,7 +31,6 @@ public class TypeTests
         Assert.Throws<InvalidValueException>(() => EmailAddress.Create(input));
     }
 
-    // Stored tags depend on this exact form, see "What must not change".
     [Theory]
     [InlineData("Acme", "acme")]
     [InlineData("  Acme Corp  ", "acme corp")]

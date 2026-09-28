@@ -30,10 +30,9 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         if (keyNameTaken)
             return CommandResult.Conflict("Key name already taken.");
 
-        // The limit sits behind a team -> subscription hop, so it needs a second
-        // read once the subscription id is known. KeyLimit is immutable, so it
-        // does not need to be part of the (phase-1) append condition; the
-        // team-id key count already is, which is what guards the invariant.
+        // The limit sits behind the team's subscription, so it needs a second read.
+        // It stays out of the append condition because it never changes. The team's
+        // key count is in the condition, and that is what guards the limit.
         var keyLimit = Subscription.KeyLimit(SubscriptionModelId.Create(subscriptionModelId));
         await loader.LoadAsync(keyLimit);
 
