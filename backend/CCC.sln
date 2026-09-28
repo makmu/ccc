@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.EventStore", "CCC.Event
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Domain", "CCC.Domain\CCC.Domain.csproj", "{FC34E617-8DAA-44F4-8158-CDCD82859840}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CCC.Commands", "CCC.Commands\CCC.Commands.csproj", "{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,18 @@ Global
 		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x64.Build.0 = Release|Any CPU
 		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x86.ActiveCfg = Release|Any CPU
 		{FC34E617-8DAA-44F4-8158-CDCD82859840}.Release|x86.Build.0 = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|x64.Build.0 = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Debug|x86.Build.0 = Debug|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|x64.ActiveCfg = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|x64.Build.0 = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|x86.ActiveCfg = Release|Any CPU
+		{52006EBC-9E38-4611-BB56-9A1D3BDEA1C1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

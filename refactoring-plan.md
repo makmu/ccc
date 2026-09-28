@@ -135,13 +135,13 @@ A value object checks format. If the input is malformed, the value object can't 
 
 ### Shared pieces
 
-- [ ] Create `backend/CCC.Commands/CCC.Commands.csproj`, a `net10.0` class library that references `CCC.Domain` and `CCC.EventStore` and nothing from ASP.NET Core
-- [ ] Add it to `CCC.sln` and reference it from the API project
-- [ ] Add `CommandError(CommandErrorKind Kind, string Message)` with `CommandErrorKind { NotFound, Conflict, Invalid }`
-- [ ] Add `CommandResult`, which is either a success or a failure carrying a `CommandError`. Give it the helpers `CommandResult.Ok`, `.NotFound(msg)`, `.Conflict(msg)` and `.Invalid(msg)`
-- [ ] Add `ICommandHandler<TCommand>` with `Task<CommandResult> HandleAsync(TCommand command, CancellationToken ct = default)`
-- [ ] Add one helper for appending that catches `ConcurrencyException` and returns `Conflict("A concurrent operation modified the event store. Please retry.")`. All 12 endpoints repeat that `try/catch` today
-- [ ] Add `AddCommandHandlers(this IServiceCollection)`, which registers each handler by name. Twelve lines don't need assembly scanning
+- [x] Create `backend/CCC.Commands/CCC.Commands.csproj`, a `net10.0` class library that references `CCC.Domain` and `CCC.EventStore` and nothing from ASP.NET Core
+- [x] Add it to `CCC.sln` and reference it from the API project
+- [x] Add `CommandError(CommandErrorKind Kind, string Message)` with `CommandErrorKind { NotFound, Conflict, Invalid }`
+- [x] Add `CommandResult`, which is either a success or a failure carrying a `CommandError`. Give it the helpers `CommandResult.Ok`, `.NotFound(msg)`, `.Conflict(msg)` and `.Invalid(msg)`
+- [x] Add `ICommandHandler<TCommand>` with `Task<CommandResult> HandleAsync(TCommand command)`. The `CancellationToken` is left out, because neither `IStateLoader` nor `IEventStore` takes one yet
+- [x] Add one helper for appending, `StateContext.TryAppendAsync`, that catches `ConcurrencyException` and returns `Conflict("A concurrent operation modified the event store. Please retry.")`. All 12 endpoints repeat that `try/catch` today
+- [x] Add `AddCommandHandlers(this IServiceCollection)`, which registers each handler by name. Twelve lines don't need assembly scanning
 
 ### Commands and handlers
 
@@ -149,21 +149,21 @@ Each command is a record of value objects. Each handler takes over the logic of 
 
 | Command | Moved out of | Notes |
 |---|---|---|
-| [ ] `AddSubscriptionModel` | `SubscriptionModelEndpoints`, `POST /subscription-models` | |
-| [ ] `AddUser` | `UserEndpoints`, `POST /users` | |
-| [ ] `RegisterTenant` | `TenantEndpoints`, `POST /tenants` | The check for at least one subscription model runs before loading and returns `Invalid` |
-| [ ] `RenameTenant` | `TenantEndpoints`, `POST /tenants/{id}/rename` | Keep the case-insensitive no-op. Tag both the old and the new canonical name |
-| [ ] `AddTeam` | `TenantEndpoints`, `POST /tenants/{id}/teams` | |
-| [ ] `AssignTenantOwner` | `TenantEndpoints`, `POST /tenants/{id}/owners` | |
-| [ ] `AddProject` | `ProjectEndpoints`, `POST /teams/{id}/projects` | |
-| [ ] `AddLanguage` | `ProjectEndpoints`, `POST /teams/{id}/projects/{id}/languages` | |
-| [ ] `AddKey` | `KeyEndpoints`, `POST .../keys` | Keep the second `KeyLimit` load outside the append condition |
-| [ ] `RenameKey` | `KeyEndpoints`, `POST .../keys/{id}/rename` | Tag both the old and the new key name |
-| [ ] `ProvideReferenceText` | `KeyEndpoints`, `POST .../keys/{id}/reference-text` | Returns `Ok` without appending when the text is unchanged |
-| [ ] `ProvideTranslation` | `KeyEndpoints`, `POST .../keys/{id}/translations` | Returns `Ok` without appending when the text is unchanged |
+| [x] `AddSubscriptionModel` | `SubscriptionModelEndpoints`, `POST /subscription-models` | |
+| [x] `AddUser` | `UserEndpoints`, `POST /users` | |
+| [x] `RegisterTenant` | `TenantEndpoints`, `POST /tenants` | The check for at least one subscription model runs before loading and returns `Invalid` |
+| [x] `RenameTenant` | `TenantEndpoints`, `POST /tenants/{id}/rename` | Keep the case-insensitive no-op. Tag both the old and the new canonical name |
+| [x] `AddTeam` | `TenantEndpoints`, `POST /tenants/{id}/teams` | |
+| [x] `AssignTenantOwner` | `TenantEndpoints`, `POST /tenants/{id}/owners` | |
+| [x] `AddProject` | `ProjectEndpoints`, `POST /teams/{id}/projects` | |
+| [x] `AddLanguage` | `ProjectEndpoints`, `POST /teams/{id}/projects/{id}/languages` | |
+| [x] `AddKey` | `KeyEndpoints`, `POST .../keys` | Keep the second `KeyLimit` load outside the append condition |
+| [x] `RenameKey` | `KeyEndpoints`, `POST .../keys/{id}/rename` | Tag both the old and the new key name |
+| [x] `ProvideReferenceText` | `KeyEndpoints`, `POST .../keys/{id}/reference-text` | Returns `Ok` without appending when the text is unchanged |
+| [x] `ProvideTranslation` | `KeyEndpoints`, `POST .../keys/{id}/translations` | Returns `Ok` without appending when the text is unchanged |
 
-- [ ] Copy every error message string exactly
-- [ ] Build. Nothing calls the handlers yet, so this phase has no smoke test
+- [x] Copy every error message string exactly
+- [x] Build. Nothing calls the handlers yet, so this phase has no smoke test
 
 ## Phase 5: Route the API through the handlers and rename it to `CCC.Api`
 
