@@ -8,9 +8,9 @@ sealed class AssignTenantOwnerHandler(IStateLoader loader) : ICommandHandler<Ass
 {
     public async Task<CommandResult> HandleAsync(AssignTenantOwner command)
     {
-        var tenantIdRegistered = State.TenantExists(command.TenantId);
-        var userAdded = State.UserExists(command.UserId);
-        var userAlreadyAssigned = State.UserIsTenantOwner(command.UserId, command.TenantId);
+        var tenantIdRegistered = Tenant.Exists(command.TenantId);
+        var userAdded = User.Exists(command.UserId);
+        var userAlreadyAssigned = User.IsTenantOwner(command.UserId, command.TenantId);
 
         var context = await loader.LoadAsync(tenantIdRegistered, userAdded, userAlreadyAssigned);
 

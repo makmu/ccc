@@ -8,11 +8,11 @@ sealed class AddLanguageHandler(IStateLoader loader) : ICommandHandler<AddLangua
 {
     public async Task<CommandResult> HandleAsync(AddLanguage command)
     {
-        var teamAdded = State.TeamExists(command.TeamId);
-        var projectAdded = State.ProjectInTeam(command.TeamId, command.ProjectId);
-        var languageAdded = State.LanguageInProject(command.ProjectId, command.LanguageCode);
-        var validParentLanguage = State.ValidParentLanguage(command.ProjectId, command.ParentLanguageCode);
-        var isReferenceLanguage = State.IsReferenceLanguage(command.ProjectId, command.LanguageCode);
+        var teamAdded = Team.Exists(command.TeamId);
+        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
+        var languageAdded = Language.InProject(command.ProjectId, command.LanguageCode);
+        var validParentLanguage = Language.ValidParent(command.ProjectId, command.ParentLanguageCode);
+        var isReferenceLanguage = Language.IsReference(command.ProjectId, command.LanguageCode);
 
         var context = await loader.LoadAsync(teamAdded, projectAdded, languageAdded, validParentLanguage, isReferenceLanguage);
 

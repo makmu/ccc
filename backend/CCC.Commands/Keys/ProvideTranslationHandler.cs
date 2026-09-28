@@ -8,13 +8,13 @@ sealed class ProvideTranslationHandler(IStateLoader loader) : ICommandHandler<Pr
 {
     public async Task<CommandResult> HandleAsync(ProvideTranslation command)
     {
-        var teamAdded = State.TeamExists(command.TeamId);
-        var projectAdded = State.ProjectInTeam(command.TeamId, command.ProjectId);
-        var keyExists = State.KeyExists(command.TeamId, command.ProjectId, command.KeyId);
-        var languageAdded = State.LanguageInProject(command.ProjectId, command.LanguageCode);
-        var currentTranslation = State.CurrentTranslation(command.KeyId, command.LanguageCode);
+        var teamAdded = Team.Exists(command.TeamId);
+        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyExists = Key.Exists(command.TeamId, command.ProjectId, command.KeyId);
+        var languageAdded = Language.InProject(command.ProjectId, command.LanguageCode);
+        var translation = Key.Translation(command.KeyId, command.LanguageCode);
 
-        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, languageAdded, currentTranslation);
+        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, languageAdded, translation);
 
         if (!teamAdded)
             return CommandResult.NotFound("Team not found.");
@@ -28,7 +28,7 @@ sealed class ProvideTranslationHandler(IStateLoader loader) : ICommandHandler<Pr
         if (!languageAdded)
             return CommandResult.Invalid("The specified language has not been added to this project.");
 
-        if (currentTranslation == command.Text)
+        if (translation == command.Text)
             return CommandResult.Ok;
 
         return await context.TryAppendAsync(

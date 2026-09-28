@@ -9,17 +9,17 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
 {
     public async Task<CommandResult> HandleAsync(RenameTenant command)
     {
-        var tenantIdRegistered = State.TenantExists(command.TenantId);
-        var currentTenantName = State.CurrentTenantName(command.TenantId);
-        var tenantNameTaken = State.TenantNameTaken(command.Name);
+        var tenantIdRegistered = Tenant.Exists(command.TenantId);
+        var tenantName = Tenant.Name(command.TenantId);
+        var tenantNameTaken = Tenant.NameTaken(command.Name);
 
-        var context = await loader.LoadAsync(tenantIdRegistered, currentTenantName, tenantNameTaken);
+        var context = await loader.LoadAsync(tenantIdRegistered, tenantName, tenantNameTaken);
 
         if (!tenantIdRegistered)
             return CommandResult.NotFound("Tenant not found.");
 
         // Case-insensitive no-op: renaming to the same name in any casing changes nothing.
-        var currentName = TenantName.Create(currentTenantName.State);
+        var currentName = TenantName.Create(tenantName.State);
         if (currentName.Canonical == command.Name.Canonical)
             return CommandResult.Ok;
 

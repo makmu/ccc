@@ -22,6 +22,7 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
 - `CCC.Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
 - `CCC.Commands` — one command record and one handler per use case. Handlers load state, run the business checks, and append events or return a `CommandResult` error
 - `CCC.Domain` — domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`ValueObjects/`)
+  - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeyCount(teamId)`
 - `CCC.EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup
 - `CCC.Commands.Tests` — handler and value object tests against an in-memory `IEventStore`
 - `CCC.Architecture.Tests` — checks the dependency rules below
@@ -31,7 +32,7 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
 - `CCC.Api` → `CCC.Commands` → `CCC.Domain` → `CCC.EventStore`. References only point this way
 - `CCC.EventStore` knows nothing about the domain
 - `CCC.Commands` never references ASP.NET Core; handlers return `CommandResult`, never `IResult`
-- Endpoints never touch `State`, `Tag` or the event store directly. Only `Program.cs` references `CCC.EventStore`, to register it
+- Endpoints never touch the state models in `CCC.Domain.State`, `Tag` or the event store directly. Only `Program.cs` references `CCC.EventStore`, to register it
 - Value objects check format and throw `InvalidValueException`, which the API turns into a 400. Handlers check rules that need the event log
 - Event records keep primitive types, and must never be renamed: the stored event type is the record's class name
 

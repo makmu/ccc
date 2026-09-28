@@ -8,8 +8,8 @@ sealed class AddUserHandler(IStateLoader loader) : ICommandHandler<AddUser>
 {
     public async Task<CommandResult> HandleAsync(AddUser command)
     {
-        var idTaken = State.UserExists(command.Id);
-        var emailTaken = State.UserEmailTaken(command.Email);
+        var idTaken = User.Exists(command.Id);
+        var emailTaken = User.EmailTaken(command.Email);
 
         var context = await loader.LoadAsync(idTaken, emailTaken);
 

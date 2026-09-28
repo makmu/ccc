@@ -8,9 +8,9 @@ sealed class AddProjectHandler(IStateLoader loader) : ICommandHandler<AddProject
 {
     public async Task<CommandResult> HandleAsync(AddProject command)
     {
-        var teamAdded = State.TeamExists(command.TeamId);
-        var projectIdTaken = State.ProjectIdTaken(command.Id);
-        var projectNameTaken = State.ProjectNameTaken(command.TeamId, command.Name);
+        var teamAdded = Team.Exists(command.TeamId);
+        var projectIdTaken = Project.IdTaken(command.Id);
+        var projectNameTaken = Project.NameTaken(command.TeamId, command.Name);
 
         var context = await loader.LoadAsync(teamAdded, projectIdTaken, projectNameTaken);
 

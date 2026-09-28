@@ -9,13 +9,13 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
 {
     public async Task<CommandResult> HandleAsync(RenameKey command)
     {
-        var teamAdded = State.TeamExists(command.TeamId);
-        var projectAdded = State.ProjectInTeam(command.TeamId, command.ProjectId);
-        var keyExists = State.KeyExists(command.TeamId, command.ProjectId, command.KeyId);
-        var currentKeyName = State.CurrentKeyName(command.KeyId);
-        var keyNameTaken = State.KeyNameTaken(command.ProjectId, command.Name);
+        var teamAdded = Team.Exists(command.TeamId);
+        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyExists = Key.Exists(command.TeamId, command.ProjectId, command.KeyId);
+        var keyName = Key.Name(command.KeyId);
+        var keyNameTaken = Key.NameTaken(command.ProjectId, command.Name);
 
-        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentKeyName, keyNameTaken);
+        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, keyName, keyNameTaken);
 
         if (!teamAdded)
             return CommandResult.NotFound("Team not found.");
@@ -29,7 +29,7 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
         if (keyNameTaken)
             return CommandResult.Conflict("A key with this name already exists in this project.");
 
-        var currentName = KeyName.Create(currentKeyName.State);
+        var currentName = KeyName.Create(keyName.State);
         if (currentName == command.Name)
             return CommandResult.Ok;
 

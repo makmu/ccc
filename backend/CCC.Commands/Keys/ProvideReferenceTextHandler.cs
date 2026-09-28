@@ -8,12 +8,12 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
 {
     public async Task<CommandResult> HandleAsync(ProvideReferenceText command)
     {
-        var teamAdded = State.TeamExists(command.TeamId);
-        var projectAdded = State.ProjectInTeam(command.TeamId, command.ProjectId);
-        var keyExists = State.KeyExists(command.TeamId, command.ProjectId, command.KeyId);
-        var currentReferenceText = State.CurrentReferenceText(command.KeyId);
+        var teamAdded = Team.Exists(command.TeamId);
+        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyExists = Key.Exists(command.TeamId, command.ProjectId, command.KeyId);
+        var referenceText = Key.ReferenceText(command.KeyId);
 
-        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, currentReferenceText);
+        var context = await loader.LoadAsync(teamAdded, projectAdded, keyExists, referenceText);
 
         if (!teamAdded)
             return CommandResult.NotFound("Team not found.");
@@ -24,7 +24,7 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
         if (!keyExists)
             return CommandResult.NotFound("Key not found in this project.");
 
-        if (currentReferenceText == command.Text)
+        if (referenceText == command.Text)
             return CommandResult.Ok;
 
         return await context.TryAppendAsync(

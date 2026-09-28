@@ -8,10 +8,10 @@ sealed class AddTeamHandler(IStateLoader loader) : ICommandHandler<AddTeam>
 {
     public async Task<CommandResult> HandleAsync(AddTeam command)
     {
-        var tenantIdRegistered = State.TenantExists(command.TenantId);
-        var tenantSubscriptions = State.TenantSubscriptions(command.TenantId);
-        var teamIdTaken = State.TeamIdTaken(command.TenantId, command.Id);
-        var teamNameConflict = State.TeamNameTaken(command.TenantId, command.Name);
+        var tenantIdRegistered = Tenant.Exists(command.TenantId);
+        var tenantSubscriptions = Tenant.Subscriptions(command.TenantId);
+        var teamIdTaken = Team.IdTaken(command.TenantId, command.Id);
+        var teamNameConflict = Team.NameTaken(command.TenantId, command.Name);
 
         var context = await loader.LoadAsync(tenantIdRegistered, tenantSubscriptions, teamIdTaken, teamNameConflict);
 

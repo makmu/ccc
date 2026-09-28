@@ -11,11 +11,11 @@ sealed class RegisterTenantHandler(IStateLoader loader) : ICommandHandler<Regist
         if (command.SubscriptionModelIds.Count == 0)
             return CommandResult.Invalid("At least one subscription model must be referenced.");
 
-        var tenantIdTaken = State.TenantExists(command.Id);
-        var tenantNameTaken = State.TenantNameTaken(command.Name);
+        var tenantIdTaken = Tenant.Exists(command.Id);
+        var tenantNameTaken = Tenant.NameTaken(command.Name);
 
         var subscriptionsAvailable = command.SubscriptionModelIds
-            .Select(State.SubscriptionExists).ToArray();
+            .Select(Subscription.Exists).ToArray();
 
         var context = await loader.LoadAsync([tenantIdTaken, tenantNameTaken, ..subscriptionsAvailable]);
 

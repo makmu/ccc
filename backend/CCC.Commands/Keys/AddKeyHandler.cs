@@ -9,11 +9,11 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
 {
     public async Task<CommandResult> HandleAsync(AddKey command)
     {
-        var teamSubscription = State.TeamSubscription(command.TeamId);
-        var projectAdded = State.ProjectInTeam(command.TeamId, command.ProjectId);
-        var keyIdTaken = State.KeyExists(command.TeamId, command.ProjectId, command.Id);
-        var keyNameTaken = State.KeyNameTaken(command.ProjectId, command.Name);
-        var teamKeyCount = State.TeamKeyCount(command.TeamId);
+        var teamSubscription = Team.Subscription(command.TeamId);
+        var projectAdded = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyIdTaken = Key.Exists(command.TeamId, command.ProjectId, command.Id);
+        var keyNameTaken = Key.NameTaken(command.ProjectId, command.Name);
+        var teamKeyCount = Team.KeyCount(command.TeamId);
 
         var context = await loader.LoadAsync(
             teamSubscription, projectAdded, keyIdTaken, keyNameTaken, teamKeyCount);
@@ -34,7 +34,7 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         // read once the subscription id is known. KeyLimit is immutable, so it
         // does not need to be part of the (phase-1) append condition; the
         // team-id key count already is, which is what guards the invariant.
-        var keyLimit = State.KeyLimit(SubscriptionModelId.Create(subscriptionModelId));
+        var keyLimit = Subscription.KeyLimit(SubscriptionModelId.Create(subscriptionModelId));
         await loader.LoadAsync(keyLimit);
 
         if (teamKeyCount >= keyLimit)

@@ -21,7 +21,7 @@ CCC.Api ──► CCC.Commands ──► CCC.Domain ──► CCC.EventStore
 
 - `CCC.EventStore` knows nothing about tenants, keys or any other domain concept.
 - `CCC.Domain` and `CCC.Commands` don't use ASP.NET Core. Handlers return a `CommandResult` (success, `NotFound`, `Conflict` or `Invalid`) and the API maps it to 200, 404, 409 or 400.
-- Endpoints don't touch `State`, `Tag` or the event store. Only `Program.cs` references `CCC.EventStore`, to register it.
+- Endpoints don't touch the state models in `CCC.Domain.State`, `Tag` or the event store. Only `Program.cs` references `CCC.EventStore`, to register it.
 
 Three further decisions shape the code:
 

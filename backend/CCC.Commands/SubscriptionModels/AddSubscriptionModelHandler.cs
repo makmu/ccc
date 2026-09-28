@@ -8,7 +8,7 @@ sealed class AddSubscriptionModelHandler(IStateLoader loader) : ICommandHandler<
 {
     public async Task<CommandResult> HandleAsync(AddSubscriptionModel command)
     {
-        var subscriptionIdTaken = State.SubscriptionExists(command.Id);
+        var subscriptionIdTaken = Subscription.Exists(command.Id);
 
         var context = await loader.LoadAsync(subscriptionIdTaken);
 
