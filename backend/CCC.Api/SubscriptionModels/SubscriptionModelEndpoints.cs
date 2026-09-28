@@ -1,6 +1,6 @@
 using CCC.Commands;
 using CCC.Commands.SubscriptionModels;
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 
 namespace CCC.Api.SubscriptionModels;
 

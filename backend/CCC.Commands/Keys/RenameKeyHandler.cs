@@ -1,6 +1,6 @@
 using CCC.Domain.Events;
 using CCC.Domain.State;
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 using CCC.EventStore;
 
 namespace CCC.Commands.Keys;

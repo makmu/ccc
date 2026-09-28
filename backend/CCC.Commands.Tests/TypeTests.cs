@@ -1,8 +1,8 @@
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 
 namespace CCC.Commands.Tests;
 
-public class ValueObjectTests
+public class TypeTests
 {
     [Fact]
     public void Ids_reject_the_empty_guid()

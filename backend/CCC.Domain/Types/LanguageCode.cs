@@ -1,4 +1,4 @@
-namespace CCC.Domain.ValueObjects;
+namespace CCC.Domain.Types;
 
 public readonly record struct LanguageCode
 {

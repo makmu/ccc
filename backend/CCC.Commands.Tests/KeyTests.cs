@@ -1,6 +1,6 @@
 using CCC.Commands.Keys;
 using CCC.Domain.Events;
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 using static CCC.Commands.Tests.CommandFixture;
 
 namespace CCC.Commands.Tests;

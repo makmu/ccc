@@ -1,4 +1,4 @@
-namespace CCC.Domain.ValueObjects;
+namespace CCC.Domain.Types;
 
 // Tags and uniqueness checks must keep producing exactly this string, or they
 // stop matching events that are already stored.

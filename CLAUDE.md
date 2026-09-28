@@ -21,7 +21,7 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
 
 - `CCC.Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
 - `CCC.Commands` — one command record and one handler per use case. Handlers load state, run the business checks, and append events or return a `CommandResult` error
-- `CCC.Domain` — domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`ValueObjects/`)
+- `CCC.Domain` — domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`Types/`)
   - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeyCount(teamId)`
 - `CCC.EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup
 - `CCC.Commands.Tests` — handler and value object tests against an in-memory `IEventStore`

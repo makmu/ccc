@@ -1,4 +1,4 @@
-namespace CCC.Domain.ValueObjects;
+namespace CCC.Domain.Types;
 
 // Tagged exactly as entered. Unlike tenant, team and project names, key names
 // are case-sensitive.

@@ -1,6 +1,6 @@
 using CCC.Commands;
 using CCC.Commands.Projects;
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 
 namespace CCC.Api.Projects;
 

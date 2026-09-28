@@ -4,7 +4,7 @@ using CCC.Commands.Projects;
 using CCC.Commands.SubscriptionModels;
 using CCC.Commands.Tenants;
 using CCC.Commands.Users;
-using CCC.Domain.ValueObjects;
+using CCC.Domain.Types;
 using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 

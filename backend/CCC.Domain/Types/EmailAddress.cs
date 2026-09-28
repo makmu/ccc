@@ -1,4 +1,4 @@
-namespace CCC.Domain.ValueObjects;
+namespace CCC.Domain.Types;
 
 // Tagged exactly as entered, so there is no canonical form.
 public readonly record struct EmailAddress
