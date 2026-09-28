@@ -201,7 +201,6 @@ I'd do this phase even though it's optional. Handlers that take value objects an
 
 - [ ] Update `CLAUDE.md` with the new project structure, the new run command `dotnet run --project backend/CCC.Api/CCC.Api.csproj` and the dependency rules
 - [ ] Add `docs/architecture/adr-006-project-structure.md` covering the four-project split, the dependency direction and decisions D1 to D3
-- [ ] Update `TODO.md`. Its planned `CCC.Events` project becomes `CCC.Domain/Events`, and phase 1 of this plan already does its `CCC.EventStore` phase. Fix its dependency graph too. It still says `CommandContextBuilder` and `CommandContext`, which are now `StateLoader` and `StateContext`
 - [ ] Update `README.md` if it mentions the old project path
 
 ---
@@ -224,4 +223,4 @@ Each commit should build and pass the smoke test.
 4. `add CCC.Commands with command handlers`
 5. `route API endpoints through command handlers; rename to CCC.Api`
 6. `add command handler tests`, optional
-7. `document project structure (ADR-006, CLAUDE.md, TODO.md)`
+7. `document project structure (ADR-006, CLAUDE.md)`
