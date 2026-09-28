@@ -8,7 +8,7 @@ The repository is not intended to be a generic content management system. Its ma
 
 ## Repository Structure
 
-- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into API, commands, domain and event store projects (see ADR-006)
+- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into API, commands, domain and event store projects plus one project per read model slice (see ADR-006 and ADR-007)
 - `frontend/` - React frontend for exploring and exercising the sample application
 - `presentation/` - standalone React/RevealJS slide deck used to explain CCC in this repository
 - `docs/architecture/` - architecture decision records for the main technical choices
@@ -24,6 +24,8 @@ dotnet build backend/CCC.sln
 dotnet test backend/CCC.sln
 dotnet run --project backend/Api/Api.csproj
 ```
+
+The backend and the read model slice tests need PostgreSQL on `localhost:5432`. The tests use the server in the `CCC_TEST_POSTGRES` connection string instead, if it is set.
 
 Swagger UI is available at `http://localhost:5039/swagger` in development.
 
@@ -61,3 +63,4 @@ The browser-hosted presentation runs on Vite's default dev port unless that port
 | [ADR-004: Dapper as Event Log Data Access Library](docs/architecture/adr-004-dapper-event-store.md) | Explains why the event store uses Dapper and explicit SQL |
 | [ADR-005: No CRUD Terminology in Requests, Commands, and Events](docs/architecture/adr-005-no-crud-naming.md) | Defines the naming convention for commands, requests, and events |
 | [ADR-006: Split the Backend into API, Commands, Domain and EventStore Projects](docs/architecture/adr-006-project-structure.md) | Defines the backend projects, the direction of their dependencies, and where validation happens |
+| [ADR-007: Read Models as Projections, One Project per Slice](docs/architecture/adr-007-read-models.md) | Defines how read models are projected, woken up and queried, and why appends are serialized |

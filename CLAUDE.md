@@ -27,23 +27,27 @@ All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `n
   - A state model answers a question with a `bool` (`Tenant.IsNamed(tenantId, name)`, `Key.HasTranslation(...)`) or returns a domain type (`Team.Subscription` → `SubscriptionModelId?`). Comparisons belong in a state model, not in the handler. The one exception is the key limit, which spans two loads, so `KeyCount >= KeyLimit` stays in `AddKeyHandler`
   - Reducers turn stored values into domain types with the regular `From`. All stored events are assumed to have passed today's validation, so there is no separate unvalidated path
   - Handlers load all their state in one call and deconstruct the values with the context: `var (idTaken, emailTaken, context) = await loader.LoadAsync(User.Exists(...), User.EmailTaken(...))`
-- `EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup
+- `EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, the conditional append, schema setup, and the projection infrastructure every read model slice shares: `IProjection`, `ProjectionRunner<T>`, `AppendSignal`, `ReadModelDatabase`, `AddProjection<T>`
+- `ReadModels/` (solution folder `ReadModels`) — one project per read model slice, each serving one kind of consumer, e.g. `PublicTranslations` for client applications. A slice owns one PostgreSQL schema named after it (`public_translations`), holds its `IProjection`, its query records and public query handlers, and registers itself with an `Add<Slice>()` extension. `ProjectionRunner<T>` keeps each projection up to date in the background, woken by `PostgresEventStore` after every append. Raise a projection's `Version` whenever its tables or its logic change, so the slice is rebuilt from the first event
 - `Commands.Tests` — handler and value object tests against an in-memory `IEventStore`
+- `ReadModels/<Slice>.Tests` — a slice's projection and query tests against a throwaway database on the PostgreSQL server in `CCC_TEST_POSTGRES` (defaults to the local development server)
 - `Architecture.Tests` — checks the dependency rules below
 - `Api/Api.http` — smoke test with one request per endpoint and error path, including the expected status and body
 
 ### Dependency Rules
-- `Api` → `Commands` → `Domain` → `EventStore`. References only point this way
+- `Api` → `Commands` → `Domain` → `EventStore`, and `Api` → each read model slice → `Domain`. References only point this way
+- A read model slice never references `Commands`, ASP.NET Core or another slice. Query endpoints live in `Api` in a folder named after the slice (`Api/PublicTranslations/`), like the command endpoints. New slices go into `ReadModelSlices` in `Architecture.Tests`
 - `EventStore` knows nothing about the domain
 - `Commands` never references ASP.NET Core; handlers return `CommandResult`, never `IResult`
 - Endpoints never touch the state models in `CCC.Domain.State`, `Tag` or the event store directly. Only `Program.cs` references `EventStore`, to register it
 - Value objects check format and throw `InvalidValueException`, which the API turns into a 400. Handlers check rules that need the event log
+- Every append in `PostgresEventStore` holds one advisory lock until commit, so positions become visible strictly in order and projection bookmarks never skip an event. Don't append outside that lock
 - Event records keep primitive types, and must never be renamed: the stored event type is the record's class name
 
 ## Build & Run
 ```bash
 dotnet build backend/CCC.sln
-dotnet test backend/CCC.sln
+dotnet test backend/CCC.sln    # read model slice tests need PostgreSQL
 dotnet run --project backend/Api/Api.csproj
 ```
 

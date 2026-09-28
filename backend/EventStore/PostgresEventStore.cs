@@ -5,20 +5,20 @@ using Npgsql;
 
 namespace CCC.EventStore;
 
-class PostgresEventStore(string connectionString) : IEventStore
+class PostgresEventStore(string connectionString, AppendSignal signal) : IEventStore
 {
-    // The global log has no per-boundary unique constraint, so the conditional
-    // append's MAX(position) guard must be evaluated atomically against concurrent
-    // writers. SERIALIZABLE makes PostgreSQL's SSI detect two appends racing into
-    // the same filtered slice and abort one. A serialization failure can be a false
-    // positive, so we retry a bounded number of times before giving up.
-    private const int MaxAppendAttempts = 5;
+    // Positions come from a sequence and are taken before commit, so two concurrent
+    // appends could commit out of position order, and a reader that tracks the last
+    // position it saw would skip the earlier one for good. Every append holds this
+    // lock from INSERT to COMMIT, which makes positions visible strictly in order.
+    // Under the lock each statement's snapshot also includes every earlier append,
+    // so the conditional append's MAX(position) check is exact in READ COMMITTED.
+    private const long AppendLockKey = 0x4343435F4556;
 
     public async Task AppendAsync(string type, object payload, Guid user)
     {
         var json = JsonSerializer.Serialize(payload);
-        await using var conn = new NpgsqlConnection(connectionString);
-        await conn.ExecuteAsync(
+        await ExecuteUnderAppendLockAsync(
             """INSERT INTO events (type, payload, "user") VALUES (@type, @payload::jsonb, @user)""",
             new { type, payload = json, user });
     }
@@ -44,41 +44,27 @@ class PostgresEventStore(string connectionString) : IEventStore
             ) = @expectedMaxPosition
             """;
 
-        var rows = await ExecuteWithSerializableRetriesAsync(sql, parameters);
+        var rows = await ExecuteUnderAppendLockAsync(sql, parameters);
 
         if (rows == 0)
             throw new ConcurrencyException("The event store was modified by a concurrent operation.");
     }
 
-    private async Task<int> ExecuteWithSerializableRetriesAsync(string sql, object parameters)
+    private async Task<int> ExecuteUnderAppendLockAsync(string sql, object parameters)
     {
         await using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
-        for (var attempt = 1; ; attempt++)
-        {
-            await using var tx = await conn.BeginTransactionAsync(IsolationLevel.Serializable);
-            try
-            {
-                var rows = await conn.ExecuteAsync(sql, parameters, tx);
-                await tx.CommitAsync();
-                return rows;
-            }
-            catch (PostgresException ex) when (IsSerializationFailure(ex))
-            {
-                await tx.RollbackAsync();
+        await conn.ExecuteAsync("SELECT pg_advisory_xact_lock(@AppendLockKey)", new { AppendLockKey }, tx);
+        var rows = await conn.ExecuteAsync(sql, parameters, tx);
 
-                // Another transaction wrote into the same slice, or SSI flagged a false
-                // positive. Either way retry up to the limit; a genuine boundary conflict
-                // then surfaces as 0 affected rows to the caller.
-                if (attempt >= MaxAppendAttempts)
-                    throw new ConcurrencyException("The event store was modified by a concurrent operation.", ex);
-            }
-        }
+        await tx.CommitAsync();
+
+        if (rows > 0)
+            signal.Notify();
+        return rows;
     }
-
-    private static bool IsSerializationFailure(PostgresException ex)
-        => ex.SqlState is PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected;
 
     public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, params string[] types)
     {

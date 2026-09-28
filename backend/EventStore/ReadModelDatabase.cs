@@ -1,0 +1,13 @@
+using Npgsql;
+
+namespace CCC.EventStore;
+
+public sealed class ReadModelDatabase(string connectionString) : IAsyncDisposable
+{
+    private readonly NpgsqlDataSource _dataSource = NpgsqlDataSource.Create(connectionString);
+
+    public ValueTask<NpgsqlConnection> OpenAsync(CancellationToken cancellationToken = default) =>
+        _dataSource.OpenConnectionAsync(cancellationToken);
+
+    public ValueTask DisposeAsync() => _dataSource.DisposeAsync();
+}

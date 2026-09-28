@@ -252,3 +252,15 @@ POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{secondKeyId}}/re
 Content-Type: application/json
 
 { "name": "heading" }
+
+### 200 translations in the reference language
+# response: [{"keyId":"66666666-6666-6666-6666-666666666666","keyName":"heading","text":"Hello","sourceLanguageCode":"en"},{"keyId":"77777777-7777-7777-7777-777777777777","keyName":"subtitle","text":null,"sourceLanguageCode":null}]
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/en/translations
+
+### 200 translations in a language with its own text for one key
+# response: [{"keyId":"66666666-6666-6666-6666-666666666666","keyName":"heading","text":"Hallo","sourceLanguageCode":"de"},{"keyId":"77777777-7777-7777-7777-777777777777","keyName":"subtitle","text":null,"sourceLanguageCode":null}]
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/de/translations
+
+### 404 translations in a language the project doesn't have
+# response: "Language not found in this project."
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/fr/translations
