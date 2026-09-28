@@ -192,10 +192,10 @@ Each command is a record of value objects. Each handler takes over the logic of 
 
 I'd do this phase even though it's optional. Handlers that take value objects and an `IStateLoader` will be the easiest code in the repo to test, and right now there are no tests at all.
 
-- [ ] Create `backend/CCC.Commands.Tests` with xUnit
-- [ ] Write an in-memory `IEventStore` fake. It has to match the behaviour of `EventFilter.Matches` and the conditional append, or the tests prove nothing
-- [ ] Write given/when/then tests for each handler. Start from some existing events, run the command, then check the appended events or the returned error
-- [ ] Unit-test the value objects, canonicalization included
+- [x] Create `backend/CCC.Commands.Tests` with xUnit
+- [x] Write an in-memory `IEventStore` fake. It has to match the behaviour of `EventFilter.Matches` and the conditional append, or the tests prove nothing
+- [x] Write given/when/then tests for each handler. Start from some existing events, run the command, then check the appended events or the returned error. The tests resolve handlers through `AddCommandHandlers`, the same way the API does, and mostly build their starting state by running earlier commands, so the setup carries the tags the handlers really write. `ConcurrencyTests` slips a competing write in between load and append
+- [x] Unit-test the value objects, canonicalization included
 
 ## Phase 8: Documentation
 
