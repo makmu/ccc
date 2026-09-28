@@ -28,7 +28,7 @@ dotnet run --project CCC/CCC.csproj
 ```
 
 ## Tech Stack
-- .NET 8.0
+- .NET 10.0
 - ASP.NET Core
 - React (frontend, separate project)
 

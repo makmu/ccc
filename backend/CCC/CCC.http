@@ -1,0 +1,254 @@
+# Smoke test for every endpoint. Run the requests top to bottom against an
+# empty event store. Later requests depend on earlier ones, so the expected
+# results only hold on a fresh database.
+#
+# Each request title starts with the expected status code. A "# response:"
+# line under the title holds the expected body, recorded before the
+# project split. Requests without one return an empty body.
+
+@baseUrl = http://localhost:5039
+@subscriptionId = 11111111-1111-1111-1111-111111111111
+@userId = 22222222-2222-2222-2222-222222222222
+@tenantId = 33333333-3333-3333-3333-333333333333
+@teamId = 44444444-4444-4444-4444-444444444444
+@projectId = 55555555-5555-5555-5555-555555555555
+@keyId = 66666666-6666-6666-6666-666666666666
+@secondKeyId = 77777777-7777-7777-7777-777777777777
+@unknownId = 99999999-9999-9999-9999-999999999999
+
+### 200 add subscription model
+POST {{baseUrl}}/subscription-models
+Content-Type: application/json
+
+{ "id": "{{subscriptionId}}", "name": "Basic", "keyLimit": 2 }
+
+### 409 subscription model id taken
+# response: "A subscription model with this id already exists."
+POST {{baseUrl}}/subscription-models
+Content-Type: application/json
+
+{ "id": "{{subscriptionId}}", "name": "Basic", "keyLimit": 2 }
+
+### 200 add user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{ "id": "{{userId}}", "name": "Alice", "email": "alice@example.com" }
+
+### 409 user email taken
+# response: "A user with this email address already exists."
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "Alice 2", "email": "alice@example.com" }
+
+### 400 register tenant without subscription models
+# response: "At least one subscription model must be referenced."
+POST {{baseUrl}}/tenants
+Content-Type: application/json
+
+{ "id": "{{tenantId}}", "name": "Acme", "subscriptionModelIds": [] }
+
+### 200 register tenant
+POST {{baseUrl}}/tenants
+Content-Type: application/json
+
+{ "id": "{{tenantId}}", "name": "Acme", "subscriptionModelIds": ["{{subscriptionId}}"] }
+
+### 409 tenant name taken, compared canonically
+# response: "A tenant with this name already exists."
+POST {{baseUrl}}/tenants
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": " ACME ", "subscriptionModelIds": ["{{subscriptionId}}"] }
+
+### 404 register tenant with unknown subscription model
+# response: "One or more subscription models were not found."
+POST {{baseUrl}}/tenants
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "Other", "subscriptionModelIds": ["{{unknownId}}"] }
+
+### 200 rename tenant to its own name in other casing, no event appended
+POST {{baseUrl}}/tenants/{{tenantId}}/rename
+Content-Type: application/json
+
+{ "name": "ACME" }
+
+### 200 rename tenant
+POST {{baseUrl}}/tenants/{{tenantId}}/rename
+Content-Type: application/json
+
+{ "name": "Acme Corp" }
+
+### 404 rename unknown tenant
+# response: "Tenant not found."
+POST {{baseUrl}}/tenants/{{unknownId}}/rename
+Content-Type: application/json
+
+{ "name": "Nobody" }
+
+### 200 assign tenant owner
+POST {{baseUrl}}/tenants/{{tenantId}}/owners
+Content-Type: application/json
+
+{ "userId": "{{userId}}" }
+
+### 409 user already tenant owner
+# response: "This user is already an owner of this tenant."
+POST {{baseUrl}}/tenants/{{tenantId}}/owners
+Content-Type: application/json
+
+{ "userId": "{{userId}}" }
+
+### 404 assign unknown user as tenant owner
+# response: "User not found."
+POST {{baseUrl}}/tenants/{{tenantId}}/owners
+Content-Type: application/json
+
+{ "userId": "{{unknownId}}" }
+
+### 200 add team
+POST {{baseUrl}}/tenants/{{tenantId}}/teams
+Content-Type: application/json
+
+{ "id": "{{teamId}}", "name": "Team A", "subscriptionModelId": "{{subscriptionId}}" }
+
+### 400 add team with subscription model the tenant doesn't have
+# response: "The specified subscription model is not available in this tenant."
+POST {{baseUrl}}/tenants/{{tenantId}}/teams
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "Team B", "subscriptionModelId": "{{unknownId}}" }
+
+### 409 team name taken
+# response: "A team with this id or name already exists in this tenant."
+POST {{baseUrl}}/tenants/{{tenantId}}/teams
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "team a", "subscriptionModelId": "{{subscriptionId}}" }
+
+### 200 add project
+POST {{baseUrl}}/teams/{{teamId}}/projects
+Content-Type: application/json
+
+{ "id": "{{projectId}}", "name": "Web", "referenceLanguage": "en" }
+
+### 409 project name taken
+# response: "A project with this name already exists in this team."
+POST {{baseUrl}}/teams/{{teamId}}/projects
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "WEB", "referenceLanguage": "en" }
+
+### 404 add project to unknown team
+# response: "Team not found."
+POST {{baseUrl}}/teams/{{unknownId}}/projects
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "Web", "referenceLanguage": "en" }
+
+### 200 add language
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
+Content-Type: application/json
+
+{ "languageCode": "de", "parentLanguageCode": "en" }
+
+### 409 language already added
+# response: "This language has already been added to the project."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
+Content-Type: application/json
+
+{ "languageCode": "de", "parentLanguageCode": "en" }
+
+### 400 add the reference language as a language
+# response: "The reference language cannot be added as a new language."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
+Content-Type: application/json
+
+{ "languageCode": "en", "parentLanguageCode": "en" }
+
+### 400 add language with unknown parent language
+# response: "The parent language must be the project's reference language or a language already added to the project."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
+Content-Type: application/json
+
+{ "languageCode": "fr", "parentLanguageCode": "xx" }
+
+### 200 add key
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+Content-Type: application/json
+
+{ "id": "{{keyId}}", "name": "title" }
+
+### 409 key id taken
+# response: "Key ID already taken."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+Content-Type: application/json
+
+{ "id": "{{keyId}}", "name": "other" }
+
+### 409 key name taken
+# response: "Key name already taken."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+Content-Type: application/json
+
+{ "id": "{{secondKeyId}}", "name": "title" }
+
+### 200 add second key, reaching the key limit of 2
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+Content-Type: application/json
+
+{ "id": "{{secondKeyId}}", "name": "subtitle" }
+
+### 409 key limit reached
+# response: "The key limit for this team's subscription model has been reached."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+Content-Type: application/json
+
+{ "id": "{{unknownId}}", "name": "third" }
+
+### 200 provide reference text
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/reference-text
+Content-Type: application/json
+
+{ "text": "Hello" }
+
+### 200 provide the same reference text again, no event appended
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/reference-text
+Content-Type: application/json
+
+{ "text": "Hello" }
+
+### 404 provide reference text for unknown key
+# response: "Key not found in this project."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{unknownId}}/reference-text
+Content-Type: application/json
+
+{ "text": "Hello" }
+
+### 200 provide translation
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/translations
+Content-Type: application/json
+
+{ "languageCode": "de", "text": "Hallo" }
+
+### 400 provide translation for a language the project doesn't have
+# response: "The specified language has not been added to this project."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/translations
+Content-Type: application/json
+
+{ "languageCode": "fr", "text": "Bonjour" }
+
+### 200 rename key
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/rename
+Content-Type: application/json
+
+{ "name": "heading" }
+
+### 409 rename key to a taken name
+# response: "A key with this name already exists in this project."
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{secondKeyId}}/rename
+Content-Type: application/json
+
+{ "name": "heading" }
