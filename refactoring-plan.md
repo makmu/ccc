@@ -23,25 +23,31 @@ backend/
 │   ├── Tenants/
 │   ├── Users/
 │   ├── CommandResultExtensions.cs   maps CommandResult to IResult
+│   ├── InvalidValueFilter.cs        turns InvalidValueException into a 400
+│   ├── CCC.Api.http                 smoke test with expected responses
 │   └── Program.cs
 ├── CCC.Domain/
 │   ├── Events/          TenantRegistered.cs, KeyAdded.cs, ...
 │   ├── State/           State.cs, Tag.cs
-│   └── ValueObjects/    TenantName.cs, KeyName.cs, LanguageCode.cs, ...
+│   └── ValueObjects/    TenantName.cs, KeyName.cs, LanguageCode.cs, InvalidValueException.cs, ...
 ├── CCC.Commands/
 │   ├── CommandResult.cs, CommandError.cs, ICommandHandler.cs
+│   ├── StateContextExtensions.cs   TryAppendAsync
 │   ├── Tenants/         RegisterTenant.cs, RegisterTenantHandler.cs, ...
 │   ├── Projects/
 │   ├── Keys/
 │   ├── SubscriptionModels/
 │   ├── Users/
 │   └── ServiceCollectionExtensions.cs   AddCommandHandlers
-└── CCC.EventStore/
-    ├── IEventStore.cs, PostgresEventStore.cs, EventStoreSchema.cs
-    ├── EventRecord.cs, EventFilter.cs, Tags.cs, ConcurrencyException.cs
-    ├── StateModel.cs, IStateModel.cs, StateLoader.cs, StateContext.cs
-    ├── DateTimeOffsetTypeHandler.cs, StringArrayTypeHandler.cs
-    └── ServiceCollectionExtensions.cs   AddEventStore
+├── CCC.EventStore/
+│   ├── IEventStore.cs, PostgresEventStore.cs, EventStoreSchema.cs
+│   ├── EventRecord.cs, EventFilter.cs, Tags.cs, ConcurrencyException.cs
+│   ├── StateModel.cs, IStateModel.cs, StateLoader.cs, StateContext.cs
+│   ├── IStateLoader.cs, DateTimeOffsetTypeHandler.cs, StringArrayTypeHandler.cs
+│   └── ServiceCollectionExtensions.cs   AddEventStore
+├── CCC.Commands.Tests/      handler and value object tests, in-memory IEventStore
+├── CCC.Architecture.Tests/  dependency rule tests
+└── Directory.Build.props    net10.0, Nullable, ImplicitUsings for every project
 ```
 
 ## Dependency graph
@@ -199,9 +205,9 @@ I'd do this phase even though it's optional. Handlers that take value objects an
 
 ## Phase 8: Documentation
 
-- [ ] Update `CLAUDE.md` with the new project structure, the new run command `dotnet run --project backend/CCC.Api/CCC.Api.csproj` and the dependency rules
-- [ ] Add `docs/architecture/adr-006-project-structure.md` covering the four-project split, the dependency direction and decisions D1 to D3
-- [ ] Update `README.md` if it mentions the old project path
+- [x] Update `CLAUDE.md` with the new project structure, the new run command `dotnet run --project backend/CCC.Api/CCC.Api.csproj` and the dependency rules
+- [x] Add `docs/architecture/adr-006-project-structure.md` covering the four-project split, the dependency direction and decisions D1 to D3
+- [x] Update `README.md` if it mentions the old project path. Also added `dotnet test` to its quick start and ADR-006 to its ADR table
 
 ---
 
