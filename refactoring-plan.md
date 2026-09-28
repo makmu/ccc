@@ -167,19 +167,19 @@ Each command is a record of value objects. Each handler takes over the logic of 
 
 ## Phase 5: Route the API through the handlers and rename it to `CCC.Api`
 
-- [ ] Rename `backend/CCC/` to `backend/CCC.Api/` and `CCC.csproj` to `CCC.Api.csproj` with `git mv`, which keeps the history. The endpoint namespaces are already `CCC.Api.*`, so they stay
-- [ ] Update the project path in `CCC.sln`
-- [ ] Flatten `CCC.Api/Api/<Feature>/` to `CCC.Api/<Feature>/`
-- [ ] Add `ToHttpResult(this CommandResult)` in `CommandResultExtensions`. It maps `Ok` to 200, `NotFound` to 404, `Conflict` to 409 and `Invalid` to 400, with the error message as the body
-- [ ] Rewrite each endpoint to do four things:
+- [x] Rename `backend/CCC/` to `backend/CCC.Api/` and `CCC.csproj` to `CCC.Api.csproj` with `git mv`, which keeps the history. The endpoint namespaces are already `CCC.Api.*`, so they stay. `CCC.http` moved along as `CCC.Api.http`
+- [x] Update the project path in `CCC.sln`
+- [x] Flatten `CCC.Api/Api/<Feature>/` to `CCC.Api/<Feature>/`
+- [x] Add `ToHttpResult(this CommandResult)` in `CommandResultExtensions`. It maps `Ok` to 200, `NotFound` to 404, `Conflict` to 409 and `Invalid` to 400, with the error message as the body
+- [x] Rewrite each endpoint to do four things:
   1. Bind the request DTO and route parameters.
   2. Turn them into value objects. Malformed input returns 400 with the error message.
   3. Build the command and call the injected `ICommandHandler<TCommand>`.
   4. Return `result.ToHttpResult()`.
-- [ ] Remove every use of `State`, `Tag`, `Tags`, `StateLoader` and `ConcurrencyException` from the endpoints. They shouldn't touch the event store at all
-- [ ] In `Program.cs`, replace the manual registrations with `AddEventStore(connectionString)` and `AddCommandHandlers()`. Keep the schema setup call at startup
-- [ ] Check that `Properties/launchSettings.json` and the `appsettings*.json` files moved with the project and still load
-- [ ] Build and rerun the smoke test. Every route must return the baseline status code and message. Also check that events written before the refactoring still read correctly, for example by renaming a tenant registered before phase 1
+- [x] Remove every use of `State`, `Tag`, `Tags`, `StateLoader` and `ConcurrencyException` from the endpoints. They shouldn't touch the event store at all
+- [x] In `Program.cs`, replace the manual registrations with `AddEventStore(connectionString)` and `AddCommandHandlers()`. Keep the schema setup call at startup
+- [x] Check that `Properties/launchSettings.json` and the `appsettings*.json` files moved with the project and still load
+- [x] Build and rerun the smoke test. Every route must return the baseline status code and message. Also check that events written before the refactoring still read correctly, for example by renaming a tenant registered before phase 1. Checked by filling the database with the phase 0 build, then running requests against this build that depend on those events: an old rename, the old key count, an unchanged old translation
 
 ## Phase 6: Check the boundaries
 

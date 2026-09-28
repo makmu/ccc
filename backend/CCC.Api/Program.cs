@@ -4,6 +4,7 @@ using CCC.Api.Projects;
 using CCC.Api.SubscriptionModels;
 using CCC.Api.Tenants;
 using CCC.Api.Users;
+using CCC.Commands;
 using CCC.EventStore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,7 @@ var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
 
 builder.Services.AddEventStore(connectionString);
+builder.Services.AddCommandHandlers();
 
 var app = builder.Build();
 

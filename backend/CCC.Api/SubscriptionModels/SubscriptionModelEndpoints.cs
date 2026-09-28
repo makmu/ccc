@@ -1,0 +1,20 @@
+using CCC.Commands;
+using CCC.Commands.SubscriptionModels;
+using CCC.Domain.ValueObjects;
+
+namespace CCC.Api.SubscriptionModels;
+
+static class SubscriptionModelEndpoints
+{
+    public static void MapSubscriptionModelEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapPost("/subscription-models", async (AddSubscriptionModelRequest request, ICommandHandler<AddSubscriptionModel> handler) =>
+        {
+            var command = new AddSubscriptionModel(
+                SubscriptionModelId.Create(request.Id),
+                request.Name,
+                KeyLimit.Create(request.KeyLimit));
+            return (await handler.HandleAsync(command)).ToHttpResult();
+        });
+    }
+}
