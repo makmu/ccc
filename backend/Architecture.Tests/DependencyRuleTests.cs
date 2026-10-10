@@ -1,4 +1,5 @@
 using System.Reflection;
+using CCC.Abstractions;
 using NetArchTest.Rules;
 
 namespace CCC.Architecture.Tests;
@@ -58,7 +59,24 @@ public class DependencyRuleTests
             "CCC.EventStore", "CCC.Domain.State");
     }
 
+    [Fact]
+    public void Handlers_are_reachable_only_through_their_interfaces()
+    {
+        var handlers = Modules
+            .SelectMany(module => module.GetTypes())
+            .Where(type => type.GetInterfaces().Any(IsHandlerInterface))
+            .ToList();
+
+        Assert.NotEmpty(handlers);
+        Assert.Empty(handlers.Where(type => type.IsVisible).Select(type => type.FullName));
+    }
+
     private static string RootNamespace(Assembly module) => $"CCC.Modules.{module.GetName().Name}";
+
+    private static bool IsHandlerInterface(Type type) =>
+        type.IsGenericType
+        && (type.GetGenericTypeDefinition() == typeof(ICommandHandler<>)
+            || type.GetGenericTypeDefinition() == typeof(IQueryHandler<,>));
 
     private static void AssertNoDependency(PredicateList types, params string[] namespaces) =>
         AssertNoDependency(types.ShouldNot().HaveDependencyOnAny(namespaces));
