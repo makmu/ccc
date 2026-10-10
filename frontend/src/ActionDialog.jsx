@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react'
 
-export default function ActionDialog({ label, title = label, className, onRun, onDone, children }) {
+export default function ActionDialog({ label, title = label, className, onRun, children }) {
   const dialog = useRef(null)
   const titleId = useId()
   const [rejection, setRejection] = useState(null)
@@ -19,7 +19,6 @@ export default function ActionDialog({ label, title = label, className, onRun, o
       await onRun(new FormData(form))
       dialog.current.close()
       form.reset()
-      onDone?.()
     } catch (error) {
       setRejection(error.message)
     } finally {

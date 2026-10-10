@@ -61,7 +61,7 @@ Frontend only, with no backend changes.
 For the people who run the service.
 
 - **Backend**: an `app_administration` read model with the queries `SubscriptionModels`, `Tenants` and `Users`, plus their endpoints, `Api.http` entries and tests.
-- **UI**: three pages.
+- **UI**: three sections on one page.
   - **Subscription models**: a list with its key limits and an "Add subscription model" action.
   - **Tenants**: a list with each tenant's owner. Actions: "Register tenant" (choosing subscription models) and "Assign owner" (choosing a user).
   - **Users**: a list and an "Add user" action.

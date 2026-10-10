@@ -1,9 +1,12 @@
+import AppAdministration from './areas/AppAdministration'
+
 export const areas = [
   {
     route: 'app-administration',
     title: 'App administration',
     purpose: 'Set up subscription models, register tenants and add users.',
     scope: null,
+    Page: AppAdministration,
   },
   {
     route: 'tenant-administration',

@@ -1,16 +1,15 @@
 using CCC.Abstractions;
-using CCC.Domain.Types;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 
-namespace CCC.Modules.TranslationDelivery.Tests;
+namespace CCC.TestKit;
 
-// Runs the projections against a throwaway database on the server given by
+// Runs a module's projection against a throwaway database on the server given by
 // CCC_TEST_POSTGRES, defaulting to the local development server.
-sealed class ReadModelFixture : IAsyncLifetime
+public sealed class ReadModelFixture(string schema, Func<IServiceCollection, IServiceCollection> addModule)
 {
     private static readonly TimeSpan CatchUpTimeout = TimeSpan.FromSeconds(5);
 
@@ -31,11 +30,10 @@ sealed class ReadModelFixture : IAsyncLifetime
 
         await EventStoreSchema.CreateAsync(ConnectionString);
 
-        _services = new ServiceCollection()
-            .AddLogging()
-            .AddEventStore(ConnectionString)
-            .AddReadModelDatabase(ConnectionString)
-            .AddTranslationDelivery()
+        _services = addModule(new ServiceCollection()
+                .AddLogging()
+                .AddEventStore(ConnectionString)
+                .AddReadModelDatabase(ConnectionString))
             .BuildServiceProvider();
 
         foreach (var service in _services.GetServices<IHostedService>())
@@ -56,12 +54,10 @@ sealed class ReadModelFixture : IAsyncLifetime
     public Task Given<TEvent>(TEvent @event) =>
         _services.GetRequiredService<IEventStore>().AppendAsync(typeof(TEvent).Name, @event!, Guid.Empty);
 
-    public async Task<IReadOnlyList<Translation>?> TranslationsOf(Guid teamId, Guid projectId, string languageCode)
+    public async Task<TResult> Query<TQuery, TResult>(TQuery query)
     {
         await WaitForCatchUpAsync();
-        var handler = _services.GetRequiredService<IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>>();
-        return await handler.HandleAsync(new TranslationsOfProject(
-            TeamId.From(teamId), ProjectId.From(projectId), LanguageCode.From(languageCode)));
+        return await _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query);
     }
 
     private async Task WaitForCatchUpAsync()
@@ -72,15 +68,15 @@ sealed class ReadModelFixture : IAsyncLifetime
         while (!await IsCaughtUpAsync(connection))
         {
             if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"The translation delivery projection did not catch up within {CatchUpTimeout}.");
+                throw new TimeoutException($"The {schema} projection did not catch up within {CatchUpTimeout}.");
             await Task.Delay(10);
         }
     }
 
-    private static async Task<bool> IsCaughtUpAsync(NpgsqlConnection connection) =>
-        await connection.ExecuteScalarAsync<bool>("SELECT to_regclass('translation_delivery.bookmark') IS NOT NULL")
-        && await connection.ExecuteScalarAsync<bool>("""
-            SELECT (SELECT position FROM translation_delivery.bookmark)
+    private async Task<bool> IsCaughtUpAsync(NpgsqlConnection connection) =>
+        await connection.ExecuteScalarAsync<bool>($"SELECT to_regclass('{schema}.bookmark') IS NOT NULL")
+        && await connection.ExecuteScalarAsync<bool>($"""
+            SELECT (SELECT position FROM {schema}.bookmark)
                  = (SELECT COALESCE(MAX(position), 0) FROM events)
             """);
 }

@@ -1,10 +1,12 @@
 using CCC.Domain.Events;
+using CCC.Domain.Types;
+using CCC.TestKit;
 
 namespace CCC.Modules.TranslationDelivery.Tests;
 
 public class TranslationsOfProjectTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new();
+    private readonly ReadModelFixture _fixture = new("translation_delivery", services => services.AddTranslationDelivery());
     private readonly Guid _team = Guid.NewGuid();
     private readonly Guid _project = Guid.NewGuid();
     private readonly Guid _key = Guid.NewGuid();
@@ -92,7 +94,7 @@ public class TranslationsOfProjectTests : IAsyncLifetime
         await _fixture.Given(new KeyAdded(subtitle, "subtitle", _project));
         await _fixture.Given(new ReferenceTextProvided(subtitle, _project, "Welcome"));
 
-        var translations = await _fixture.TranslationsOf(_team, _project, "de-AT");
+        var translations = await TranslationsOf(_team, _project, "de-AT");
 
         Assert.Equal(
             [new Translation(subtitle, "subtitle", "Welcome", "en"), new Translation(_key, "title", null, null)],
@@ -115,23 +117,27 @@ public class TranslationsOfProjectTests : IAsyncLifetime
         await _fixture.Given(new ProjectAdded(otherProject, "App", _team, "en"));
         await _fixture.Given(new KeyAdded(Guid.NewGuid(), "title", otherProject));
 
-        Assert.Single((await _fixture.TranslationsOf(_team, _project, "en"))!);
+        Assert.Single((await TranslationsOf(_team, _project, "en"))!);
     }
 
     [Fact]
     public async Task A_language_the_project_does_not_have_is_not_found()
     {
-        Assert.Null(await _fixture.TranslationsOf(_team, _project, "it"));
+        Assert.Null(await TranslationsOf(_team, _project, "it"));
     }
 
     [Fact]
     public async Task A_project_of_another_team_is_not_found()
     {
-        Assert.Null(await _fixture.TranslationsOf(Guid.NewGuid(), _project, "en"));
+        Assert.Null(await TranslationsOf(Guid.NewGuid(), _project, "en"));
     }
 
     private async Task<Translation> TitleIn(string languageCode) =>
-        Assert.Single((await _fixture.TranslationsOf(_team, _project, languageCode))!);
+        Assert.Single((await TranslationsOf(_team, _project, languageCode))!);
+
+    private Task<IReadOnlyList<Translation>?> TranslationsOf(Guid teamId, Guid projectId, string languageCode) =>
+        _fixture.Query<TranslationsOfProject, IReadOnlyList<Translation>?>(new TranslationsOfProject(
+            TeamId.From(teamId), ProjectId.From(projectId), LanguageCode.From(languageCode)));
 
     private async Task<(string?, string?)> TextIn(string languageCode)
     {
