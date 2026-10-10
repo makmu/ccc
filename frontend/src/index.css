@@ -58,7 +58,8 @@ h2 {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -84,7 +85,8 @@ button:disabled {
 }
 
 input,
-select {
+select,
+textarea {
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--rule);
   border-radius: 4px;
@@ -259,6 +261,54 @@ h3 {
   border-left: 1px solid var(--rule);
 }
 
+button.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--action);
+  font-size: 0.875rem;
+}
+
+button.link:hover {
+  text-decoration: underline;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.editor td {
+  min-width: 10rem;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+}
+
+.editor th[scope='row'] {
+  color: var(--ink);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.key-name span {
+  margin-right: 0.75rem;
+}
+
+button.cell {
+  display: block;
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+button.cell:hover {
+  border-color: var(--rule);
+  background: var(--wash);
+}
+
 .choices {
   display: flex;
   flex-direction: column;
@@ -275,6 +325,9 @@ h3 {
 
 dialog {
   width: min(28rem, calc(100vw - 2rem));
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
   padding: 1.5rem;
   border: 1px solid var(--rule);
   border-radius: 6px;

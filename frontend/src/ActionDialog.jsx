@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react'
 
-export default function ActionDialog({ label, title = label, className, onRun, children }) {
+export default function ActionDialog({ label, title = label, trigger = label, triggerLabel, className, onRun, children }) {
   const dialog = useRef(null)
   const titleId = useId()
   const [rejection, setRejection] = useState(null)
@@ -28,7 +28,7 @@ export default function ActionDialog({ label, title = label, className, onRun, c
 
   return (
     <>
-      <button type="button" className={className} onClick={open}>{label}</button>
+      <button type="button" className={className} aria-label={triggerLabel} onClick={open}>{trigger}</button>
       <dialog ref={dialog} aria-labelledby={titleId}>
         <form onSubmit={run}>
           <h2 id={titleId}>{title}</h2>

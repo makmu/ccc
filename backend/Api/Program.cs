@@ -64,6 +64,7 @@ api.MapAddKey();
 api.MapProvideReferenceText();
 api.MapProvideTranslation();
 api.MapRenameKey();
+api.MapKeysOfProject();
 api.MapTranslationsOfProject();
 
 app.Run();

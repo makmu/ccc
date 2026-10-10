@@ -292,3 +292,11 @@ GET {{baseUrl}}/tenants/{{tenantId}}/teams
 ### 200 projects of team with their languages
 # response: [{"id":"55555555-5555-5555-5555-555555555555","name":"Web","referenceLanguage":"en","languages":[{"code":"de","parentCode":"en"},{"code":"en","parentCode":null}]}]
 GET {{baseUrl}}/teams/{{teamId}}/projects
+
+### 200 keys of project with their own texts
+# response: {"referenceLanguage":"en","languages":["de"],"keys":[{"id":"66666666-6666-6666-6666-666666666666","name":"heading","referenceText":"Hello","translations":{"de":"Hallo"}},{"id":"77777777-7777-7777-7777-777777777777","name":"subtitle","referenceText":null,"translations":{}}]}
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
+
+### 404 keys of a project in another team
+# response: "Project not found in this team."
+GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/keys

@@ -92,7 +92,7 @@ For editors, working in the project chosen in the header.
 - **UI**:
   - a key × language table and an "Add key" action
   - per key, "Rename key"
-  - per cell, "Provide reference text" or "Provide translation" as an inline editor
+  - per cell, "Provide reference text" or "Provide translation" in a dialog that shows the reference text while translating
 - Read models update shortly after a command. The table updates the changed row immediately and refreshes it from the query once the read model has caught up, so the delay never shows up as a missing change.
 
 ### 6. Translation delivery

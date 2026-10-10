@@ -1,6 +1,7 @@
 import AppAdministration from './areas/AppAdministration'
 import TeamAdministration from './areas/TeamAdministration'
 import TenantAdministration from './areas/TenantAdministration'
+import TranslationEditor from './areas/TranslationEditor'
 
 export const areas = [
   {
@@ -29,6 +30,7 @@ export const areas = [
     title: 'Translation editor',
     purpose: 'Add keys and write their texts in every language.',
     scope: 'project',
+    Page: TranslationEditor,
   },
   {
     route: 'translation-delivery',
