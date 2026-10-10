@@ -10,43 +10,43 @@ public class DependencyRuleTests
     private static readonly Assembly Commands = Assembly.Load("Commands");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
-    private static readonly Assembly[] ReadModelSlices = [Assembly.Load("PublicTranslations")];
+    private static readonly Assembly[] Modules = [Assembly.Load("TranslationDelivery")];
 
     [Fact]
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Domain", "CCC.EventStore", "CCC.Commands", "CCC.ReadModels", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Domain", "CCC.EventStore", "CCC.Commands", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void EventStore_knows_nothing_about_the_domain()
     {
         AssertNoDependency(Types.InAssembly(EventStore),
-            "CCC.Abstractions", "CCC.Domain", "CCC.Commands", "CCC.ReadModels", "CCC.Api");
+            "CCC.Abstractions", "CCC.Domain", "CCC.Commands", "CCC.Modules", "CCC.Api");
     }
 
     [Fact]
     public void Domain_depends_on_nothing_but_the_event_store()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Abstractions", "CCC.Commands", "CCC.ReadModels", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Abstractions", "CCC.Commands", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void Commands_do_not_depend_on_ASP_NET_Core()
     {
-        AssertNoDependency(Types.InAssembly(Commands), "CCC.ReadModels", "CCC.Api", "Microsoft.AspNetCore");
+        AssertNoDependency(Types.InAssembly(Commands), "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
-    public void Read_model_slices_depend_on_neither_commands_nor_ASP_NET_Core_nor_each_other()
+    public void Modules_depend_on_neither_commands_nor_ASP_NET_Core_nor_each_other()
     {
-        foreach (var slice in ReadModelSlices)
+        foreach (var module in Modules)
         {
-            var otherSlices = ReadModelSlices.Where(other => other != slice).Select(RootNamespace);
-            AssertNoDependency(Types.InAssembly(slice),
-                ["CCC.Commands", "CCC.Api", "Microsoft.AspNetCore", .. otherSlices]);
+            var otherModules = Modules.Where(other => other != module).Select(RootNamespace);
+            AssertNoDependency(Types.InAssembly(module),
+                ["CCC.Commands", "CCC.Api", "Microsoft.AspNetCore", .. otherModules]);
         }
     }
 
@@ -58,7 +58,7 @@ public class DependencyRuleTests
             "CCC.EventStore", "CCC.Domain.State");
     }
 
-    private static string RootNamespace(Assembly slice) => $"CCC.ReadModels.{slice.GetName().Name}";
+    private static string RootNamespace(Assembly module) => $"CCC.Modules.{module.GetName().Name}";
 
     private static void AssertNoDependency(PredicateList types, params string[] namespaces) =>
         AssertNoDependency(types.ShouldNot().HaveDependencyOnAny(namespaces));

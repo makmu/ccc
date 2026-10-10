@@ -3,7 +3,7 @@ using CCC.Domain.Types;
 using CCC.EventStore;
 using Dapper;
 
-namespace CCC.ReadModels.PublicTranslations;
+namespace CCC.Modules.TranslationDelivery;
 
 public record TranslationsOfProject(TeamId TeamId, ProjectId ProjectId, LanguageCode LanguageCode);
 
@@ -26,8 +26,8 @@ sealed class TranslationsOfProjectHandler(ReadModelDatabase database)
         var languageInProject = await connection.ExecuteScalarAsync<bool>("""
             SELECT EXISTS (
                 SELECT 1
-                FROM public_translations.projects p
-                JOIN public_translations.languages l ON l.project_id = p.project_id
+                FROM translation_delivery.projects p
+                JOIN translation_delivery.languages l ON l.project_id = p.project_id
                 WHERE p.project_id = @ProjectId AND p.team_id = @TeamId AND l.language_code = @LanguageCode
             )
             """, parameters);
@@ -37,7 +37,7 @@ sealed class TranslationsOfProjectHandler(ReadModelDatabase database)
 
         var translations = await connection.QueryAsync<Translation>("""
             SELECT key_id AS KeyId, key_name AS KeyName, text AS Text, source_language_code AS SourceLanguageCode
-            FROM public_translations.texts
+            FROM translation_delivery.texts
             WHERE project_id = @ProjectId AND language_code = @LanguageCode
             ORDER BY key_name
             """, parameters);

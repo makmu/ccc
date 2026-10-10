@@ -2,11 +2,11 @@ using CCC.Abstractions;
 using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CCC.ReadModels.PublicTranslations;
+namespace CCC.Modules.TranslationDelivery;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddPublicTranslations(this IServiceCollection services)
+    public static IServiceCollection AddTranslationDelivery(this IServiceCollection services)
     {
         services.AddProjection<TranslationsProjection>();
         services.AddTransient<IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>, TranslationsOfProjectHandler>();

@@ -2,12 +2,12 @@ using CCC.Api;
 using CCC.Api.Keys;
 using CCC.Api.Projects;
 using CCC.Api.SubscriptionModels;
-using CCC.Api.PublicTranslations;
+using CCC.Api.TranslationDelivery;
 using CCC.Api.Tenants;
 using CCC.Api.Users;
 using CCC.Commands;
 using CCC.EventStore;
-using CCC.ReadModels.PublicTranslations;
+using CCC.Modules.TranslationDelivery;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +23,7 @@ var readModelsConnectionString = builder.Configuration.GetConnectionString("Read
 builder.Services.AddEventStore(connectionString);
 builder.Services.AddCommandHandlers();
 builder.Services.AddReadModelDatabase(readModelsConnectionString);
-builder.Services.AddPublicTranslations();
+builder.Services.AddTranslationDelivery();
 
 var app = builder.Build();
 

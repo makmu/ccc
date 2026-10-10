@@ -1,6 +1,6 @@
 using CCC.Domain.Events;
 
-namespace CCC.ReadModels.PublicTranslations.Tests;
+namespace CCC.Modules.TranslationDelivery.Tests;
 
 public class TranslationsOfProjectTests : IAsyncLifetime
 {

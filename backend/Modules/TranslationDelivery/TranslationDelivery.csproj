@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <RootNamespace>CCC.ReadModels.PublicTranslations</RootNamespace>
+      <RootNamespace>CCC.Modules.TranslationDelivery</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

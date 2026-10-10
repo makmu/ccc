@@ -1,8 +1,8 @@
 using CCC.Abstractions;
 using CCC.Domain.Types;
-using CCC.ReadModels.PublicTranslations;
+using CCC.Modules.TranslationDelivery;
 
-namespace CCC.Api.PublicTranslations;
+namespace CCC.Api.TranslationDelivery;
 
 static class TranslationsOfProjectEndpoint
 {

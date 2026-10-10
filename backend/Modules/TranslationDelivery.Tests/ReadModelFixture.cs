@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 
-namespace CCC.ReadModels.PublicTranslations.Tests;
+namespace CCC.Modules.TranslationDelivery.Tests;
 
 // Runs the projections against a throwaway database on the server given by
 // CCC_TEST_POSTGRES, defaulting to the local development server.
@@ -35,7 +35,7 @@ sealed class ReadModelFixture : IAsyncLifetime
             .AddLogging()
             .AddEventStore(ConnectionString)
             .AddReadModelDatabase(ConnectionString)
-            .AddPublicTranslations()
+            .AddTranslationDelivery()
             .BuildServiceProvider();
 
         foreach (var service in _services.GetServices<IHostedService>())
@@ -72,15 +72,15 @@ sealed class ReadModelFixture : IAsyncLifetime
         while (!await IsCaughtUpAsync(connection))
         {
             if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"The public translations projection did not catch up within {CatchUpTimeout}.");
+                throw new TimeoutException($"The translation delivery projection did not catch up within {CatchUpTimeout}.");
             await Task.Delay(10);
         }
     }
 
     private static async Task<bool> IsCaughtUpAsync(NpgsqlConnection connection) =>
-        await connection.ExecuteScalarAsync<bool>("SELECT to_regclass('public_translations.bookmark') IS NOT NULL")
+        await connection.ExecuteScalarAsync<bool>("SELECT to_regclass('translation_delivery.bookmark') IS NOT NULL")
         && await connection.ExecuteScalarAsync<bool>("""
-            SELECT (SELECT position FROM public_translations.bookmark)
+            SELECT (SELECT position FROM translation_delivery.bookmark)
                  = (SELECT COALESCE(MAX(position), 0) FROM events)
             """);
 }

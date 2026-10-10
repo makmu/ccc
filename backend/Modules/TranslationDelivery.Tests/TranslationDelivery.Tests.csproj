@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <IsPackable>false</IsPackable>
-        <RootNamespace>CCC.ReadModels.PublicTranslations.Tests</RootNamespace>
+        <RootNamespace>CCC.Modules.TranslationDelivery.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PublicTranslations\PublicTranslations.csproj" />
+        <ProjectReference Include="..\TranslationDelivery\TranslationDelivery.csproj" />
     </ItemGroup>
 
     <ItemGroup>
