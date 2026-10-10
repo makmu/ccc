@@ -1,3 +1,4 @@
+using CCC.Abstractions;
 using CCC.Commands.Projects;
 using CCC.Domain.Events;
 using CCC.Domain.Types;

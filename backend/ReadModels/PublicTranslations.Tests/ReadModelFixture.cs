@@ -1,3 +1,4 @@
+using CCC.Abstractions;
 using CCC.Domain.Types;
 using CCC.EventStore;
 using Dapper;
@@ -58,7 +59,7 @@ sealed class ReadModelFixture : IAsyncLifetime
     public async Task<IReadOnlyList<Translation>?> TranslationsOf(Guid teamId, Guid projectId, string languageCode)
     {
         await WaitForCatchUpAsync();
-        var handler = _services.GetRequiredService<TranslationsOfProjectHandler>();
+        var handler = _services.GetRequiredService<IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>>();
         return await handler.HandleAsync(new TranslationsOfProject(
             TeamId.From(teamId), ProjectId.From(projectId), LanguageCode.From(languageCode)));
     }

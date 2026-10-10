@@ -1,3 +1,4 @@
+using CCC.Abstractions;
 using CCC.EventStore;
 
 namespace CCC.Commands;

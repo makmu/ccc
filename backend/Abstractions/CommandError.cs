@@ -1,4 +1,4 @@
-namespace CCC.Commands;
+namespace CCC.Abstractions;
 
 public enum CommandErrorKind
 {

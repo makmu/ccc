@@ -1,4 +1,4 @@
-using CCC.Commands;
+using CCC.Abstractions;
 using CCC.Commands.Tenants;
 using CCC.Domain.Types;
 

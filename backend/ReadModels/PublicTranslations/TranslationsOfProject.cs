@@ -1,3 +1,4 @@
+using CCC.Abstractions;
 using CCC.Domain.Types;
 using CCC.EventStore;
 using Dapper;
@@ -8,7 +9,8 @@ public record TranslationsOfProject(TeamId TeamId, ProjectId ProjectId, Language
 
 public record Translation(Guid KeyId, string KeyName, string? Text, string? SourceLanguageCode);
 
-public sealed class TranslationsOfProjectHandler(ReadModelDatabase database)
+sealed class TranslationsOfProjectHandler(ReadModelDatabase database)
+    : IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>
 {
     public async Task<IReadOnlyList<Translation>?> HandleAsync(TranslationsOfProject query)
     {

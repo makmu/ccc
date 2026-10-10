@@ -1,3 +1,5 @@
+using CCC.Abstractions;
+
 namespace CCC.Commands.Tests;
 
 static class CommandAssert

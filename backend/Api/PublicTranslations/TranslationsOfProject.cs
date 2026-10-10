@@ -1,3 +1,4 @@
+using CCC.Abstractions;
 using CCC.Domain.Types;
 using CCC.ReadModels.PublicTranslations;
 
@@ -7,7 +8,7 @@ static class TranslationsOfProjectEndpoint
 {
     public static void MapTranslationsOfProject(this IEndpointRouteBuilder app) =>
         app.MapGet("/teams/{teamId}/projects/{projectId}/languages/{languageCode}/translations",
-            async (Guid teamId, Guid projectId, string languageCode, TranslationsOfProjectHandler handler) =>
+            async (Guid teamId, Guid projectId, string languageCode, IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?> handler) =>
             {
                 var query = new TranslationsOfProject(
                     TeamId.From(teamId),
