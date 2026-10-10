@@ -1,52 +1,22 @@
 # CCC - Multi-Tenant CMS (Content/Copy Management System)
 
-## Project Overview
-CCC is a multi-tenant CMS that allows users to define keys and translations for those keys. Its primary focus is enabling developers, project managers, and editors to manage label texts for user controls in different languages. Keys are not limited to simple UI elements — they can also represent dynamic welcome texts, mail templates, or any static data consumed by a target application.
+## Purpose
+CCC is a demo project. It shows how to build a .NET backend on an event store with dynamic consistency boundaries (DCB), with commands and queries separated (CQS) and read models projected from the event log (CQRS). The frontend is secondary: it only gives access to the commands and queries.
+
+## Demo Domain
+A multi-tenant CMS in which users define keys and translations for those keys, such as label texts for user controls in different languages. Keys can also represent welcome texts, mail templates, or any other static data consumed by a target application.
 
 ## Architecture
-The system consists of two main parts:
+- **Backend (C# / ASP.NET Core)** — the actual subject of the demo, with two API surfaces:
+  1. **Internal API** — the commands and queries the frontend uses to manage tenants, teams, projects, keys and translations
+  2. **Public API** — lets client applications fetch translations by project and locale
+- **Frontend (React)** — a thin UI over the internal API
 
-### Frontend
-- React application
-- Provides the management UI for tenants, keys, and translations
+## Project Structure and Dependency Rules
+Read these files whenever you need to explore the project structure, and always before modifying code:
 
-### Backend (C# / ASP.NET Core)
-Two distinct API surfaces:
-
-1. **Internal API** — used exclusively by the frontend to manage tenants, keys, and translations
-2. **Public API** — allows client applications to fetch key/translation results by tenant and locale
-
-## Project Structure
-All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `net10.0`, `Nullable` and `ImplicitUsings` from `backend/Directory.Build.props`. Project names have no `CCC.` prefix, but each sets `RootNamespace`, so namespaces keep it: the `Domain` project's code lives in `CCC.Domain.*`.
-
-- `Abstractions` — the contracts every module shares at its boundary to `Api`: `ICommandHandler<TCommand>`, `IQueryHandler<TQuery, TResult>`, `CommandResult` and `CommandError`. References no other project, and holds nothing else
-- `Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
-- `Modules/` (solution folder `Modules`) — one project per module, each covering one area of work (ADR-009): `AppAdministration`, `TenantAdministration`, `TeamAdministration`, `TranslationEditor` and `TranslationDelivery`. A module holds the commands, command handlers, projections and query handlers of its area of work, and registers its handlers in an `Add<Module>()` extension. A use case goes into the module whose tasks it changes together with and whose queries it needs; who usually performs it is only a hint
-  - Command handlers load state, run the business checks, and append events or return a `CommandResult` error
-  - A module with read models owns one PostgreSQL schema named after it (`translation_delivery`) and its `IProjection`s. `ProjectionRunner<T>` keeps each projection up to date in the background, woken by `PostgresEventStore` after every append. Raise a projection's `Version` whenever its tables or its logic change, so the module's schema is rebuilt from the first event
-- One file per use case in `Api` and in the module, named after the command or query and in folders named after the module: `Api/TranslationEditor/AddKey.cs` holds `AddKeyEndpoint` with its nested `AddKeyRequest` and a `MapAddKey` extension, `Modules/TranslationEditor/AddKey.cs` holds the `AddKey` record and `AddKeyHandler`. `Program.cs` calls every `Add<Module>()` and maps every endpoint explicitly
-- `Domain` — the shared kernel every module builds on: domain events (`Events/`), state model definitions and the tag vocabulary (`State/`), value objects (`Types/`)
-  - State models are grouped into one static class per domain concept, named after it: `Tenant.NameTaken(...)`, `User.EmailTaken(...)`, `Subscription.Exists(...)`. A state model goes into the class of the thing it is keyed by, e.g. `Team.KeysAdded(teamId)`
-  - A state model answers a question with a `bool` (`Tenant.IsNamed(tenantId, name)`, `Key.HasTranslation(...)`) or returns a domain type (`Team.Subscription` → `SubscriptionModelId?`). Comparisons belong in a state model, not in the handler. The one exception is the key limit, which spans two loads, so `KeyCount >= KeyLimit` stays in `AddKeyHandler`
-  - Reducers turn stored values into domain types with the regular `From`. All stored events are assumed to have passed today's validation, so there is no separate unvalidated path
-  - Handlers load all their state in one call and deconstruct the values with the context: `var (idTaken, emailTaken, context) = await loader.LoadAsync(User.Exists(...), User.EmailTaken(...))`
-- `EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateModel<T>`, `StateLoader`, `StateContext.TryAppendAsync` (the conditional append), schema setup, and the projection infrastructure every module with read models shares: `IProjection`, `ProjectionRunner<T>`, `AppendSignal`, `ReadModelDatabase`, `AddProjection<T>`
-- `Modules/<Module>.Tests` — a module's tests. Handler tests run against the in-memory `IEventStore` from `TestKit`; projection and query tests run against a throwaway database on the PostgreSQL server in `CCC_TEST_POSTGRES` (defaults to the local development server)
-- `TestKit` — what every handler test project shares: `InMemoryEventStore`, `CommandFixture` with its `Given…` setup helpers, and `CommandAssert`. The fixture registers every module, so tests set up state through other modules' commands and get the same events and tags as production
-- `Domain.Tests` — value object tests
-- `Architecture.Tests` — checks the dependency rules below
-- `Api/Api.http` — smoke test with one request per endpoint and error path, including the expected status and body
-
-### Dependency Rules
-- `Api` → each module → `Domain` → `EventStore`. `Api` and every module also reference `Abstractions`, which references nothing. References only point this way
-- A module never references another module, `Api` or ASP.NET Core; handlers return `CommandResult`, never `IResult`. New modules go into `Modules` in `Architecture.Tests`
-- Modules talk only through the event log. Any module may read any event, in a state model or a projection, but each event type is appended by one module only, and a module never reads another module's tables
-- `EventStore` knows nothing about the domain
-- Command and query handlers are internal. Endpoints inject `ICommandHandler<TCommand>` or `IQueryHandler<TQuery, TResult>`, never a handler class
-- Endpoints never touch the state models in `CCC.Domain.State`, `Tag` or the event store directly. Only `Program.cs` references `EventStore`, to register it
-- Value objects check format and throw `InvalidValueException`, which the API turns into a 400. Handlers check rules that need the event log
-- Every append in `PostgresEventStore` holds one advisory lock until commit, so positions become visible strictly in order and projection bookmarks never skip an event. Don't append outside that lock
-- Event records keep primitive types, and must never be renamed: the stored event type is the record's class name
+- [docs/project-structure.md](docs/project-structure.md) — the projects, what goes where, and the conventions inside each project
+- [docs/dependency-rules.md](docs/dependency-rules.md) — which project may reference which, and the rules `Architecture.Tests` enforces
 
 ## Build & Run
 ```bash
@@ -58,6 +28,7 @@ dotnet run --project backend/Api/Api.csproj
 ## Tech Stack
 - .NET 10.0
 - ASP.NET Core
+- PostgreSQL with Dapper
 - React (frontend, separate project)
 
 ## Naming Conventions
