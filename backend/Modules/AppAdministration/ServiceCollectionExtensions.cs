@@ -1,5 +1,7 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.Modules.AppAdministration.Commands;
+using CCC.Modules.AppAdministration.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.AppAdministration;

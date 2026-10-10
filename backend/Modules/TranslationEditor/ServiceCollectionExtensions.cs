@@ -1,5 +1,7 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.Modules.TranslationEditor.Commands;
+using CCC.Modules.TranslationEditor.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TranslationEditor;

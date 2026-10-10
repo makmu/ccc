@@ -1,5 +1,7 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.Modules.TeamAdministration.Commands;
+using CCC.Modules.TeamAdministration.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TeamAdministration;

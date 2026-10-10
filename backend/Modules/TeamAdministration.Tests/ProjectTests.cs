@@ -1,7 +1,7 @@
 using CCC.Abstractions;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
-using CCC.Modules.TeamAdministration;
+using CCC.Modules.TeamAdministration.Commands;
 using CCC.TestKit;
 using static CCC.TestKit.CommandFixture;
 

@@ -1,4 +1,5 @@
 using CCC.Domain.Events;
+using CCC.Modules.AppAdministration.Queries;
 using CCC.TestKit;
 
 namespace CCC.Modules.AppAdministration.Tests;

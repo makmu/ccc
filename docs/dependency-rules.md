@@ -6,6 +6,7 @@ What each project holds is described in [project-structure.md](project-structure
 - A module never references another module, `Api` or ASP.NET Core; handlers return `CommandResult`, never `IResult`. New modules go into `Modules` in `Architecture.Tests`
 - Modules talk only through the event log. Any module may read any event, in a state model or a projection, but each event type is appended by one module only, and a module never reads another module's tables
 - `EventStore` knows nothing about the domain
+- Command handlers live in a module's `Commands` namespace, query handlers and projections in its `Queries` namespace, and each endpoint on the same side as the handler it calls
 - Command and query handlers are internal. Endpoints inject `ICommandHandler<TCommand>` or `IQueryHandler<TQuery, TResult>`, never a handler class
 - Endpoints never touch the state models in `CCC.Domain.State`, `Tag` or the event store directly. Only `Program.cs` references `EventStore`, to register it
 - Value objects check format and throw `InvalidValueException`, which the API turns into a 400. Handlers check rules that need the event log

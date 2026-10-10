@@ -1,8 +1,8 @@
 using CCC.Abstractions;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
-using CCC.Modules.AppAdministration;
-using CCC.Modules.TenantAdministration;
+using CCC.Modules.AppAdministration.Commands;
+using CCC.Modules.TenantAdministration.Commands;
 using CCC.TestKit;
 using static CCC.TestKit.CommandFixture;
 

@@ -1,5 +1,7 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.Modules.TenantAdministration.Commands;
+using CCC.Modules.TenantAdministration.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TenantAdministration;

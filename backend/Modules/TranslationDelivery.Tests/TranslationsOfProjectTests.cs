@@ -1,5 +1,6 @@
 using CCC.Domain.Events;
 using CCC.Domain.Types;
+using CCC.Modules.TranslationDelivery.Queries;
 using CCC.TestKit;
 
 namespace CCC.Modules.TranslationDelivery.Tests;

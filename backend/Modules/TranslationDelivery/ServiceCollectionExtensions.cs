@@ -1,5 +1,6 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.Modules.TranslationDelivery.Queries;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TranslationDelivery;

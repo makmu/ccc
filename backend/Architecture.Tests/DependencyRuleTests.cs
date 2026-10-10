@@ -1,5 +1,6 @@
 using System.Reflection;
 using CCC.Abstractions;
+using CCC.EventStore;
 using NetArchTest.Rules;
 
 namespace CCC.Architecture.Tests;
@@ -71,12 +72,46 @@ public class DependencyRuleTests
         Assert.Empty(handlers.Where(type => type.IsVisible).Select(type => type.FullName));
     }
 
+    [Fact]
+    public void Commands_and_queries_live_in_their_own_namespaces()
+    {
+        var misplaced = Modules
+            .SelectMany(module => module.GetTypes())
+            .Where(type => Side(type) is { } side && !type.Namespace!.EndsWith($".{side}"))
+            .Select(type => type.FullName);
+
+        Assert.Empty(misplaced);
+
+        foreach (var module in Modules)
+        {
+            foreach (var side in new[] { "Commands", "Queries" })
+            {
+                var result = Types.InAssembly(Api)
+                    .That().HaveDependencyOn($"{RootNamespace(module)}.{side}")
+                    .Should().ResideInNamespaceEndingWith($".{side}")
+                    .GetResult();
+                Assert.True(result.IsSuccessful,
+                    $"Endpoints of {side.ToLower()} outside a {side} namespace: " + string.Join(", ", result.FailingTypeNames ?? []));
+            }
+        }
+    }
+
     private static string RootNamespace(Assembly module) => $"CCC.Modules.{module.GetName().Name}";
 
     private static bool IsHandlerInterface(Type type) =>
         type.IsGenericType
         && (type.GetGenericTypeDefinition() == typeof(ICommandHandler<>)
             || type.GetGenericTypeDefinition() == typeof(IQueryHandler<,>));
+
+    private static string? Side(Type type)
+    {
+        if (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
+            return "Commands";
+        if (type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>))
+            || typeof(IProjection).IsAssignableFrom(type))
+            return "Queries";
+        return null;
+    }
 
     private static void AssertNoDependency(PredicateList types, params string[] namespaces) =>
         AssertNoDependency(types.ShouldNot().HaveDependencyOnAny(namespaces));
