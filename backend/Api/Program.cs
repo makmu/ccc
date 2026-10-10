@@ -59,6 +59,7 @@ api.MapDetailsOfTenant();
 api.MapTeamsOfTenant();
 api.MapAddProject();
 api.MapAddLanguage();
+api.MapProjectsOfTeam();
 api.MapAddKey();
 api.MapProvideReferenceText();
 api.MapProvideTranslation();

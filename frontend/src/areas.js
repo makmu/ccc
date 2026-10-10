@@ -1,4 +1,5 @@
 import AppAdministration from './areas/AppAdministration'
+import TeamAdministration from './areas/TeamAdministration'
 import TenantAdministration from './areas/TenantAdministration'
 
 export const areas = [
@@ -21,6 +22,7 @@ export const areas = [
     title: 'Team administration',
     purpose: 'Add projects and the languages they are translated into.',
     scope: 'team',
+    Page: TeamAdministration,
   },
   {
     route: 'translation-editor',

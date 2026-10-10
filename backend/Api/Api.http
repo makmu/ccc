@@ -288,3 +288,7 @@ GET {{baseUrl}}/tenants/{{unknownId}}
 ### 200 teams of tenant
 # response: [{"id":"44444444-4444-4444-4444-444444444444","name":"Team A","subscriptionModel":"Basic"}]
 GET {{baseUrl}}/tenants/{{tenantId}}/teams
+
+### 200 projects of team with their languages
+# response: [{"id":"55555555-5555-5555-5555-555555555555","name":"Web","referenceLanguage":"en","languages":[{"code":"de","parentCode":"en"},{"code":"en","parentCode":null}]}]
+GET {{baseUrl}}/teams/{{teamId}}/projects

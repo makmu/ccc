@@ -1,4 +1,5 @@
 using CCC.Abstractions;
+using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TeamAdministration;
@@ -9,6 +10,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ICommandHandler<AddProject>, AddProjectHandler>();
         services.AddTransient<ICommandHandler<AddLanguage>, AddLanguageHandler>();
+        services.AddProjection<TeamAdministrationProjection>();
+        services.AddTransient<IQueryHandler<ProjectsOfTeam, IReadOnlyList<ProjectSummary>>, ProjectsOfTeamHandler>();
         return services;
     }
 }
