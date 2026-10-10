@@ -10,3 +10,7 @@ const currentRoute = () => window.location.hash.replace(/^#\/?/, '')
 export function useHashRoute() {
   return useSyncExternalStore(subscribe, currentRoute)
 }
+
+export function navigate(route) {
+  window.location.hash = `/${route}`
+}

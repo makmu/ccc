@@ -55,6 +55,8 @@ api.MapUsers();
 api.MapAddTeam();
 api.MapAssignTenantOwner();
 api.MapRenameTenant();
+api.MapDetailsOfTenant();
+api.MapTeamsOfTenant();
 api.MapAddProject();
 api.MapAddLanguage();
 api.MapAddKey();

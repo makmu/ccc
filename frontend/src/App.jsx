@@ -1,7 +1,7 @@
 import { areas } from './areas'
 import { useScope } from './scope'
 import ScopeSwitcher from './ScopeSwitcher'
-import { useHashRoute } from './useHashRoute'
+import { navigate, useHashRoute } from './useHashRoute'
 
 export default function App() {
   const route = useHashRoute()
@@ -22,7 +22,7 @@ export default function App() {
           className="menu-compact"
           aria-label="Area"
           value={area.route}
-          onChange={event => { window.location.hash = `/${event.target.value}` }}
+          onChange={event => navigate(event.target.value)}
         >
           {areas.map(a => <option key={a.route} value={a.route}>{a.title}</option>)}
         </select>

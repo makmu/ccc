@@ -29,6 +29,11 @@ public static class Tenant
             .When<TenantRegistered>((e, _) => CanonicalForm.Of(e.Name) == name.Canonical)
             .When<TenantRenamed>((e, _) => CanonicalForm.Of(e.Name) == name.Canonical);
 
+    public static StateModel<IReadOnlyList<SubscriptionModelId>> SubscriptionModels(TenantId tenantId) =>
+        StateModel.Init<IReadOnlyList<SubscriptionModelId>>([])
+            .Where(Tag.TenantId(tenantId))
+            .When<TenantRegistered>((e, _) => e.SubscriptionModelIds.Select(SubscriptionModelId.From).ToList());
+
     public static StateModel<bool> HasSubscription(TenantId tenantId, SubscriptionModelId subscriptionModelId) =>
         StateModel.Init(false)
             .Where(Tag.TenantId(tenantId))

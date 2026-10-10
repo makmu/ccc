@@ -1,11 +1,12 @@
 import ActionDialog, { Field } from '../ActionDialog'
 import { command, newId } from '../api'
 import QueryView from '../QueryView'
+import { useScope } from '../scope'
 import { useQuery } from '../useQuery'
 
 export default function AppAdministration() {
   const subscriptionModels = useQuery('/subscription-models')
-  const tenants = useQuery('/tenants')
+  const tenants = useScope().lists.tenant
   const users = useQuery('/users')
 
   return (

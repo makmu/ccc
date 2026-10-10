@@ -1,17 +1,10 @@
 import { levels, useScope } from './scope'
-import { useQuery } from './useQuery'
 
 const labels = { tenant: 'Tenant', team: 'Team', project: 'Project' }
 
 export default function ScopeSwitcher({ depth }) {
-  const { scope, choose } = useScope()
+  const { scope, choose, lists } = useScope()
   const shown = levels.slice(0, levels.indexOf(depth) + 1)
-
-  const options = {
-    tenant: useQuery(shown.includes('tenant') ? '/tenants' : null),
-    team: useQuery(shown.includes('team') && scope.tenant ? `/tenants/${scope.tenant}/teams` : null),
-    project: useQuery(shown.includes('project') && scope.team ? `/teams/${scope.team}/projects` : null),
-  }
 
   return (
     <div className="scope">
@@ -22,7 +15,7 @@ export default function ScopeSwitcher({ depth }) {
           <ScopeSelect
             key={level}
             label={labels[level]}
-            options={options[level]}
+            list={lists[level]}
             value={scope[level]}
             onChange={id => choose(level, id)}
           />
@@ -32,7 +25,7 @@ export default function ScopeSwitcher({ depth }) {
   )
 }
 
-function ScopeSelect({ label, options: { data, error, loading }, value, onChange }) {
+function ScopeSelect({ label, list: { data, error, loading }, value, onChange }) {
   const name = label.toLowerCase()
   const items = data ?? []
   const selected = items.some(item => item.id === value) ? value : ''

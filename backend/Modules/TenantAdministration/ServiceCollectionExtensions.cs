@@ -1,4 +1,5 @@
 using CCC.Abstractions;
+using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.Modules.TenantAdministration;
@@ -9,6 +10,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ICommandHandler<AddTeam>, AddTeamHandler>();
         services.AddTransient<ICommandHandler<RenameTenant>, RenameTenantHandler>();
+        services.AddTransient<IQueryHandler<DetailsOfTenant, TenantDetails?>, DetailsOfTenantHandler>();
+        services.AddProjection<TenantAdministrationProjection>();
+        services.AddTransient<IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>, TeamsOfTenantHandler>();
         return services;
     }
 }

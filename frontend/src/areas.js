@@ -1,4 +1,5 @@
 import AppAdministration from './areas/AppAdministration'
+import TenantAdministration from './areas/TenantAdministration'
 
 export const areas = [
   {
@@ -13,6 +14,7 @@ export const areas = [
     title: 'Tenant administration',
     purpose: 'Rename your tenant and add the teams that work in it.',
     scope: 'tenant',
+    Page: TenantAdministration,
   },
   {
     route: 'team-administration',

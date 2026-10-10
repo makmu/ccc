@@ -31,6 +31,9 @@ public sealed class CommandFixture
     public Task<CommandResult> Handle<TCommand>(TCommand command) =>
         _services.GetRequiredService<ICommandHandler<TCommand>>().HandleAsync(command);
 
+    public Task<TResult> Query<TQuery, TResult>(TQuery query) =>
+        _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query);
+
     public async Task Given<TCommand>(TCommand command)
     {
         var result = await Handle(command);

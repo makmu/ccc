@@ -276,3 +276,15 @@ GET {{baseUrl}}/tenants
 ### 200 users
 # response: [{"id":"22222222-2222-2222-2222-222222222222","name":"Alice","email":"alice@example.com"}]
 GET {{baseUrl}}/users
+
+### 200 details of tenant
+# response: {"id":"33333333-3333-3333-3333-333333333333","name":"Acme Corp","subscriptionModels":[{"id":"11111111-1111-1111-1111-111111111111","name":"Basic"}]}
+GET {{baseUrl}}/tenants/{{tenantId}}
+
+### 404 details of unknown tenant
+# response: "Tenant not found."
+GET {{baseUrl}}/tenants/{{unknownId}}
+
+### 200 teams of tenant
+# response: [{"id":"44444444-4444-4444-4444-444444444444","name":"Team A","subscriptionModel":"Basic"}]
+GET {{baseUrl}}/tenants/{{tenantId}}/teams
