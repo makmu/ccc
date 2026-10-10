@@ -1,6 +1,7 @@
 import AppAdministration from './areas/AppAdministration'
 import TeamAdministration from './areas/TeamAdministration'
 import TenantAdministration from './areas/TenantAdministration'
+import TranslationDelivery from './areas/TranslationDelivery'
 import TranslationEditor from './areas/TranslationEditor'
 
 export const areas = [
@@ -37,5 +38,6 @@ export const areas = [
     title: 'Translation delivery',
     purpose: 'See the texts your application receives in each language.',
     scope: 'project',
+    Page: TranslationDelivery,
   },
 ]

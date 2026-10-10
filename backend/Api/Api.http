@@ -300,3 +300,11 @@ GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
 ### 404 keys of a project in another team
 # response: "Project not found in this team."
 GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/keys
+
+### 200 languages of project, reference language first
+# response: ["en","de"]
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
+
+### 404 languages of a project in another team
+# response: "Project not found in this team."
+GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/languages

@@ -22,4 +22,10 @@ public static class Project
             .Where(Tag.TeamId(teamId))
             .Where(Tag.ProjectId(projectId))
             .When<ProjectAdded>((_, _) => true);
+
+    public static StateModel<IReadOnlyList<LanguageCode>> Languages(ProjectId projectId) =>
+        StateModel.Init<IReadOnlyList<LanguageCode>>([])
+            .Where(Tag.ProjectId(projectId))
+            .When<ProjectAdded>((e, _) => [LanguageCode.From(e.ReferenceLanguage)])
+            .When<LanguageAdded>((e, languages) => [.. languages, LanguageCode.From(e.LanguageCode)]);
 }

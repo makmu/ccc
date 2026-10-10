@@ -66,5 +66,6 @@ api.MapProvideTranslation();
 api.MapRenameKey();
 api.MapKeysOfProject();
 api.MapTranslationsOfProject();
+api.MapLanguagesOfProject();
 
 app.Run();

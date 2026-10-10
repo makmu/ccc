@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddProjection<TranslationsProjection>();
         services.AddTransient<IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>, TranslationsOfProjectHandler>();
+        services.AddTransient<IQueryHandler<LanguagesOfProject, IReadOnlyList<string>?>, LanguagesOfProjectHandler>();
         return services;
     }
 }
