@@ -37,8 +37,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    // In development the Vite dev server proxies plain HTTP, and a redirect would send the browser past the proxy.
+    app.UseHttpsRedirection();
+}
 
 await EventStoreSchema.CreateAsync(connectionString);
 

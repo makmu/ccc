@@ -1,31 +1,48 @@
-import { useState } from 'react'
-import AddUserForm from './AddUserForm'
-import RegisterTenantForm from './RegisterTenantForm'
-import './App.css'
-
-const TABS = ['Add User', 'Register Tenant']
+import { areas } from './areas'
+import { useScope } from './scope'
+import ScopeSwitcher from './ScopeSwitcher'
+import { useHashRoute } from './useHashRoute'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(0)
+  const route = useHashRoute()
+  const area = areas.find(a => a.route === route) ?? areas[0]
 
   return (
-    <div className="app">
-      <h1>CCC Admin</h1>
-      <div className="tabs">
-        {TABS.map((tab, i) => (
-          <button
-            key={tab}
-            className={i === activeTab ? 'tab active' : 'tab'}
-            onClick={() => setActiveTab(i)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-      <div className="tab-content">
-        {activeTab === 0 && <AddUserForm />}
-        {activeTab === 1 && <RegisterTenantForm />}
-      </div>
+    <div className="shell">
+      <nav className="menu" aria-label="Areas">
+        <p className="brand">CCC</p>
+        <ul>
+          {areas.map(a => (
+            <li key={a.route}>
+              <a href={`#/${a.route}`} aria-current={a === area ? 'page' : undefined}>{a.title}</a>
+            </li>
+          ))}
+        </ul>
+        <select
+          className="menu-compact"
+          aria-label="Area"
+          value={area.route}
+          onChange={event => { window.location.hash = `/${event.target.value}` }}
+        >
+          {areas.map(a => <option key={a.route} value={a.route}>{a.title}</option>)}
+        </select>
+      </nav>
+      <main>
+        {area.scope && <ScopeSwitcher depth={area.scope} />}
+        <header className="area-header">
+          <h1>{area.title}</h1>
+          <p className="quiet">{area.purpose}</p>
+        </header>
+        <AreaContent area={area} />
+      </main>
     </div>
   )
+}
+
+function AreaContent({ area }) {
+  const { scope } = useScope()
+  if (area.scope && !scope[area.scope]) {
+    return <p className="hint">Choose a {area.scope} above to start.</p>
+  }
+  return area.Page ? <area.Page /> : null
 }

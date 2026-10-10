@@ -1,25 +1,25 @@
-export async function addUser(payload) {
-  const res = await fetch('/users', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || `HTTP ${res.status}`)
-  }
-  return res
-}
+export const newId = () => crypto.randomUUID()
 
-export async function registerTenant(payload) {
-  const res = await fetch('/tenants', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || `HTTP ${res.status}`)
+export const command = (path, body) => send('POST', path, body)
+
+export const query = path => send('GET', path)
+
+async function send(method, path, body) {
+  let response
+  try {
+    response = await fetch(`/api${path}`, {
+      method,
+      headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    })
+  } catch {
+    throw new Error("The server can't be reached. Check that it is running and try again.")
   }
-  return res
+
+  const text = await response.text()
+  const content = text ? JSON.parse(text) : null
+  if (response.ok) return content
+
+  if ([400, 404, 409].includes(response.status) && typeof content === 'string') throw new Error(content)
+  throw new Error('Something went wrong on the server. Try again in a moment.')
 }
