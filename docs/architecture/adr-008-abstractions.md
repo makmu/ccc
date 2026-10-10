@@ -1,5 +1,7 @@
 # ADR-008: An Abstractions Project for the Handler Contracts
 
+> **Changed by ADR-009:** `Commands` and the read model slices are now modules. `Api` and every module reference `Abstractions`.
+
 ## Decision
 
 A new project, `Abstractions` (namespace `CCC.Abstractions`), holds the contracts every vertical slice shares at its boundary to `Api`:

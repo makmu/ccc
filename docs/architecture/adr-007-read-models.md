@@ -1,5 +1,7 @@
 # ADR-007: Read Models as Projections, One Project per Slice
 
+> **Changed by ADR-009:** read model slices are now modules under `Modules/`, which also hold the commands of their area of work. `PublicTranslations` is now `TranslationDelivery`, with the schema `translation_delivery`. The projection mechanics below are unchanged.
+
 ## Decision
 
 Queries are answered from read models. Each read model is a vertical slice with its own project in the `ReadModels` solution folder, and each serves one kind of consumer. `PublicTranslations` serves client applications, and a richer slice for the translation management UI will sit next to it. A slice owns one PostgreSQL schema named after it, so a new slice never touches the tables of another. The slices sit next to the command side, not on top of it, and never reference each other:
