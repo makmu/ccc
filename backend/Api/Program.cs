@@ -1,13 +1,15 @@
 using CCC.Api;
-using CCC.Api.Keys;
-using CCC.Api.Projects;
-using CCC.Api.SubscriptionModels;
+using CCC.Api.AppAdministration;
+using CCC.Api.TeamAdministration;
+using CCC.Api.TenantAdministration;
 using CCC.Api.TranslationDelivery;
-using CCC.Api.Tenants;
-using CCC.Api.Users;
-using CCC.Commands;
+using CCC.Api.TranslationEditor;
 using CCC.EventStore;
+using CCC.Modules.AppAdministration;
+using CCC.Modules.TeamAdministration;
+using CCC.Modules.TenantAdministration;
 using CCC.Modules.TranslationDelivery;
+using CCC.Modules.TranslationEditor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,10 @@ var readModelsConnectionString = builder.Configuration.GetConnectionString("Read
     ?? throw new InvalidOperationException("Connection string 'ReadModels' is not configured.");
 
 builder.Services.AddEventStore(connectionString);
-builder.Services.AddCommandHandlers();
+builder.Services.AddAppAdministration();
+builder.Services.AddTenantAdministration();
+builder.Services.AddTeamAdministration();
+builder.Services.AddTranslationEditor();
 builder.Services.AddReadModelDatabase(readModelsConnectionString);
 builder.Services.AddTranslationDelivery();
 

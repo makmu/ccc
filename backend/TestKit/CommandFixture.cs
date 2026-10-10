@@ -1,13 +1,11 @@
 using System.Text.Json;
 using CCC.Abstractions;
-using CCC.Commands;
-using CCC.Commands.Keys;
-using CCC.Commands.Projects;
-using CCC.Commands.SubscriptionModels;
-using CCC.Commands.Tenants;
-using CCC.Commands.Users;
 using CCC.Domain.Types;
 using CCC.EventStore;
+using CCC.Modules.AppAdministration;
+using CCC.Modules.TeamAdministration;
+using CCC.Modules.TenantAdministration;
+using CCC.Modules.TranslationEditor;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.TestKit;
@@ -21,7 +19,10 @@ public sealed class CommandFixture
         _services = new ServiceCollection()
             .AddSingleton<IEventStore>(Store)
             .AddTransient<IStateLoader, StateLoader>()
-            .AddCommandHandlers()
+            .AddAppAdministration()
+            .AddTenantAdministration()
+            .AddTeamAdministration()
+            .AddTranslationEditor()
             .BuildServiceProvider();
     }
 

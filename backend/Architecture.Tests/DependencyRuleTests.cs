@@ -7,46 +7,46 @@ public class DependencyRuleTests
 {
     private static readonly Assembly Abstractions = Assembly.Load("Abstractions");
     private static readonly Assembly Api = Assembly.Load("Api");
-    private static readonly Assembly Commands = Assembly.Load("Commands");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
-    private static readonly Assembly[] Modules = [Assembly.Load("TranslationDelivery")];
+    private static readonly Assembly[] Modules =
+    [
+        Assembly.Load("AppAdministration"),
+        Assembly.Load("TenantAdministration"),
+        Assembly.Load("TeamAdministration"),
+        Assembly.Load("TranslationEditor"),
+        Assembly.Load("TranslationDelivery"),
+    ];
 
     [Fact]
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Domain", "CCC.EventStore", "CCC.Commands", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Domain", "CCC.EventStore", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void EventStore_knows_nothing_about_the_domain()
     {
         AssertNoDependency(Types.InAssembly(EventStore),
-            "CCC.Abstractions", "CCC.Domain", "CCC.Commands", "CCC.Modules", "CCC.Api");
+            "CCC.Abstractions", "CCC.Domain", "CCC.Modules", "CCC.Api");
     }
 
     [Fact]
     public void Domain_depends_on_nothing_but_the_event_store()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Abstractions", "CCC.Commands", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Abstractions", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
-    public void Commands_do_not_depend_on_ASP_NET_Core()
-    {
-        AssertNoDependency(Types.InAssembly(Commands), "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
-    }
-
-    [Fact]
-    public void Modules_depend_on_neither_commands_nor_ASP_NET_Core_nor_each_other()
+    public void Modules_depend_on_neither_the_API_nor_ASP_NET_Core_nor_each_other()
     {
         foreach (var module in Modules)
         {
             var otherModules = Modules.Where(other => other != module).Select(RootNamespace);
             AssertNoDependency(Types.InAssembly(module),
-                ["CCC.Commands", "CCC.Api", "Microsoft.AspNetCore", .. otherModules]);
+                ["CCC.Api", "Microsoft.AspNetCore", .. otherModules]);
         }
     }
 

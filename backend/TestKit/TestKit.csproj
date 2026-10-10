@@ -11,7 +11,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Commands\Commands.csproj" />
+        <ProjectReference Include="..\Modules\AppAdministration\AppAdministration.csproj" />
+        <ProjectReference Include="..\Modules\TeamAdministration\TeamAdministration.csproj" />
+        <ProjectReference Include="..\Modules\TenantAdministration\TenantAdministration.csproj" />
+        <ProjectReference Include="..\Modules\TranslationEditor\TranslationEditor.csproj" />
     </ItemGroup>
 
     <ItemGroup>
