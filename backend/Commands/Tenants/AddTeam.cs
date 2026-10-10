@@ -27,8 +27,9 @@ sealed class AddTeamHandler(IStateLoader loader) : ICommandHandler<AddTeam>
         if (idTaken || nameTaken)
             return CommandResult.Conflict("A team with this id or name already exists in this tenant.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new TeamAdded(command.Id.Value, command.Name.Value, command.TenantId.Value, command.SubscriptionModelId.Value),
             Tags.From(Tag.TeamId(command.Id), Tag.TenantId(command.TenantId), Tag.TeamName(command.Name)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

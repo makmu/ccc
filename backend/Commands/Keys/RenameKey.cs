@@ -35,10 +35,11 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
         if (alreadyNamed)
             return CommandResult.Ok;
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new KeyRenamed(command.KeyId.Value, command.ProjectId.Value, command.Name.Value),
             Tags.From(
                 Tag.TeamId(command.TeamId),
                 Tag.KeyId(command.KeyId), Tag.ProjectId(command.ProjectId), Tag.KeyName(currentName), Tag.KeyName(command.Name)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

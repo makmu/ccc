@@ -22,8 +22,9 @@ sealed class AddUserHandler(IStateLoader loader) : ICommandHandler<AddUser>
         if (emailTaken)
             return CommandResult.Conflict("A user with this email address already exists.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new UserAdded(command.Id.Value, command.Name, command.Email.Value),
             Tags.From(Tag.UserId(command.Id), Tag.UserEmail(command.Email)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

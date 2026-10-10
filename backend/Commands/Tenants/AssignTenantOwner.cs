@@ -26,8 +26,9 @@ sealed class AssignTenantOwnerHandler(IStateLoader loader) : ICommandHandler<Ass
         if (alreadyOwner)
             return CommandResult.Conflict("This user is already an owner of this tenant.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new TenantOwnerAssigned(command.UserId.Value, command.TenantId.Value),
             Tags.From(Tag.TenantId(command.TenantId), Tag.UserId(command.UserId)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

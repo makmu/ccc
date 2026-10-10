@@ -15,4 +15,7 @@ public sealed record CommandResult
     public static CommandResult Conflict(string message) => new(new CommandError(CommandErrorKind.Conflict, message));
 
     public static CommandResult Invalid(string message) => new(new CommandError(CommandErrorKind.Invalid, message));
+
+    public static CommandResult ConcurrentModification { get; } =
+        Conflict("A concurrent operation modified the event store. Please retry.");
 }

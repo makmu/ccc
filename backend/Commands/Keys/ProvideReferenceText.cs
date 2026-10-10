@@ -30,8 +30,9 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
         if (alreadyProvided)
             return CommandResult.Ok;
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new ReferenceTextProvided(command.KeyId.Value, command.ProjectId.Value, command.Text.Value),
             Tags.From(Tag.KeyId(command.KeyId)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

@@ -17,8 +17,9 @@ sealed class AddSubscriptionModelHandler(IStateLoader loader) : ICommandHandler<
         if (idTaken)
             return CommandResult.Conflict("A subscription model with this id already exists.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new SubscriptionModelAdded(command.Id.Value, command.Name, command.KeyLimit.Value),
             Tags.From(Tag.SubscriptionId(command.Id)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

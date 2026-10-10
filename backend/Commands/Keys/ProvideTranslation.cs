@@ -34,8 +34,9 @@ sealed class ProvideTranslationHandler(IStateLoader loader) : ICommandHandler<Pr
         if (alreadyProvided)
             return CommandResult.Ok;
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new TranslationProvided(command.KeyId.Value, command.ProjectId.Value, command.LanguageCode.Value, command.Text.Value),
             Tags.From(Tag.KeyId(command.KeyId), Tag.LanguageCode(command.LanguageCode)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

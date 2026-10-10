@@ -39,12 +39,13 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         if (keysAdded >= keyLimit)
             return CommandResult.Conflict("The key limit for this team's subscription model has been reached.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new KeyAdded(command.Id.Value, command.Name.Value, command.ProjectId.Value),
             Tags.From(
                 Tag.TeamId(command.TeamId),
                 Tag.ProjectId(command.ProjectId),
                 Tag.KeyId(command.Id),
                 Tag.KeyName(command.Name)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

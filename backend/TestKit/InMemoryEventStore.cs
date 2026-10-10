@@ -1,9 +1,9 @@
 using System.Text.Json;
 using CCC.EventStore;
 
-namespace CCC.Commands.Tests;
+namespace CCC.TestKit;
 
-sealed class InMemoryEventStore : IEventStore
+public sealed class InMemoryEventStore : IEventStore
 {
     private readonly List<EventRecord> _events = [];
 

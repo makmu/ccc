@@ -4,7 +4,8 @@ using CCC.Domain.Events;
 using CCC.Domain.State;
 using CCC.Domain.Types;
 using CCC.EventStore;
-using static CCC.Commands.Tests.CommandFixture;
+using CCC.TestKit;
+using static CCC.TestKit.CommandFixture;
 
 namespace CCC.Commands.Tests;
 

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CCC.Abstractions;
+using CCC.Commands;
 using CCC.Commands.Keys;
 using CCC.Commands.Projects;
 using CCC.Commands.SubscriptionModels;
@@ -9,9 +10,9 @@ using CCC.Domain.Types;
 using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CCC.Commands.Tests;
+namespace CCC.TestKit;
 
-sealed class CommandFixture
+public sealed class CommandFixture
 {
     private readonly ServiceProvider _services;
 

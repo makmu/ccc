@@ -1,8 +1,8 @@
 using CCC.Abstractions;
 
-namespace CCC.Commands.Tests;
+namespace CCC.TestKit;
 
-static class CommandAssert
+public static class CommandAssert
 {
     public static void Failed(CommandResult result, CommandErrorKind kind, string message)
     {

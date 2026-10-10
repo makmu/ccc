@@ -28,11 +28,12 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
 
         // Tag both names under the same key, so later name lookups match this
         // rename whether it took a name or freed one.
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new TenantRenamed(command.TenantId.Value, command.Name.Value),
             Tags.From(
                 Tag.TenantId(command.TenantId),
                 Tag.TenantName(currentName),
                 Tag.TenantName(command.Name)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

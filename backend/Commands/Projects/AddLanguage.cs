@@ -34,8 +34,9 @@ sealed class AddLanguageHandler(IStateLoader loader) : ICommandHandler<AddLangua
         if (!validParent)
             return CommandResult.Invalid("The parent language must be the project's reference language or a language already added to the project.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new LanguageAdded(command.LanguageCode.Value, command.ParentLanguageCode.Value, command.ProjectId.Value),
             Tags.From(Tag.ProjectId(command.ProjectId), Tag.LanguageCode(command.LanguageCode)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

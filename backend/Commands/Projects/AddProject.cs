@@ -26,12 +26,13 @@ sealed class AddProjectHandler(IStateLoader loader) : ICommandHandler<AddProject
         if (nameTaken)
             return CommandResult.Conflict("A project with this name already exists in this team.");
 
-        return await context.TryAppendAsync(
+        var appended = await context.TryAppendAsync(
             new ProjectAdded(command.Id.Value, command.Name.Value, command.TeamId.Value, command.ReferenceLanguage.Value),
             Tags.From(
                 Tag.ProjectId(command.Id),
                 Tag.TeamId(command.TeamId),
                 Tag.ProjectName(command.Name),
                 Tag.LanguageCode(command.ReferenceLanguage)));
+        return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }
