@@ -29,26 +29,42 @@ public sealed class ReadModelFixture(string schema, Func<IServiceCollection, ISe
             await server.ExecuteAsync($"CREATE DATABASE {_database}");
 
         await EventStoreSchema.CreateAsync(ConnectionString);
-
-        _services = addModule(new ServiceCollection()
-                .AddLogging()
-                .AddEventStore(ConnectionString)
-                .AddReadModelDatabase(ConnectionString))
-            .BuildServiceProvider();
-
-        foreach (var service in _services.GetServices<IHostedService>())
-            await service.StartAsync(CancellationToken.None);
+        await StartAsync();
     }
 
     public async Task DisposeAsync()
     {
-        foreach (var service in _services.GetServices<IHostedService>())
-            await service.StopAsync(CancellationToken.None);
-        await _services.DisposeAsync();
+        await StopAsync();
 
         NpgsqlConnection.ClearAllPools();
         await using var server = new NpgsqlConnection(ServerConnectionString);
         await server.ExecuteAsync($"DROP DATABASE {_database} WITH (FORCE)");
+    }
+
+    public async Task RestartAsync()
+    {
+        await StopAsync();
+        await StartAsync();
+    }
+
+    public async Task<ProjectionBookmark> BookmarkAsync()
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        return await connection.QuerySingleAsync<ProjectionBookmark>(
+            $"SELECT position, stalled_at AS stalledAt, stall_reason AS stallReason FROM {schema}.bookmark");
+    }
+
+    public async Task<ProjectionBookmark> WaitForStallAsync()
+    {
+        var deadline = DateTime.UtcNow + CatchUpTimeout;
+        while (true)
+        {
+            if (await HasBookmarkAsync() && await BookmarkAsync() is { StallReason: not null } bookmark)
+                return bookmark;
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException($"The {schema} projection did not stall within {CatchUpTimeout}.");
+            await Task.Delay(10);
+        }
     }
 
     public Task Given<TEvent>(TEvent @event) =>
@@ -58,6 +74,26 @@ public sealed class ReadModelFixture(string schema, Func<IServiceCollection, ISe
     {
         await WaitForCatchUpAsync();
         return await _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query);
+    }
+
+    private async Task StartAsync()
+    {
+        _services = addModule(new ServiceCollection()
+                .AddLogging()
+                .AddSingleton(new ProjectionRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
+                .AddEventStore(ConnectionString)
+                .AddReadModelDatabase(ConnectionString))
+            .BuildServiceProvider();
+
+        foreach (var service in _services.GetServices<IHostedService>())
+            await service.StartAsync(CancellationToken.None);
+    }
+
+    private async Task StopAsync()
+    {
+        foreach (var service in _services.GetServices<IHostedService>())
+            await service.StopAsync(CancellationToken.None);
+        await _services.DisposeAsync();
     }
 
     private async Task WaitForCatchUpAsync()
@@ -73,10 +109,21 @@ public sealed class ReadModelFixture(string schema, Func<IServiceCollection, ISe
         }
     }
 
+    private async Task<bool> HasBookmarkAsync()
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        return await HasBookmarkAsync(connection);
+    }
+
+    private Task<bool> HasBookmarkAsync(NpgsqlConnection connection) =>
+        connection.ExecuteScalarAsync<bool>($"SELECT to_regclass('{schema}.bookmark') IS NOT NULL");
+
     private async Task<bool> IsCaughtUpAsync(NpgsqlConnection connection) =>
-        await connection.ExecuteScalarAsync<bool>($"SELECT to_regclass('{schema}.bookmark') IS NOT NULL")
+        await HasBookmarkAsync(connection)
         && await connection.ExecuteScalarAsync<bool>($"""
             SELECT (SELECT position FROM {schema}.bookmark)
                  = (SELECT COALESCE(MAX(position), 0) FROM events)
             """);
 }
+
+public sealed record ProjectionBookmark(long Position, DateTimeOffset? StalledAt, string? StallReason);

@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         where TProjection : class, IProjection
     {
         services.TryAddSingleton<AppendSignal>();
+        services.TryAddSingleton(ProjectionRetryPolicy.Default);
         services.AddSingleton<TProjection>();
         services.AddHostedService<ProjectionRunner<TProjection>>();
         return services;

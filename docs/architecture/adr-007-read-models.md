@@ -2,6 +2,8 @@
 
 > **Changed by ADR-009:** read model slices are now modules under `Modules/`, which also hold the commands of their area of work. `PublicTranslations` is now `TranslationDelivery`, with the schema `translation_delivery`. The projection mechanics below are unchanged.
 
+> **Changed by ADR-010:** a runner no longer retries failures forever. It stalls after three retries, records the stall in its bookmark table, and doesn't catch up until it is unstalled.
+
 ## Decision
 
 Queries are answered from read models. Each read model is a vertical slice with its own project in the `ReadModels` solution folder, and each serves one kind of consumer. `PublicTranslations` serves client applications, and a richer slice for the translation management UI will sit next to it. A slice owns one PostgreSQL schema named after it, so a new slice never touches the tables of another. The slices sit next to the command side, not on top of it, and never reference each other:
@@ -40,7 +42,7 @@ Positions come from a `BIGSERIAL`, which hands out numbers before commit. `SERIA
 - All appends go through one lock, which caps write throughput at one append at a time. This is fine for a CMS.
 - Each slice's tests need a PostgreSQL server, because the projection logic lives in SQL.
 - `EventStore` now also hosts the projection infrastructure and depends on `Microsoft.Extensions.Hosting.Abstractions`.
-- `ReadAsync` returns every matching event at once, so a rebuild holds the whole matching log in memory.
+- A runner reads the log in pages of up to 100 events, one transaction per page, so a rebuild takes one round trip per page.
 
 ## Alternatives Considered
 
