@@ -5,12 +5,13 @@ namespace CCC.Api.TenantAdministration;
 
 static class EndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapTenantAdministration(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapTenantAdministration(this IEndpointRouteBuilder app)
     {
-        app.MapAddTeam();
-        app.MapRenameTenant();
-        app.MapDetailsOfTenant();
-        app.MapTeamsOfTenant();
-        return app;
+        var group = app.MapGroup("").WithTags("TenantAdministration");
+        group.MapAddTeam();
+        group.MapRenameTenant();
+        group.MapDetailsOfTenant();
+        group.MapTeamsOfTenant();
+        return group;
     }
 }

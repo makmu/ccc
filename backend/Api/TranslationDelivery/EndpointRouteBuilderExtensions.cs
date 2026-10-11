@@ -4,10 +4,11 @@ namespace CCC.Api.TranslationDelivery;
 
 static class EndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapTranslationDelivery(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapTranslationDelivery(this IEndpointRouteBuilder app)
     {
-        app.MapTranslationsOfProject();
-        app.MapLanguagesOfProject();
-        return app;
+        var group = app.MapGroup("").WithTags("TranslationDelivery");
+        group.MapTranslationsOfProject();
+        group.MapLanguagesOfProject();
+        return group;
     }
 }

@@ -1,4 +1,5 @@
 using CCC.Domain.Types;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CCC.Api;
 
@@ -12,7 +13,7 @@ class InvalidValueFilter : IEndpointFilter
         }
         catch (InvalidValueException ex)
         {
-            return Results.BadRequest(ex.Message);
+            return TypedResults.BadRequest(new ProblemDetails { Detail = ex.Message });
         }
     }
 }

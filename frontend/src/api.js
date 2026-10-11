@@ -20,6 +20,6 @@ async function send(method, path, body) {
   const content = text ? JSON.parse(text) : null
   if (response.ok) return content
 
-  if ([400, 404, 409].includes(response.status) && typeof content === 'string') throw new Error(content)
+  if ([400, 404, 409].includes(response.status) && typeof content?.detail === 'string') throw new Error(content.detail)
   throw new Error('Something went wrong on the server. Try again in a moment.')
 }

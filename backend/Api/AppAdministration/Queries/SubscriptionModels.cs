@@ -9,5 +9,5 @@ static class SubscriptionModelsEndpoint
         app.MapGet("/subscription-models",
             async (IQueryHandler<SubscriptionModels, IReadOnlyList<SubscriptionModelSummary>> handler,
                 CancellationToken cancellationToken) =>
-                Results.Ok(await handler.HandleAsync(new SubscriptionModels(), cancellationToken)));
+                TypedResults.Ok(await handler.HandleAsync(new SubscriptionModels(), cancellationToken)));
 }

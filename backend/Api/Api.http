@@ -23,7 +23,7 @@ Content-Type: application/json
 { "id": "{{subscriptionId}}", "name": "Basic", "keyLimit": 2 }
 
 ### 409 subscription model id taken
-# response: "A subscription model with this id already exists."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A subscription model with this id already exists."}
 POST {{baseUrl}}/subscription-models
 Content-Type: application/json
 
@@ -36,14 +36,14 @@ Content-Type: application/json
 { "id": "{{userId}}", "name": "Alice", "email": "alice@example.com" }
 
 ### 409 user email taken
-# response: "A user with this email address already exists."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A user with this email address already exists."}
 POST {{baseUrl}}/users
 Content-Type: application/json
 
 { "id": "{{unknownId}}", "name": "Alice 2", "email": "alice@example.com" }
 
 ### 400 register tenant without subscription models
-# response: "At least one subscription model must be referenced."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Bad Request","status":400,"detail":"At least one subscription model must be referenced."}
 POST {{baseUrl}}/tenants
 Content-Type: application/json
 
@@ -56,14 +56,14 @@ Content-Type: application/json
 { "id": "{{tenantId}}", "name": "Acme", "subscriptionModelIds": ["{{subscriptionId}}"] }
 
 ### 409 tenant name taken, compared canonically
-# response: "A tenant with this name already exists."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A tenant with this name already exists."}
 POST {{baseUrl}}/tenants
 Content-Type: application/json
 
 { "id": "{{unknownId}}", "name": " ACME ", "subscriptionModelIds": ["{{subscriptionId}}"] }
 
 ### 404 register tenant with unknown subscription model
-# response: "One or more subscription models were not found."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"One or more subscription models were not found."}
 POST {{baseUrl}}/tenants
 Content-Type: application/json
 
@@ -82,7 +82,7 @@ Content-Type: application/json
 { "name": "Acme Corp" }
 
 ### 404 rename unknown tenant
-# response: "Tenant not found."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Tenant not found."}
 POST {{baseUrl}}/tenants/{{unknownId}}/rename
 Content-Type: application/json
 
@@ -95,14 +95,14 @@ Content-Type: application/json
 { "userId": "{{userId}}" }
 
 ### 409 user already tenant owner
-# response: "This user is already an owner of this tenant."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"This user is already an owner of this tenant."}
 POST {{baseUrl}}/tenants/{{tenantId}}/owners
 Content-Type: application/json
 
 { "userId": "{{userId}}" }
 
 ### 404 assign unknown user as tenant owner
-# response: "User not found."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"User not found."}
 POST {{baseUrl}}/tenants/{{tenantId}}/owners
 Content-Type: application/json
 
@@ -115,14 +115,14 @@ Content-Type: application/json
 { "id": "{{teamId}}", "name": "Team A", "subscriptionModelId": "{{subscriptionId}}" }
 
 ### 400 add team with subscription model the tenant doesn't have
-# response: "The specified subscription model is not available in this tenant."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Bad Request","status":400,"detail":"The specified subscription model is not available in this tenant."}
 POST {{baseUrl}}/tenants/{{tenantId}}/teams
 Content-Type: application/json
 
 { "id": "{{unknownId}}", "name": "Team B", "subscriptionModelId": "{{unknownId}}" }
 
 ### 409 team name taken
-# response: "A team with this id or name already exists in this tenant."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A team with this id or name already exists in this tenant."}
 POST {{baseUrl}}/tenants/{{tenantId}}/teams
 Content-Type: application/json
 
@@ -135,14 +135,14 @@ Content-Type: application/json
 { "id": "{{projectId}}", "name": "Web", "referenceLanguage": "en" }
 
 ### 409 project name taken
-# response: "A project with this name already exists in this team."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A project with this name already exists in this team."}
 POST {{baseUrl}}/teams/{{teamId}}/projects
 Content-Type: application/json
 
 { "id": "{{unknownId}}", "name": "WEB", "referenceLanguage": "en" }
 
 ### 404 add project to unknown team
-# response: "Team not found."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Team not found."}
 POST {{baseUrl}}/teams/{{unknownId}}/projects
 Content-Type: application/json
 
@@ -155,21 +155,21 @@ Content-Type: application/json
 { "languageCode": "de", "parentLanguageCode": "en" }
 
 ### 409 language already added
-# response: "This language has already been added to the project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"This language has already been added to the project."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
 Content-Type: application/json
 
 { "languageCode": "de", "parentLanguageCode": "en" }
 
 ### 400 add the reference language as a language
-# response: "The reference language cannot be added as a new language."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Bad Request","status":400,"detail":"The reference language cannot be added as a new language."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
 Content-Type: application/json
 
 { "languageCode": "en", "parentLanguageCode": "en" }
 
 ### 400 add language with unknown parent language
-# response: "The parent language must be the project's reference language or a language already added to the project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Bad Request","status":400,"detail":"The parent language must be the project's reference language or a language already added to the project."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
 Content-Type: application/json
 
@@ -182,14 +182,14 @@ Content-Type: application/json
 { "id": "{{keyId}}", "name": "title" }
 
 ### 409 key id taken
-# response: "Key ID already taken."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"Key ID already taken."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
 Content-Type: application/json
 
 { "id": "{{keyId}}", "name": "other" }
 
 ### 409 key name taken
-# response: "Key name already taken."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"Key name already taken."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
 Content-Type: application/json
 
@@ -202,7 +202,7 @@ Content-Type: application/json
 { "id": "{{secondKeyId}}", "name": "subtitle" }
 
 ### 409 key limit reached
-# response: "The key limit for this team's subscription model has been reached."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"The key limit for this team's subscription model has been reached."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
 Content-Type: application/json
 
@@ -221,7 +221,7 @@ Content-Type: application/json
 { "text": "Hello" }
 
 ### 404 provide reference text for unknown key
-# response: "Key not found in this project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Key not found in this project."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{unknownId}}/reference-text
 Content-Type: application/json
 
@@ -234,7 +234,7 @@ Content-Type: application/json
 { "languageCode": "de", "text": "Hallo" }
 
 ### 400 provide translation for a language the project doesn't have
-# response: "The specified language has not been added to this project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"Bad Request","status":400,"detail":"The specified language has not been added to this project."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/translations
 Content-Type: application/json
 
@@ -253,7 +253,7 @@ Content-Type: application/json
 { "name": "heading" }
 
 ### 409 rename key to a taken name
-# response: "A key with this name already exists in this project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.10","title":"Conflict","status":409,"detail":"A key with this name already exists in this project."}
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{secondKeyId}}/rename
 Content-Type: application/json
 
@@ -290,7 +290,7 @@ Content-Type: application/json
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/de/translations
 
 ### 404 translations in a language the project doesn't have
-# response: "Language not found in this project."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Language not found in this project."}
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/fr/translations
 
 ### 200 subscription models
@@ -310,7 +310,7 @@ GET {{baseUrl}}/users
 GET {{baseUrl}}/tenants/{{tenantId}}
 
 ### 404 details of unknown tenant
-# response: "Tenant not found."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Tenant not found."}
 GET {{baseUrl}}/tenants/{{unknownId}}
 
 ### 200 teams of tenant
@@ -326,7 +326,7 @@ GET {{baseUrl}}/teams/{{teamId}}/projects
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys
 
 ### 404 keys of a project in another team
-# response: "Project not found in this team."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Project not found in this team."}
 GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/keys
 
 ### 200 languages of project, reference language first
@@ -334,5 +334,5 @@ GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/keys
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
 
 ### 404 languages of a project in another team
-# response: "Project not found in this team."
+# response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Project not found in this team."}
 GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/languages

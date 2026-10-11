@@ -5,11 +5,12 @@ namespace CCC.Api.TeamAdministration;
 
 static class EndpointRouteBuilderExtensions
 {
-    public static IEndpointRouteBuilder MapTeamAdministration(this IEndpointRouteBuilder app)
+    public static RouteGroupBuilder MapTeamAdministration(this IEndpointRouteBuilder app)
     {
-        app.MapAddProject();
-        app.MapAddLanguage();
-        app.MapProjectsOfTeam();
-        return app;
+        var group = app.MapGroup("").WithTags("TeamAdministration");
+        group.MapAddProject();
+        group.MapAddLanguage();
+        group.MapProjectsOfTeam();
+        return group;
     }
 }

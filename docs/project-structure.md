@@ -7,6 +7,7 @@ The rules for how these projects may reference each other are in [dependency-rul
 When these docs say *projection*, they mean a read model: the tables built from the event log to answer queries, together with the `IProjection` that builds them.
 
 - `Api` — ASP.NET Core app. Endpoints, request DTOs, request → value object mapping, `CommandResult` → HTTP mapping, startup (`Program.cs`)
+  - Endpoints return `TypedResults` with a declared `Results<…>` type, such as `Results<Ok<TenantDetails>, NotFound<ProblemDetails>>`, so the OpenAPI document shows every status and body. Errors are `ProblemDetails` with the message in `detail`. A query that parses route values into value objects also declares `.Produces<ProblemDetails>(400)` for `InvalidValueFilter`. Each `Map<Module>()` maps into a group tagged with the module's name
 - `Base/` (solution folder `Base`) — the projects every module builds on, other than `Domain` and `EventStore` (ADR-013). Their namespaces follow the folder: `CCC.Base.<Project>`
   - `Abstractions` — the contracts every module shares at its boundary to `Api`: `ICommandHandler<TCommand>`, `IQueryHandler<TQuery, TResult>`, `CommandResult` and `CommandError`. References no other project, and holds nothing else
   - `Dcb` — the building blocks of dynamic consistency boundaries, without any storage (ADR-012): `StateModel<T>`, `IStateModel`, `EventFilter`, `EventRecord` with `PayloadAs`, `EventHandlers<T>` (the dispatch by event type that state models and projections share) and `Tags`. References nothing

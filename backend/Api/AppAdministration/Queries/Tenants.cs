@@ -8,5 +8,5 @@ static class TenantsEndpoint
     public static void MapTenants(this IEndpointRouteBuilder app) =>
         app.MapGet("/tenants",
             async (IQueryHandler<Tenants, IReadOnlyList<TenantSummary>> handler, CancellationToken cancellationToken) =>
-                Results.Ok(await handler.HandleAsync(new Tenants(), cancellationToken)));
+                TypedResults.Ok(await handler.HandleAsync(new Tenants(), cancellationToken)));
 }
