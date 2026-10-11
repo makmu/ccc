@@ -6,7 +6,7 @@ namespace CCC.Api.TranslationEditor.Commands;
 
 static class ProvideReferenceTextEndpoint
 {
-    public record ProvideReferenceTextRequest(string Text);
+    public record ProvideReferenceTextRequest(string? Text);
 
     public static void MapProvideReferenceText(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/reference-text",
@@ -16,7 +16,7 @@ static class ProvideReferenceTextEndpoint
                     TeamId.From(teamId),
                     ProjectId.From(projectId),
                     KeyId.From(keyId),
-                    Text.From(request.Text));
+                    request.Text is null ? null : Text.From(request.Text));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
 }

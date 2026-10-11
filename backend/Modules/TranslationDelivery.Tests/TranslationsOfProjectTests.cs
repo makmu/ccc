@@ -79,6 +79,55 @@ public class TranslationsOfProjectTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task An_empty_translation_is_a_text_of_its_own_and_stops_inheritance()
+    {
+        await _fixture.Given(new ReferenceTextProvided(_key, _project, "Hello"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de", ""));
+
+        Assert.Equal(("", "de"), await TextIn("de"));
+        Assert.Equal(("", "de"), await TextIn("de-AT"));
+        Assert.Equal(("Hello", "en"), await TextIn("fr"));
+    }
+
+    [Fact]
+    public async Task A_withdrawn_translation_inherits_from_its_parent_again()
+    {
+        await _fixture.Given(new LanguageAdded("de-AT-W", "de-AT", _project));
+        await _fixture.Given(new ReferenceTextProvided(_key, _project, "Hello"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de", "Hallo"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de-AT-W", "Servus"));
+        await _fixture.Given(new TranslationWithdrawn(_key, _project, "de"));
+
+        Assert.Equal(("Hello", "en"), await TextIn("de"));
+        Assert.Equal(("Hello", "en"), await TextIn("de-AT"));
+        Assert.Equal(("Servus", "de-AT-W"), await TextIn("de-AT-W"));
+    }
+
+    [Fact]
+    public async Task A_withdrawn_translation_takes_over_what_its_parent_inherits()
+    {
+        await _fixture.Given(new ReferenceTextProvided(_key, _project, "Hello"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de", "Hallo"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de-AT", "Servus"));
+        await _fixture.Given(new TranslationWithdrawn(_key, _project, "de"));
+        await _fixture.Given(new TranslationWithdrawn(_key, _project, "de-AT"));
+
+        Assert.Equal(("Hello", "en"), await TextIn("de-AT"));
+    }
+
+    [Fact]
+    public async Task A_withdrawn_reference_text_leaves_the_languages_inheriting_it_without_text()
+    {
+        await _fixture.Given(new ReferenceTextProvided(_key, _project, "Hello"));
+        await _fixture.Given(new TranslationProvided(_key, _project, "de", "Hallo"));
+        await _fixture.Given(new ReferenceTextWithdrawn(_key, _project));
+
+        Assert.Equal((null, null), await TextIn("en"));
+        Assert.Equal((null, null), await TextIn("fr"));
+        Assert.Equal(("Hallo", "de"), await TextIn("de-AT"));
+    }
+
+    [Fact]
     public async Task A_language_added_later_starts_with_the_texts_of_its_parent()
     {
         await _fixture.Given(new ReferenceTextProvided(_key, _project, "Hello"));

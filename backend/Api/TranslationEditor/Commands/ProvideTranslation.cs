@@ -6,7 +6,7 @@ namespace CCC.Api.TranslationEditor.Commands;
 
 static class ProvideTranslationEndpoint
 {
-    public record ProvideTranslationRequest(string LanguageCode, string Text);
+    public record ProvideTranslationRequest(string LanguageCode, string? Text);
 
     public static void MapProvideTranslation(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/translations",
@@ -17,7 +17,7 @@ static class ProvideTranslationEndpoint
                     ProjectId.From(projectId),
                     KeyId.From(keyId),
                     LanguageCode.From(request.LanguageCode),
-                    Text.From(request.Text));
+                    request.Text is null ? null : Text.From(request.Text));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });
 }

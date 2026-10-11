@@ -10,7 +10,7 @@ sealed class TranslationEditorProjection : IProjection
 {
     public string Schema => "translation_editor";
 
-    public int Version => 1;
+    public int Version => 2;
 
     public IReadOnlyCollection<string> EventTypes { get; } =
     [
@@ -19,7 +19,9 @@ sealed class TranslationEditorProjection : IProjection
         nameof(KeyAdded),
         nameof(KeyRenamed),
         nameof(ReferenceTextProvided),
+        nameof(ReferenceTextWithdrawn),
         nameof(TranslationProvided),
+        nameof(TranslationWithdrawn),
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction) =>
@@ -77,11 +79,20 @@ sealed class TranslationEditorProjection : IProjection
                 UPDATE translation_editor.keys SET reference_text = @Text WHERE key_id = @KeyId;
                 """, Payload<ReferenceTextProvided>(record), transaction),
 
+            nameof(ReferenceTextWithdrawn) => connection.ExecuteAsync("""
+                UPDATE translation_editor.keys SET reference_text = NULL WHERE key_id = @KeyId;
+                """, Payload<ReferenceTextWithdrawn>(record), transaction),
+
             nameof(TranslationProvided) => connection.ExecuteAsync("""
                 INSERT INTO translation_editor.translations (key_id, language_code, text)
                 VALUES (@KeyId, @LanguageCode, @Text)
                 ON CONFLICT (key_id, language_code) DO UPDATE SET text = EXCLUDED.text;
                 """, Payload<TranslationProvided>(record), transaction),
+
+            nameof(TranslationWithdrawn) => connection.ExecuteAsync("""
+                DELETE FROM translation_editor.translations
+                WHERE key_id = @KeyId AND language_code = @LanguageCode;
+                """, Payload<TranslationWithdrawn>(record), transaction),
 
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };

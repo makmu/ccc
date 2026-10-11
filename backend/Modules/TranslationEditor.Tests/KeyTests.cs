@@ -157,12 +157,35 @@ public class KeyTests
     }
 
     [Fact]
-    public async Task ProvideReferenceText_with_empty_text_for_a_key_without_one_appends_nothing()
+    public async Task ProvideReferenceText_with_empty_text_for_a_key_without_one_appends_it()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, Text.From("")));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(new ReferenceTextProvided(key.Value, project.Value, ""), _fixture.LastEvent<ReferenceTextProvided>());
+    }
+
+    [Fact]
+    public async Task ProvideReferenceText_without_text_withdraws_the_reference_text()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+        await _fixture.Given(new ProvideReferenceText(team, project, key, Text.From("Hello")));
+
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, null));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(new ReferenceTextWithdrawn(key.Value, project.Value), _fixture.LastEvent<ReferenceTextWithdrawn>());
+    }
+
+    [Fact]
+    public async Task ProvideReferenceText_without_text_for_a_key_without_one_appends_nothing()
     {
         var (team, project, key) = await _fixture.GivenKey();
         var eventsBefore = _fixture.Store.Events.Count;
 
-        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, Text.From("")));
+        var result = await _fixture.Handle(new ProvideReferenceText(team, project, key, null));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
@@ -199,6 +222,47 @@ public class KeyTests
         var eventsBefore = _fixture.Store.Events.Count;
 
         var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
+    }
+
+    [Fact]
+    public async Task ProvideTranslation_with_empty_text_for_a_language_without_one_appends_it()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+        await _fixture.GivenLanguage(team, project, "de");
+
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("")));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(new TranslationProvided(key.Value, project.Value, "de", ""), _fixture.LastEvent<TranslationProvided>());
+    }
+
+    [Fact]
+    public async Task ProvideTranslation_without_text_withdraws_the_translation()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+        await _fixture.GivenLanguage(team, project, "de");
+        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
+
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), null));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal(new TranslationWithdrawn(key.Value, project.Value, "de"), _fixture.LastEvent<TranslationWithdrawn>());
+        Assert.Contains("language-code=de", _fixture.LastTags());
+    }
+
+    [Fact]
+    public async Task ProvideTranslation_without_text_for_a_language_without_one_appends_nothing()
+    {
+        var (team, project, key) = await _fixture.GivenKey();
+        await _fixture.GivenLanguage(team, project, "de");
+        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), Text.From("Hallo")));
+        await _fixture.Given(new ProvideTranslation(team, project, key, LanguageCode.From("de"), null));
+        var eventsBefore = _fixture.Store.Events.Count;
+
+        var result = await _fixture.Handle(new ProvideTranslation(team, project, key, LanguageCode.From("de"), null));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(eventsBefore, _fixture.Store.Events.Count);

@@ -37,15 +37,16 @@ public static class Key
             .When<KeyAdded>((e, _) => e.Name == name.Value)
             .When<KeyRenamed>((e, _) => e.Name == name.Value);
 
-    // A key without a reference text or translation counts as having an empty one.
-    public static StateModel<bool> HasReferenceText(KeyId keyId, Text text) =>
-        StateModel.Init(text.Value == string.Empty)
+    public static StateModel<bool> HasReferenceText(KeyId keyId, Text? text) =>
+        StateModel.Init(text is null)
             .Where(Tag.KeyId(keyId))
-            .When<ReferenceTextProvided>((e, _) => e.Text == text.Value);
+            .When<ReferenceTextProvided>((e, _) => e.Text == text?.Value)
+            .When<ReferenceTextWithdrawn>((_, _) => text is null);
 
-    public static StateModel<bool> HasTranslation(KeyId keyId, LanguageCode languageCode, Text text) =>
-        StateModel.Init(text.Value == string.Empty)
+    public static StateModel<bool> HasTranslation(KeyId keyId, LanguageCode languageCode, Text? text) =>
+        StateModel.Init(text is null)
             .Where(Tag.KeyId(keyId))
             .Where(Tag.LanguageCode(languageCode))
-            .When<TranslationProvided>((e, _) => e.Text == text.Value);
+            .When<TranslationProvided>((e, _) => e.Text == text?.Value)
+            .When<TranslationWithdrawn>((_, _) => text is null);
 }

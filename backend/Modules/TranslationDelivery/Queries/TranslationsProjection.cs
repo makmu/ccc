@@ -13,7 +13,7 @@ sealed class TranslationsProjection : IProjection
 {
     public string Schema => "translation_delivery";
 
-    public int Version => 1;
+    public int Version => 2;
 
     public IReadOnlyCollection<string> EventTypes { get; } =
     [
@@ -22,7 +22,9 @@ sealed class TranslationsProjection : IProjection
         nameof(KeyAdded),
         nameof(KeyRenamed),
         nameof(ReferenceTextProvided),
+        nameof(ReferenceTextWithdrawn),
         nameof(TranslationProvided),
+        nameof(TranslationWithdrawn),
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction) =>
@@ -87,7 +89,11 @@ sealed class TranslationsProjection : IProjection
 
             nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(Payload<ReferenceTextProvided>(record), connection, transaction),
 
+            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(Payload<ReferenceTextWithdrawn>(record), connection, transaction),
+
             nameof(TranslationProvided) => ProvideTextAsync(Payload<TranslationProvided>(record), connection, transaction),
+
+            nameof(TranslationWithdrawn) => WithdrawTextAsync(Payload<TranslationWithdrawn>(record), connection, transaction),
 
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
@@ -128,6 +134,29 @@ sealed class TranslationsProjection : IProjection
             SET text = @Text, source_language_code = @LanguageCode
             WHERE project_id = @ProjectId AND key_id = @KeyId
               AND language_code IN (SELECT language_code FROM heirs);
+            """, e, transaction);
+
+    private static async Task WithdrawReferenceTextAsync(ReferenceTextWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction)
+    {
+        var referenceLanguageCode = await connection.ExecuteScalarAsync<string>(
+            "SELECT reference_language_code FROM translation_delivery.projects WHERE project_id = @ProjectId",
+            e, transaction);
+
+        await WithdrawTextAsync(new TranslationWithdrawn(e.KeyId, e.ProjectId, referenceLanguageCode!), connection, transaction);
+    }
+
+    private static Task WithdrawTextAsync(TranslationWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            WITH parent AS (
+                SELECT p.text, p.source_language_code
+                FROM translation_delivery.languages l
+                JOIN translation_delivery.texts p
+                    ON p.project_id = l.project_id AND p.language_code = l.parent_language_code AND p.key_id = @KeyId
+                WHERE l.project_id = @ProjectId AND l.language_code = @LanguageCode
+            )
+            UPDATE translation_delivery.texts
+            SET text = (SELECT text FROM parent), source_language_code = (SELECT source_language_code FROM parent)
+            WHERE project_id = @ProjectId AND key_id = @KeyId AND source_language_code = @LanguageCode;
             """, e, transaction);
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;

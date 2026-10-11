@@ -267,6 +267,28 @@ GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/en/translation
 # response: [{"keyId":"66666666-6666-6666-6666-666666666666","keyName":"heading","text":"Hallo","sourceLanguageCode":"de"},{"keyId":"77777777-7777-7777-7777-777777777777","keyName":"subtitle","text":null,"sourceLanguageCode":null}]
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/de/translations
 
+### 200 withdraw translation
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/translations
+Content-Type: application/json
+
+{ "languageCode": "de", "text": null }
+
+### 200 withdraw the same translation again, no event appended
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/translations
+Content-Type: application/json
+
+{ "languageCode": "de", "text": null }
+
+### 200 provide an empty reference text
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{secondKeyId}}/reference-text
+Content-Type: application/json
+
+{ "text": "" }
+
+### 200 translations inherited again after a withdrawn translation, and an empty text
+# response: [{"keyId":"66666666-6666-6666-6666-666666666666","keyName":"heading","text":"Hello","sourceLanguageCode":"en"},{"keyId":"77777777-7777-7777-7777-777777777777","keyName":"subtitle","text":"","sourceLanguageCode":"en"}]
+GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/de/translations
+
 ### 404 translations in a language the project doesn't have
 # response: "Language not found in this project."
 GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages/fr/translations

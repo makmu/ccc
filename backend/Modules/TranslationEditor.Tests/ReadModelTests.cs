@@ -74,6 +74,23 @@ public class ReadModelTests : IAsyncLifetime
         Assert.Equal("Servus", key.Translations["de"]);
     }
 
+    [Fact]
+    public async Task A_withdrawn_text_is_no_longer_shown()
+    {
+        var title = Guid.NewGuid();
+        await _fixture.Given(new KeyAdded(title, "title", _project));
+        await _fixture.Given(new ReferenceTextProvided(title, _project, "Hello"));
+        await _fixture.Given(new TranslationProvided(title, _project, "de", "Hallo"));
+        await _fixture.Given(new TranslationProvided(title, _project, "fr", ""));
+        await _fixture.Given(new ReferenceTextWithdrawn(title, _project));
+        await _fixture.Given(new TranslationWithdrawn(title, _project, "de"));
+
+        var key = Assert.Single((await KeysOf(_team, _project))!.Keys);
+
+        Assert.Null(key.ReferenceText);
+        Assert.Equal(new Dictionary<string, string> { ["fr"] = "" }, key.Translations);
+    }
+
     private Task<ProjectKeys?> KeysOf(Guid team, Guid project) =>
         _fixture.Query<KeysOfProject, ProjectKeys?>(new KeysOfProject(TeamId.From(team), ProjectId.From(project)));
 }

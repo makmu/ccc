@@ -6,7 +6,7 @@ using CCC.EventStore;
 
 namespace CCC.Modules.TranslationEditor.Commands;
 
-public record ProvideReferenceText(TeamId TeamId, ProjectId ProjectId, KeyId KeyId, Text Text);
+public record ProvideReferenceText(TeamId TeamId, ProjectId ProjectId, KeyId KeyId, Text? Text);
 
 sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<ProvideReferenceText>
 {
@@ -30,9 +30,10 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
         if (alreadyProvided)
             return CommandResult.Ok;
 
-        var appended = await context.TryAppendAsync(
-            new ReferenceTextProvided(command.KeyId.Value, command.ProjectId.Value, command.Text.Value),
-            Tags.From(Tag.KeyId(command.KeyId)));
+        var tags = Tags.From(Tag.KeyId(command.KeyId));
+        var appended = command.Text is { } text
+            ? await context.TryAppendAsync(new ReferenceTextProvided(command.KeyId.Value, command.ProjectId.Value, text.Value), tags)
+            : await context.TryAppendAsync(new ReferenceTextWithdrawn(command.KeyId.Value, command.ProjectId.Value), tags);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }
