@@ -13,9 +13,10 @@ sealed class AddSubscriptionModelHandler(IStateLoader loader) : ICommandHandler<
 {
     public async Task<CommandResult> HandleAsync(AddSubscriptionModel command, CancellationToken cancellationToken)
     {
-        var (idTaken, context) = await loader.LoadAsync(Subscription.Exists(command.Id), cancellationToken);
+        var idTaken = Subscription.Exists(command.Id);
+        var context = await loader.LoadAsync([idTaken], cancellationToken);
 
-        if (idTaken)
+        if (idTaken.IsTrue())
             return CommandResult.Conflict("A subscription model with this id already exists.");
 
         var appended = await context.TryAppendAsync(

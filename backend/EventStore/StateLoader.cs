@@ -10,25 +10,15 @@ public class StateLoader(IEventStore eventStore) : IStateLoader
     // when model B's entries are part of the same union.
     public async Task<StateContext> LoadAsync(IReadOnlyList<IStateModel> models, CancellationToken cancellationToken)
     {
-        var filters = models.Select(model => model.Filter).ToArray();
-        var union = new EventFilter(filters.SelectMany(filter => filter.Entries).ToList());
-        var maxPosition = -1L;
+        var union = new EventFilter(models.SelectMany(model => model.Filter.Entries).ToList());
+        var records = union.Entries.Count > 0
+            ? (await eventStore.LoadAsync(union, cancellationToken)).ToList()
+            : [];
 
-        if (union.Entries.Count > 0)
-        {
-            foreach (var record in await eventStore.LoadAsync(union, cancellationToken))
-            {
-                for (var i = 0; i < models.Count; i++)
-                {
-                    if (filters[i].Matches(record))
-                        models[i].Apply(record);
-                }
+        foreach (var model in models)
+            model.Load(records.Where(model.Filter.Matches));
 
-                if (record.Position > maxPosition)
-                    maxPosition = record.Position;
-            }
-        }
-
+        var maxPosition = records.Count > 0 ? records.Max(record => record.Position) : -1L;
         return new StateContext(eventStore, union, maxPosition);
     }
 }

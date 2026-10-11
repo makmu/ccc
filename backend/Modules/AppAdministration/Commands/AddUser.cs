@@ -13,15 +13,14 @@ sealed class AddUserHandler(IStateLoader loader) : ICommandHandler<AddUser>
 {
     public async Task<CommandResult> HandleAsync(AddUser command, CancellationToken cancellationToken)
     {
-        var (idTaken, emailTaken, context) = await loader.LoadAsync(
-            User.Exists(command.Id),
-            User.EmailTaken(command.Email),
-            cancellationToken);
+        var idTaken = User.Exists(command.Id);
+        var emailTaken = User.EmailTaken(command.Email);
+        var context = await loader.LoadAsync([idTaken, emailTaken], cancellationToken);
 
-        if (idTaken)
+        if (idTaken.IsTrue())
             return CommandResult.Conflict("A user with this id already exists.");
 
-        if (emailTaken)
+        if (emailTaken.IsTrue())
             return CommandResult.Conflict("A user with this email address already exists.");
 
         var appended = await context.TryAppendAsync(

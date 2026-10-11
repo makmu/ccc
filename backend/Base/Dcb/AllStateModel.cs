@@ -2,18 +2,16 @@ namespace CCC.Base.Dcb;
 
 sealed class AllStateModel(IStateModel<bool>[] models) : IStateModel<bool>
 {
-    private readonly EventFilter[] _filters = models.Select(model => model.Filter).ToArray();
+    private bool _loaded;
 
-    public bool State => models.All(model => model.State);
+    public bool Value => _loaded ? models.All(model => model.Value) : throw StateModel.NotLoaded(Filter);
 
-    public EventFilter Filter => new(_filters.SelectMany(filter => filter.Entries).ToList());
+    public EventFilter Filter => new(models.SelectMany(model => model.Filter.Entries).ToList());
 
-    public void Apply(EventRecord record)
+    public void Load(IEnumerable<EventRecord> records)
     {
-        for (var i = 0; i < models.Length; i++)
-        {
-            if (_filters[i].Matches(record))
-                models[i].Apply(record);
-        }
+        foreach (var model in models)
+            model.Load(records.Where(model.Filter.Matches));
+        _loaded = true;
     }
 }

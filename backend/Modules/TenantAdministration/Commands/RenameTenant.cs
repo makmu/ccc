@@ -13,19 +13,18 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
 {
     public async Task<CommandResult> HandleAsync(RenameTenant command, CancellationToken cancellationToken)
     {
-        var (name, alreadyNamed, nameTaken, context) = await loader.LoadAsync(
-            Tenant.Name(command.TenantId),
-            Tenant.IsNamed(command.TenantId, command.Name),
-            Tenant.NameTaken(command.Name),
-            cancellationToken);
+        var name = Tenant.Name(command.TenantId);
+        var alreadyNamed = Tenant.IsNamed(command.TenantId, command.Name);
+        var nameTaken = Tenant.NameTaken(command.Name);
+        var context = await loader.LoadAsync([name, alreadyNamed, nameTaken], cancellationToken);
 
-        if (name is not { } currentName)
+        if (name.IsNull(out var currentName))
             return CommandResult.NotFound("Tenant not found.");
 
-        if (alreadyNamed)
+        if (alreadyNamed.IsTrue())
             return CommandResult.Ok;
 
-        if (nameTaken)
+        if (nameTaken.IsTrue())
             return CommandResult.Conflict("A tenant with this name already exists.");
 
         // Tag both names under the same key, so later name lookups match this

@@ -13,19 +13,18 @@ sealed class AssignTenantOwnerHandler(IStateLoader loader) : ICommandHandler<Ass
 {
     public async Task<CommandResult> HandleAsync(AssignTenantOwner command, CancellationToken cancellationToken)
     {
-        var (tenantExists, userExists, alreadyOwner, context) = await loader.LoadAsync(
-            Tenant.Exists(command.TenantId),
-            User.Exists(command.UserId),
-            User.IsTenantOwner(command.UserId, command.TenantId),
-            cancellationToken);
+        var tenantExists = Tenant.Exists(command.TenantId);
+        var userExists = User.Exists(command.UserId);
+        var alreadyOwner = User.IsTenantOwner(command.UserId, command.TenantId);
+        var context = await loader.LoadAsync([tenantExists, userExists, alreadyOwner], cancellationToken);
 
-        if (!tenantExists)
+        if (tenantExists.IsFalse())
             return CommandResult.NotFound("Tenant not found.");
 
-        if (!userExists)
+        if (userExists.IsFalse())
             return CommandResult.NotFound("User not found.");
 
-        if (alreadyOwner)
+        if (alreadyOwner.IsTrue())
             return CommandResult.Conflict("This user is already an owner of this tenant.");
 
         var appended = await context.TryAppendAsync(

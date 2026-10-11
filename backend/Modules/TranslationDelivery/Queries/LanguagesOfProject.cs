@@ -1,4 +1,5 @@
 using CCC.Base.Abstractions;
+using CCC.Base.Dcb;
 using CCC.Domain.State;
 using CCC.Domain.Types;
 using CCC.EventStore;
@@ -11,11 +12,10 @@ sealed class LanguagesOfProjectHandler(IStateLoader loader) : IQueryHandler<Lang
 {
     public async Task<IReadOnlyList<string>?> HandleAsync(LanguagesOfProject query, CancellationToken cancellationToken)
     {
-        var (inTeam, languages, _) = await loader.LoadAsync(
-            Project.InTeam(query.TeamId, query.ProjectId),
-            Project.Languages(query.ProjectId),
-            cancellationToken);
+        var inTeam = Project.InTeam(query.TeamId, query.ProjectId);
+        var languages = Project.Languages(query.ProjectId);
+        await loader.LoadAsync([inTeam, languages], cancellationToken);
 
-        return inTeam ? languages.Select(language => language.Value).ToList() : null;
+        return inTeam.IsTrue() ? languages.List().Select(language => language.Value).ToList() : null;
     }
 }

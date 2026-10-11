@@ -1,4 +1,5 @@
 using CCC.Base.Abstractions;
+using CCC.Base.Dcb;
 using CCC.Domain.State;
 using CCC.Domain.Types;
 using CCC.EventStore;
@@ -15,21 +16,20 @@ sealed class DetailsOfTenantHandler(IStateLoader loader) : IQueryHandler<Details
 {
     public async Task<TenantDetails?> HandleAsync(DetailsOfTenant query, CancellationToken cancellationToken)
     {
-        var (name, subscriptionModelIds, _) = await loader.LoadAsync(
-            Tenant.Name(query.TenantId),
-            Tenant.SubscriptionModels(query.TenantId),
-            cancellationToken);
+        var name = Tenant.Name(query.TenantId);
+        var subscriptionModelIds = Tenant.SubscriptionModels(query.TenantId);
+        await loader.LoadAsync([name, subscriptionModelIds], cancellationToken);
 
-        if (name is not { } tenantName)
+        if (name.IsNull(out var tenantName))
             return null;
 
-        var subscriptionModelNames = subscriptionModelIds.Select(Subscription.Name).ToList();
+        var subscriptionModelNames = subscriptionModelIds.List().Select(Subscription.Name).ToList();
         await loader.LoadAsync(subscriptionModelNames, cancellationToken);
 
-        var subscriptionModels = subscriptionModelIds
+        var subscriptionModels = subscriptionModelIds.List()
             .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(
                 id.Value,
-                model.State?.Value ?? throw new InvalidOperationException($"Subscription model {id.Value} has no name.")))
+                model.Value?.Value ?? throw new InvalidOperationException($"Subscription model {id.Value} has no name.")))
             .OrderBy(model => model.Name, StringComparer.Ordinal)
             .ToList();
         return new TenantDetails(query.TenantId.Value, tenantName.Value, subscriptionModels);

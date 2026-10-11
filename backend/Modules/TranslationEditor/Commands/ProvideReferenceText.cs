@@ -13,23 +13,22 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
 {
     public async Task<CommandResult> HandleAsync(ProvideReferenceText command, CancellationToken cancellationToken)
     {
-        var (teamExists, projectInTeam, keyExists, alreadyProvided, context) = await loader.LoadAsync(
-            Team.Exists(command.TeamId),
-            Project.InTeam(command.TeamId, command.ProjectId),
-            Key.Exists(command.TeamId, command.ProjectId, command.KeyId),
-            Key.HasReferenceText(command.KeyId, command.Text),
-            cancellationToken);
+        var teamExists = Team.Exists(command.TeamId);
+        var projectInTeam = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyExists = Key.Exists(command.TeamId, command.ProjectId, command.KeyId);
+        var alreadyProvided = Key.HasReferenceText(command.KeyId, command.Text);
+        var context = await loader.LoadAsync([teamExists, projectInTeam, keyExists, alreadyProvided], cancellationToken);
 
-        if (!teamExists)
+        if (teamExists.IsFalse())
             return CommandResult.NotFound("Team not found.");
 
-        if (!projectInTeam)
+        if (projectInTeam.IsFalse())
             return CommandResult.NotFound("Project not found in this team.");
 
-        if (!keyExists)
+        if (keyExists.IsFalse())
             return CommandResult.NotFound("Key not found in this project.");
 
-        if (alreadyProvided)
+        if (alreadyProvided.IsTrue())
             return CommandResult.Ok;
 
         var tags = Tags.From(Tag.KeyId(command.KeyId));

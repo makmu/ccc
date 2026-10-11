@@ -13,28 +13,27 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
 {
     public async Task<CommandResult> HandleAsync(RenameKey command, CancellationToken cancellationToken)
     {
-        var (teamExists, projectInTeam, keyExists, name, nameTaken, alreadyNamed, context) = await loader.LoadAsync(
-            Team.Exists(command.TeamId),
-            Project.InTeam(command.TeamId, command.ProjectId),
-            Key.Exists(command.TeamId, command.ProjectId, command.KeyId),
-            Key.Name(command.KeyId),
-            Key.NameTaken(command.ProjectId, command.Name),
-            Key.IsNamed(command.KeyId, command.Name),
-            cancellationToken);
+        var teamExists = Team.Exists(command.TeamId);
+        var projectInTeam = Project.InTeam(command.TeamId, command.ProjectId);
+        var keyExists = Key.Exists(command.TeamId, command.ProjectId, command.KeyId);
+        var name = Key.Name(command.KeyId);
+        var nameTaken = Key.NameTaken(command.ProjectId, command.Name);
+        var alreadyNamed = Key.IsNamed(command.KeyId, command.Name);
+        var context = await loader.LoadAsync([teamExists, projectInTeam, keyExists, name, nameTaken, alreadyNamed], cancellationToken);
 
-        if (!teamExists)
+        if (teamExists.IsFalse())
             return CommandResult.NotFound("Team not found.");
 
-        if (!projectInTeam)
+        if (projectInTeam.IsFalse())
             return CommandResult.NotFound("Project not found in this team.");
 
-        if (!keyExists || name is not { } currentName)
+        if (keyExists.IsFalse() || name.IsNull(out var currentName))
             return CommandResult.NotFound("Key not found in this project.");
 
-        if (alreadyNamed)
+        if (alreadyNamed.IsTrue())
             return CommandResult.Ok;
 
-        if (nameTaken)
+        if (nameTaken.IsTrue())
             return CommandResult.Conflict("A key with this name already exists in this project.");
 
         var appended = await context.TryAppendAsync(
