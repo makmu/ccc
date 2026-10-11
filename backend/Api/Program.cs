@@ -13,8 +13,17 @@ using CCC.Modules.TranslationEditor;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.RespectNullableAnnotations = true;
+    options.SerializerOptions.RespectRequiredConstructorParameters = true;
+});
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SupportNonNullableReferenceTypes();
+    options.SchemaFilter<ConstructorParametersAsRequiredSchemaFilter>();
+});
 
 var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
