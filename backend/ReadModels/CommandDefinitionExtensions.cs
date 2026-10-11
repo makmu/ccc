@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace CCC.EventStore;
+namespace CCC.ReadModels;
 
 public static class CommandDefinitionExtensions
 {

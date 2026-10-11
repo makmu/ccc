@@ -4,6 +4,8 @@
 
 > **Changed by ADR-010:** a runner no longer retries failures forever. It stalls after three retries, records the stall in its bookmark table, and doesn't catch up until it is unstalled.
 
+> **Changed by ADR-011:** the projection infrastructure has moved from `EventStore` into its own `ReadModels` project. `AppendSignal` stays in `EventStore`.
+
 ## Decision
 
 Queries are answered from read models. Each read model is a vertical slice with its own project in the `ReadModels` solution folder, and each serves one kind of consumer. `PublicTranslations` serves client applications, and a richer slice for the translation management UI will sit next to it. A slice owns one PostgreSQL schema named after it, so a new slice never touches the tables of another. The slices sit next to the command side, not on top of it, and never reference each other:

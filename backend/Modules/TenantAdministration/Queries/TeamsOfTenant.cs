@@ -1,6 +1,6 @@
 using CCC.Abstractions;
 using CCC.Domain.Types;
-using CCC.EventStore;
+using CCC.ReadModels;
 using Dapper;
 
 namespace CCC.Modules.TenantAdministration.Queries;

@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace CCC.EventStore;
+namespace CCC.ReadModels;
 
 public sealed class ReadModelDatabase(string connectionString) : IAsyncDisposable
 {

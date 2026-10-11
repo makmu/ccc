@@ -1,5 +1,5 @@
 using CCC.Abstractions;
-using CCC.EventStore;
+using CCC.ReadModels;
 using CCC.Modules.TranslationEditor.Commands;
 using CCC.Modules.TranslationEditor.Queries;
 using Microsoft.Extensions.DependencyInjection;

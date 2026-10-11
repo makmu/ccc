@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslationEditor.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain.Tests", "Domain.Tests\Domain.Tests.csproj", "{7EDAB168-63AE-46CC-B055-BDCC9B2307FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadModels", "ReadModels\ReadModels.csproj", "{BD119585-FC76-4C7D-87D1-D70977AC4C5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -250,6 +252,18 @@ Global
 		{7EDAB168-63AE-46CC-B055-BDCC9B2307FF}.Release|x64.Build.0 = Release|Any CPU
 		{7EDAB168-63AE-46CC-B055-BDCC9B2307FF}.Release|x86.ActiveCfg = Release|Any CPU
 		{7EDAB168-63AE-46CC-B055-BDCC9B2307FF}.Release|x86.Build.0 = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|x64.Build.0 = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Debug|x86.Build.0 = Debug|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|x64.ActiveCfg = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|x64.Build.0 = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|x86.ActiveCfg = Release|Any CPU
+		{BD119585-FC76-4C7D-87D1-D70977AC4C5C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

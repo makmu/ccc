@@ -1,10 +1,11 @@
 using System.Threading.Channels;
+using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace CCC.EventStore;
+namespace CCC.ReadModels;
 
 // Exactly one runner writes a projection's schema, so neither the bookmark nor the
 // read model tables need locking. Running the API twice would break this.

@@ -1,6 +1,6 @@
 using System.Reflection;
 using CCC.Abstractions;
-using CCC.EventStore;
+using CCC.ReadModels;
 using NetArchTest.Rules;
 
 namespace CCC.Architecture.Tests;
@@ -11,6 +11,7 @@ public class DependencyRuleTests
     private static readonly Assembly Api = Assembly.Load("Api");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
+    private static readonly Assembly ReadModels = Assembly.Load("ReadModels");
     private static readonly Assembly[] Modules =
     [
         Assembly.Load("AppAdministration"),
@@ -24,13 +25,20 @@ public class DependencyRuleTests
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Domain", "CCC.EventStore", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Domain", "CCC.EventStore", "CCC.ReadModels", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
-    public void EventStore_knows_nothing_about_the_domain()
+    public void EventStore_knows_nothing_about_the_domain_or_the_read_models()
     {
         AssertNoDependency(Types.InAssembly(EventStore),
+            "CCC.Abstractions", "CCC.Domain", "CCC.ReadModels", "CCC.Modules", "CCC.Api");
+    }
+
+    [Fact]
+    public void ReadModels_know_nothing_about_the_domain()
+    {
+        AssertNoDependency(Types.InAssembly(ReadModels),
             "CCC.Abstractions", "CCC.Domain", "CCC.Modules", "CCC.Api");
     }
 
@@ -38,7 +46,7 @@ public class DependencyRuleTests
     public void Domain_depends_on_nothing_but_the_event_store()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Abstractions", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Abstractions", "CCC.ReadModels", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
@@ -57,7 +65,7 @@ public class DependencyRuleTests
     {
         AssertNoDependency(
             Types.InAssembly(Api).That().DoNotHaveName("Program"),
-            "CCC.EventStore", "CCC.Domain.State");
+            "CCC.EventStore", "CCC.ReadModels", "CCC.Domain.State");
     }
 
     [Fact]

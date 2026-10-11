@@ -1,5 +1,6 @@
 using CCC.Abstractions;
 using CCC.EventStore;
+using CCC.ReadModels;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

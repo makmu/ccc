@@ -1,5 +1,5 @@
 using CCC.Abstractions;
-using CCC.EventStore;
+using CCC.ReadModels;
 using Dapper;
 
 namespace CCC.Modules.AppAdministration.Queries;

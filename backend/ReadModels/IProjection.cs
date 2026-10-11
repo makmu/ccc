@@ -1,7 +1,8 @@
+using CCC.EventStore;
 using Dapper;
 using Npgsql;
 
-namespace CCC.EventStore;
+namespace CCC.ReadModels;
 
 public interface IProjection
 {

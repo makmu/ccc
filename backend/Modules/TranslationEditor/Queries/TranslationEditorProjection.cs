@@ -1,5 +1,6 @@
 using CCC.Domain.Events;
 using CCC.EventStore;
+using CCC.ReadModels;
 using Dapper;
 using Npgsql;
 

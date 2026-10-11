@@ -2,7 +2,7 @@ using System.Threading.Channels;
 
 namespace CCC.EventStore;
 
-sealed class AppendSignal
+public sealed class AppendSignal
 {
     private readonly Lock _lock = new();
     private readonly List<Channel<bool>> _channels = [];
@@ -23,7 +23,7 @@ sealed class AppendSignal
         return channel.Reader;
     }
 
-    public void Notify()
+    internal void Notify()
     {
         lock (_lock)
             foreach (var channel in _channels)

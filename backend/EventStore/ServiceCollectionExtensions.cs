@@ -16,20 +16,4 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IStateLoader, StateLoader>();
         return services;
     }
-
-    public static IServiceCollection AddReadModelDatabase(this IServiceCollection services, string connectionString)
-    {
-        services.AddSingleton(_ => new ReadModelDatabase(connectionString));
-        return services;
-    }
-
-    public static IServiceCollection AddProjection<TProjection>(this IServiceCollection services)
-        where TProjection : class, IProjection
-    {
-        services.TryAddSingleton<AppendSignal>();
-        services.TryAddSingleton(ProjectionRetryPolicy.Default);
-        services.AddSingleton<TProjection>();
-        services.AddHostedService<ProjectionRunner<TProjection>>();
-        return services;
-    }
 }

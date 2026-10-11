@@ -1,4 +1,4 @@
-namespace CCC.EventStore;
+namespace CCC.ReadModels;
 
 public sealed record ProjectionRetryPolicy(int MaxRetries, TimeSpan FirstDelay)
 {
