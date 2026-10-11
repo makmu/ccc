@@ -9,6 +9,7 @@ public class DependencyRuleTests
 {
     private static readonly Assembly Abstractions = Assembly.Load("Abstractions");
     private static readonly Assembly Api = Assembly.Load("Api");
+    private static readonly Assembly Dcb = Assembly.Load("Dcb");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
     private static readonly Assembly ProjectionBase = Assembly.Load("ProjectionBase");
@@ -25,7 +26,15 @@ public class DependencyRuleTests
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Domain", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Dcb", "CCC.Domain", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+    }
+
+    [Fact]
+    public void Dcb_depends_on_nothing()
+    {
+        AssertNoDependency(Types.InAssembly(Dcb),
+            "CCC.Abstractions", "CCC.Domain", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api",
+            "Dapper", "Npgsql", "Microsoft");
     }
 
     [Fact]
@@ -43,10 +52,10 @@ public class DependencyRuleTests
     }
 
     [Fact]
-    public void Domain_depends_on_nothing_but_the_event_store()
+    public void Domain_depends_on_nothing_but_Dcb()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Abstractions", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Abstractions", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft");
     }
 
     [Fact]
@@ -65,7 +74,7 @@ public class DependencyRuleTests
     {
         AssertNoDependency(
             Types.InAssembly(Api).That().DoNotHaveName("Program"),
-            "CCC.EventStore", "CCC.ProjectionBase", "CCC.Domain.State");
+            "CCC.Dcb", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Domain.State");
     }
 
     [Fact]

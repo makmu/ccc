@@ -1,3 +1,4 @@
+using CCC.Dcb;
 namespace CCC.EventStore;
 
 public static class StateLoaderExtensions

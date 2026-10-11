@@ -1,5 +1,7 @@
 # ADR-011: Projection Infrastructure in a ProjectionBase Project
 
+> **Changed by ADR-012:** `EventHandlers<T>` and `EventRecord` have moved from `EventStore` into the dependency-free `Dcb` project. `ProjectionBase` references `Dcb` and `EventStore`, and projections no longer need `CCC.EventStore`.
+
 ## Decision
 
 The infrastructure that every module with projections shares moves from `EventStore` into a new `ProjectionBase` project, with the namespace `CCC.ProjectionBase`:

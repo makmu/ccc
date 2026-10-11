@@ -8,7 +8,7 @@ The repository is not intended to be a generic content management system. Its ma
 
 ## Repository Structure
 
-- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into API, commands, domain and event store projects plus one project per projection slice (see ADR-006 and ADR-007)
+- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into `Api`, one project per module, `Domain`, `Dcb`, `EventStore` and `ProjectionBase` (see ADR-006, ADR-009, ADR-011 and ADR-012)
 - `frontend/` - React frontend for exploring and exercising the sample application
 - `presentation/` - standalone React/RevealJS slide deck used to explain CCC in this repository
 - `docs/architecture/` - architecture decision records for the main technical choices
@@ -64,3 +64,8 @@ The browser-hosted presentation runs on Vite's default dev port unless that port
 | [ADR-005: No CRUD Terminology in Requests, Commands, and Events](docs/architecture/adr-005-no-crud-naming.md) | Defines the naming convention for commands, requests, and events |
 | [ADR-006: Split the Backend into API, Commands, Domain and EventStore Projects](docs/architecture/adr-006-project-structure.md) | Defines the backend projects, the direction of their dependencies, and where validation happens |
 | [ADR-007: Projections Answer Queries, One Project per Slice](docs/architecture/adr-007-projections.md) | Defines how projections are built, woken up and queried, and why appends are serialized |
+| [ADR-008: An Abstractions Project for the Handler Contracts](docs/architecture/adr-008-abstractions.md) | Puts the command and query handler contracts into a project that references nothing |
+| [ADR-009: Modules by Area of Work](docs/architecture/adr-009-modules.md) | Groups commands, projections and queries into one project per area of work |
+| [ADR-010: Projections Stall After Repeated Failures](docs/architecture/adr-010-stalled-projections.md) | Defines when a projection gives up, how the stall is recorded, and how to unstall it |
+| [ADR-011: Projection Infrastructure in a ProjectionBase Project](docs/architecture/adr-011-projection-base.md) | Moves the projection runner and its helpers out of the event store |
+| [ADR-012: State Model Primitives in a Dependency-Free Dcb Project](docs/architecture/adr-012-dcb.md) | Moves state models, tags and event records into a project that references nothing, so the domain no longer depends on the event store |

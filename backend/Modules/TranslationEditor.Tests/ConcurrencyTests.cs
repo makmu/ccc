@@ -1,8 +1,8 @@
 using CCC.Abstractions;
+using CCC.Dcb;
 using CCC.Domain.Events;
 using CCC.Domain.State;
 using CCC.Domain.Types;
-using CCC.EventStore;
 using CCC.Modules.TranslationEditor.Commands;
 using CCC.TestKit;
 using static CCC.TestKit.CommandFixture;

@@ -1,5 +1,5 @@
+using CCC.Dcb;
 using CCC.Domain.Events;
-using CCC.EventStore;
 using CCC.ProjectionBase;
 using Dapper;
 using Npgsql;

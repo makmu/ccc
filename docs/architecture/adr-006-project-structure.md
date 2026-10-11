@@ -2,6 +2,8 @@
 
 > **Changed by ADR-009:** the use cases of `Commands` now live in modules under `Modules/`, one per area of work, and `Commands` is gone. The other projects, the dependency direction and the three decisions below still hold.
 
+> **Changed by ADR-012:** `StateModel<T>`, `IStateModel`, `Tags` and the other state model primitives now live in a dependency-free `Dcb` project. `Domain` references only `Dcb`, and so does `EventStore`. This replaces decision 1 below and adopts a variant of alternative 2.
+
 ## Decision
 
 The backend is split into four projects, each with one job. All four live in `backend/` and share `backend/CCC.sln`.

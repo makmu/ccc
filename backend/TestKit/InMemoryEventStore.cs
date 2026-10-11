@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CCC.Dcb;
 using CCC.EventStore;
 
 namespace CCC.TestKit;

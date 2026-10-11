@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace CCC.EventStore;
+namespace CCC.Dcb;
 
 public sealed partial class Tags : IEquatable<Tags>
 {

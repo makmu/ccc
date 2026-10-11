@@ -1,6 +1,6 @@
+using CCC.Dcb;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
-using CCC.EventStore;
 
 namespace CCC.Domain.State;
 

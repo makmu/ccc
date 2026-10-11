@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using CCC.Dcb;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.Hosting;

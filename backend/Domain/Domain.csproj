@@ -5,7 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\EventStore\EventStore.csproj" />
+        <ProjectReference Include="..\Dcb\Dcb.csproj" />
     </ItemGroup>
 
 </Project>

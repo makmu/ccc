@@ -1,4 +1,4 @@
-namespace CCC.EventStore;
+namespace CCC.Dcb;
 
 sealed class AllStateModel(IStateModel<bool>[] models) : IStateModel<bool>
 {
