@@ -21,7 +21,25 @@ sealed class AppAdministrationProjection : IProjection
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+        connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
+
+    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var command = record.Type switch
+        {
+            nameof(SubscriptionModelAdded) => AddSubscriptionModel(record.PayloadAs<SubscriptionModelAdded>()),
+            nameof(TenantRegistered) => RegisterTenant(record.PayloadAs<TenantRegistered>()),
+            nameof(TenantRenamed) => RenameTenant(record.PayloadAs<TenantRenamed>()),
+            nameof(TenantOwnerAssigned) => AssignTenantOwner(record.PayloadAs<TenantOwnerAssigned>()),
+            nameof(UserAdded) => AddUser(record.PayloadAs<UserAdded>()),
+            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
+        };
+        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
+    }
+
+    private static CommandDefinition InstallTables() =>
+        new("""
             CREATE TABLE IF NOT EXISTS app_administration.subscription_models (
                 subscription_model_id UUID PRIMARY KEY,
                 name                  TEXT NOT NULL,
@@ -50,59 +68,37 @@ sealed class AppAdministrationProjection : IProjection
                 name    TEXT NOT NULL,
                 email   TEXT NOT NULL
             );
-            """, transaction: transaction, cancellationToken: cancellationToken));
+            """);
 
-    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        record.Type switch
-        {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(record.PayloadAs<SubscriptionModelAdded>(), connection, transaction, cancellationToken),
-            nameof(TenantRegistered) => RegisterTenantAsync(record.PayloadAs<TenantRegistered>(), connection, transaction, cancellationToken),
-            nameof(TenantRenamed) => RenameTenantAsync(record.PayloadAs<TenantRenamed>(), connection, transaction, cancellationToken),
-            nameof(TenantOwnerAssigned) => AssignTenantOwnerAsync(record.PayloadAs<TenantOwnerAssigned>(), connection, transaction, cancellationToken),
-            nameof(UserAdded) => AddUserAsync(record.PayloadAs<UserAdded>(), connection, transaction, cancellationToken),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-
-    private static Task AddSubscriptionModelAsync(SubscriptionModelAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddSubscriptionModel(SubscriptionModelAdded e) =>
+        new("""
             INSERT INTO app_administration.subscription_models (subscription_model_id, name, key_limit)
             VALUES (@Id, @Name, @KeyLimit);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static async Task RegisterTenantAsync(TenantRegistered e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        await connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition RegisterTenant(TenantRegistered e) =>
+        new("""
             INSERT INTO app_administration.tenants (tenant_id, name)
             VALUES (@Id, @Name);
-            """, e, transaction, cancellationToken: cancellationToken));
 
-        await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO app_administration.tenant_subscription_models (tenant_id, subscription_model_id)
-            VALUES (@TenantId, @SubscriptionModelId);
-            """, e.SubscriptionModelIds.Select(id => new { TenantId = e.Id, SubscriptionModelId = id }),
-            transaction, cancellationToken: cancellationToken));
-    }
+            SELECT @Id, unnest(@SubscriptionModelIds);
+            """, e);
 
-    private static Task RenameTenantAsync(TenantRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition RenameTenant(TenantRenamed e) =>
+        new("""
             UPDATE app_administration.tenants SET name = @Name WHERE tenant_id = @TenantId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AssignTenantOwnerAsync(TenantOwnerAssigned e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AssignTenantOwner(TenantOwnerAssigned e) =>
+        new("""
             INSERT INTO app_administration.tenant_owners (tenant_id, user_id)
             VALUES (@TenantId, @UserId);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddUserAsync(UserAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddUser(UserAdded e) =>
+        new("""
             INSERT INTO app_administration.users (user_id, name, email)
             VALUES (@Id, @Name, @Email);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 }

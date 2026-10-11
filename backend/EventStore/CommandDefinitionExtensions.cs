@@ -3,7 +3,7 @@ using Dapper;
 
 namespace CCC.EventStore;
 
-static class CommandDefinitionExtensions
+public static class CommandDefinitionExtensions
 {
     public static CommandDefinition With(this CommandDefinition command, CancellationToken cancellationToken) =>
         command.With(null, cancellationToken);

@@ -18,7 +18,22 @@ sealed class TeamAdministrationProjection : IProjection
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+        connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
+
+    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var command = record.Type switch
+        {
+            nameof(ProjectAdded) => AddProject(record.PayloadAs<ProjectAdded>()),
+            nameof(LanguageAdded) => AddLanguage(record.PayloadAs<LanguageAdded>()),
+            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
+        };
+        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
+    }
+
+    private static CommandDefinition InstallTables() =>
+        new("""
             CREATE TABLE IF NOT EXISTS team_administration.projects (
                 project_id         UUID PRIMARY KEY,
                 team_id            UUID NOT NULL,
@@ -32,31 +47,20 @@ sealed class TeamAdministrationProjection : IProjection
                 parent_language_code TEXT,
                 PRIMARY KEY (project_id, language_code)
             );
-            """, transaction: transaction, cancellationToken: cancellationToken));
+            """);
 
-    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        record.Type switch
-        {
-            nameof(ProjectAdded) => AddProjectAsync(record.PayloadAs<ProjectAdded>(), connection, transaction, cancellationToken),
-            nameof(LanguageAdded) => AddLanguageAsync(record.PayloadAs<LanguageAdded>(), connection, transaction, cancellationToken),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-
-    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddProject(ProjectAdded e) =>
+        new("""
             INSERT INTO team_administration.projects (project_id, team_id, name, reference_language)
             VALUES (@Id, @TeamId, @Name, @ReferenceLanguage);
 
             INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
             VALUES (@Id, @ReferenceLanguage, NULL);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddLanguage(LanguageAdded e) =>
+        new("""
             INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
             VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 }

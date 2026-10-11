@@ -24,7 +24,28 @@ sealed class TranslationsProjection : IProjection
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+        connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
+
+    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var command = record.Type switch
+        {
+            nameof(ProjectAdded) => AddProject(record.PayloadAs<ProjectAdded>()),
+            nameof(LanguageAdded) => AddLanguage(record.PayloadAs<LanguageAdded>()),
+            nameof(KeyAdded) => AddKey(record.PayloadAs<KeyAdded>()),
+            nameof(KeyRenamed) => RenameKey(record.PayloadAs<KeyRenamed>()),
+            nameof(ReferenceTextProvided) => ProvideReferenceText(record.PayloadAs<ReferenceTextProvided>()),
+            nameof(ReferenceTextWithdrawn) => WithdrawReferenceText(record.PayloadAs<ReferenceTextWithdrawn>()),
+            nameof(TranslationProvided) => ProvideTranslation(record.PayloadAs<TranslationProvided>()),
+            nameof(TranslationWithdrawn) => WithdrawTranslation(record.PayloadAs<TranslationWithdrawn>()),
+            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
+        };
+        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
+    }
+
+    private static CommandDefinition InstallTables() =>
+        new("""
             CREATE TABLE IF NOT EXISTS translation_delivery.projects (
                 project_id              UUID PRIMARY KEY,
                 team_id                 UUID NOT NULL,
@@ -47,36 +68,19 @@ sealed class TranslationsProjection : IProjection
                 source_language_code TEXT,
                 PRIMARY KEY (project_id, language_code, key_id)
             );
-            """, transaction: transaction, cancellationToken: cancellationToken));
+            """);
 
-    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        record.Type switch
-        {
-            nameof(ProjectAdded) => AddProjectAsync(record.PayloadAs<ProjectAdded>(), connection, transaction, cancellationToken),
-            nameof(LanguageAdded) => AddLanguageAsync(record.PayloadAs<LanguageAdded>(), connection, transaction, cancellationToken),
-            nameof(KeyAdded) => AddKeyAsync(record.PayloadAs<KeyAdded>(), connection, transaction, cancellationToken),
-            nameof(KeyRenamed) => RenameKeyAsync(record.PayloadAs<KeyRenamed>(), connection, transaction, cancellationToken),
-            nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(record.PayloadAs<ReferenceTextProvided>(), connection, transaction, cancellationToken),
-            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(record.PayloadAs<ReferenceTextWithdrawn>(), connection, transaction, cancellationToken),
-            nameof(TranslationProvided) => ProvideTextAsync(record.PayloadAs<TranslationProvided>(), connection, transaction, cancellationToken),
-            nameof(TranslationWithdrawn) => WithdrawTextAsync(record.PayloadAs<TranslationWithdrawn>(), connection, transaction, cancellationToken),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-
-    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddProject(ProjectAdded e) =>
+        new("""
             INSERT INTO translation_delivery.projects (project_id, team_id, reference_language_code)
             VALUES (@Id, @TeamId, @ReferenceLanguage);
 
             INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
             VALUES (@Id, @ReferenceLanguage, NULL);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddLanguage(LanguageAdded e) =>
+        new("""
             INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
             VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
 
@@ -84,41 +88,37 @@ sealed class TranslationsProjection : IProjection
             SELECT project_id, @LanguageCode, key_id, key_name, text, source_language_code
             FROM translation_delivery.texts
             WHERE project_id = @ProjectId AND language_code = @ParentLanguageCode;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddKeyAsync(KeyAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddKey(KeyAdded e) =>
+        new("""
             INSERT INTO translation_delivery.texts (project_id, language_code, key_id, key_name)
             SELECT project_id, language_code, @Id, @Name
             FROM translation_delivery.languages
             WHERE project_id = @ProjectId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task RenameKeyAsync(KeyRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition RenameKey(KeyRenamed e) =>
+        new("""
             UPDATE translation_delivery.texts
             SET key_name = @Name
             WHERE project_id = @ProjectId AND key_id = @KeyId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static async Task ProvideReferenceTextAsync(ReferenceTextProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var referenceLanguageCode = await ReferenceLanguageCodeAsync(e.ProjectId, connection, transaction, cancellationToken);
+    private static CommandDefinition ProvideReferenceText(ReferenceTextProvided e) =>
+        ProvideText(e.KeyId, e.ProjectId, languageCode: null, e.Text);
 
-        await ProvideTextAsync(new TranslationProvided(e.KeyId, e.ProjectId, referenceLanguageCode, e.Text), connection, transaction, cancellationToken);
-    }
+    private static CommandDefinition ProvideTranslation(TranslationProvided e) =>
+        ProvideText(e.KeyId, e.ProjectId, e.LanguageCode, e.Text);
 
-    private static Task ProvideTextAsync(TranslationProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
-            UPDATE translation_delivery.texts
-            SET text = @Text, source_language_code = @LanguageCode
-            WHERE project_id = @ProjectId AND key_id = @KeyId AND language_code = @LanguageCode;
-
+    private static CommandDefinition ProvideText(Guid keyId, Guid projectId, string? languageCode, string text) =>
+        new("""
             WITH RECURSIVE
+                provided AS (
+                    SELECT COALESCE(@LanguageCode, reference_language_code) AS language_code
+                    FROM translation_delivery.projects
+                    WHERE project_id = @ProjectId
+                ),
                 inheriting AS (
                     SELECT l.language_code, l.parent_language_code
                     FROM translation_delivery.languages l
@@ -127,43 +127,41 @@ sealed class TranslationsProjection : IProjection
                     WHERE l.project_id = @ProjectId
                       AND t.source_language_code IS DISTINCT FROM t.language_code
                 ),
-                heirs AS (
-                    SELECT language_code FROM inheriting WHERE parent_language_code = @LanguageCode
+                receiving AS (
+                    SELECT language_code FROM provided
                     UNION ALL
-                    SELECT i.language_code FROM inheriting i JOIN heirs h ON i.parent_language_code = h.language_code
+                    SELECT i.language_code FROM inheriting i JOIN receiving r ON i.parent_language_code = r.language_code
                 )
             UPDATE translation_delivery.texts
-            SET text = @Text, source_language_code = @LanguageCode
+            SET text = @Text, source_language_code = (SELECT language_code FROM provided)
             WHERE project_id = @ProjectId AND key_id = @KeyId
-              AND language_code IN (SELECT language_code FROM heirs);
-            """, e, transaction, cancellationToken: cancellationToken));
+              AND language_code IN (SELECT language_code FROM receiving);
+            """, new { KeyId = keyId, ProjectId = projectId, LanguageCode = languageCode, Text = text });
 
-    private static async Task WithdrawReferenceTextAsync(ReferenceTextWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var referenceLanguageCode = await ReferenceLanguageCodeAsync(e.ProjectId, connection, transaction, cancellationToken);
+    private static CommandDefinition WithdrawReferenceText(ReferenceTextWithdrawn e) =>
+        WithdrawText(e.KeyId, e.ProjectId, languageCode: null);
 
-        await WithdrawTextAsync(new TranslationWithdrawn(e.KeyId, e.ProjectId, referenceLanguageCode), connection, transaction, cancellationToken);
-    }
+    private static CommandDefinition WithdrawTranslation(TranslationWithdrawn e) =>
+        WithdrawText(e.KeyId, e.ProjectId, e.LanguageCode);
 
-    private static Task WithdrawTextAsync(TranslationWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
-            WITH parent AS (
-                SELECT p.text, p.source_language_code
-                FROM translation_delivery.languages l
-                JOIN translation_delivery.texts p
-                    ON p.project_id = l.project_id AND p.language_code = l.parent_language_code AND p.key_id = @KeyId
-                WHERE l.project_id = @ProjectId AND l.language_code = @LanguageCode
-            )
+    private static CommandDefinition WithdrawText(Guid keyId, Guid projectId, string? languageCode) =>
+        new("""
+            WITH
+                withdrawn AS (
+                    SELECT COALESCE(@LanguageCode, reference_language_code) AS language_code
+                    FROM translation_delivery.projects
+                    WHERE project_id = @ProjectId
+                ),
+                parent AS (
+                    SELECT p.text, p.source_language_code
+                    FROM translation_delivery.languages l
+                    JOIN translation_delivery.texts p
+                        ON p.project_id = l.project_id AND p.language_code = l.parent_language_code AND p.key_id = @KeyId
+                    WHERE l.project_id = @ProjectId AND l.language_code = (SELECT language_code FROM withdrawn)
+                )
             UPDATE translation_delivery.texts
             SET text = (SELECT text FROM parent), source_language_code = (SELECT source_language_code FROM parent)
-            WHERE project_id = @ProjectId AND key_id = @KeyId AND source_language_code = @LanguageCode;
-            """, e, transaction, cancellationToken: cancellationToken));
-
-    private static async Task<string> ReferenceLanguageCodeAsync(Guid projectId, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        (await connection.ExecuteScalarAsync<string>(new CommandDefinition(
-            "SELECT reference_language_code FROM translation_delivery.projects WHERE project_id = @projectId",
-            new { projectId }, transaction, cancellationToken: cancellationToken)))!;
+            WHERE project_id = @ProjectId AND key_id = @KeyId
+              AND source_language_code = (SELECT language_code FROM withdrawn);
+            """, new { KeyId = keyId, ProjectId = projectId, LanguageCode = languageCode });
 }

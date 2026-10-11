@@ -24,7 +24,28 @@ sealed class TranslationEditorProjection : IProjection
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+        connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
+
+    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var command = record.Type switch
+        {
+            nameof(ProjectAdded) => AddProject(record.PayloadAs<ProjectAdded>()),
+            nameof(LanguageAdded) => AddLanguage(record.PayloadAs<LanguageAdded>()),
+            nameof(KeyAdded) => AddKey(record.PayloadAs<KeyAdded>()),
+            nameof(KeyRenamed) => RenameKey(record.PayloadAs<KeyRenamed>()),
+            nameof(ReferenceTextProvided) => ProvideReferenceText(record.PayloadAs<ReferenceTextProvided>()),
+            nameof(ReferenceTextWithdrawn) => WithdrawReferenceText(record.PayloadAs<ReferenceTextWithdrawn>()),
+            nameof(TranslationProvided) => ProvideTranslation(record.PayloadAs<TranslationProvided>()),
+            nameof(TranslationWithdrawn) => WithdrawTranslation(record.PayloadAs<TranslationWithdrawn>()),
+            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
+        };
+        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
+    }
+
+    private static CommandDefinition InstallTables() =>
+        new("""
             CREATE TABLE IF NOT EXISTS translation_editor.projects (
                 project_id         UUID PRIMARY KEY,
                 team_id            UUID NOT NULL,
@@ -50,74 +71,51 @@ sealed class TranslationEditorProjection : IProjection
                 text          TEXT NOT NULL,
                 PRIMARY KEY (key_id, language_code)
             );
-            """, transaction: transaction, cancellationToken: cancellationToken));
+            """);
 
-    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        record.Type switch
-        {
-            nameof(ProjectAdded) => AddProjectAsync(record.PayloadAs<ProjectAdded>(), connection, transaction, cancellationToken),
-            nameof(LanguageAdded) => AddLanguageAsync(record.PayloadAs<LanguageAdded>(), connection, transaction, cancellationToken),
-            nameof(KeyAdded) => AddKeyAsync(record.PayloadAs<KeyAdded>(), connection, transaction, cancellationToken),
-            nameof(KeyRenamed) => RenameKeyAsync(record.PayloadAs<KeyRenamed>(), connection, transaction, cancellationToken),
-            nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(record.PayloadAs<ReferenceTextProvided>(), connection, transaction, cancellationToken),
-            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(record.PayloadAs<ReferenceTextWithdrawn>(), connection, transaction, cancellationToken),
-            nameof(TranslationProvided) => ProvideTranslationAsync(record.PayloadAs<TranslationProvided>(), connection, transaction, cancellationToken),
-            nameof(TranslationWithdrawn) => WithdrawTranslationAsync(record.PayloadAs<TranslationWithdrawn>(), connection, transaction, cancellationToken),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-
-    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddProject(ProjectAdded e) =>
+        new("""
             INSERT INTO translation_editor.projects (project_id, team_id, reference_language)
             VALUES (@Id, @TeamId, @ReferenceLanguage);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddLanguage(LanguageAdded e) =>
+        new("""
             INSERT INTO translation_editor.languages (project_id, language_code)
             VALUES (@ProjectId, @LanguageCode);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddKeyAsync(KeyAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddKey(KeyAdded e) =>
+        new("""
             INSERT INTO translation_editor.keys (key_id, project_id, name)
             VALUES (@Id, @ProjectId, @Name);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task RenameKeyAsync(KeyRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition RenameKey(KeyRenamed e) =>
+        new("""
             UPDATE translation_editor.keys SET name = @Name WHERE key_id = @KeyId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task ProvideReferenceTextAsync(ReferenceTextProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition ProvideReferenceText(ReferenceTextProvided e) =>
+        new("""
             UPDATE translation_editor.keys SET reference_text = @Text WHERE key_id = @KeyId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task WithdrawReferenceTextAsync(ReferenceTextWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition WithdrawReferenceText(ReferenceTextWithdrawn e) =>
+        new("""
             UPDATE translation_editor.keys SET reference_text = NULL WHERE key_id = @KeyId;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task ProvideTranslationAsync(TranslationProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition ProvideTranslation(TranslationProvided e) =>
+        new("""
             INSERT INTO translation_editor.translations (key_id, language_code, text)
             VALUES (@KeyId, @LanguageCode, @Text)
             ON CONFLICT (key_id, language_code) DO UPDATE SET text = EXCLUDED.text;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task WithdrawTranslationAsync(TranslationWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition WithdrawTranslation(TranslationWithdrawn e) =>
+        new("""
             DELETE FROM translation_editor.translations
             WHERE key_id = @KeyId AND language_code = @LanguageCode;
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 }

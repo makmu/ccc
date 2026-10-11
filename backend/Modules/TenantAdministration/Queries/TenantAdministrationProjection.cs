@@ -18,7 +18,22 @@ sealed class TenantAdministrationProjection : IProjection
     ];
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+        connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
+
+    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        var command = record.Type switch
+        {
+            nameof(SubscriptionModelAdded) => AddSubscriptionModel(record.PayloadAs<SubscriptionModelAdded>()),
+            nameof(TeamAdded) => AddTeam(record.PayloadAs<TeamAdded>()),
+            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
+        };
+        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
+    }
+
+    private static CommandDefinition InstallTables() =>
+        new("""
             CREATE TABLE IF NOT EXISTS tenant_administration.subscription_models (
                 subscription_model_id UUID PRIMARY KEY,
                 name                  TEXT NOT NULL
@@ -30,28 +45,17 @@ sealed class TenantAdministrationProjection : IProjection
                 name                  TEXT NOT NULL,
                 subscription_model_id UUID NOT NULL
             );
-            """, transaction: transaction, cancellationToken: cancellationToken));
+            """);
 
-    public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        record.Type switch
-        {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(record.PayloadAs<SubscriptionModelAdded>(), connection, transaction, cancellationToken),
-            nameof(TeamAdded) => AddTeamAsync(record.PayloadAs<TeamAdded>(), connection, transaction, cancellationToken),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-
-    private static Task AddSubscriptionModelAsync(SubscriptionModelAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddSubscriptionModel(SubscriptionModelAdded e) =>
+        new("""
             INSERT INTO tenant_administration.subscription_models (subscription_model_id, name)
             VALUES (@Id, @Name);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 
-    private static Task AddTeamAsync(TeamAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken) =>
-        connection.ExecuteAsync(new CommandDefinition("""
+    private static CommandDefinition AddTeam(TeamAdded e) =>
+        new("""
             INSERT INTO tenant_administration.teams (team_id, tenant_id, name, subscription_model_id)
             VALUES (@Id, @TenantId, @Name, @SubscriptionModelId);
-            """, e, transaction, cancellationToken: cancellationToken));
+            """, e);
 }
