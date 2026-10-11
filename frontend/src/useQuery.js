@@ -21,7 +21,7 @@ export function useQuery(path) {
     return () => { current = false }
   }, [path])
 
-  // Read models catch up shortly after a command, so a single reload could still miss the change.
+  // Projections catch up shortly after a command, so a single reload could still miss the change.
   async function reloadUntil(caughtUp = () => true) {
     for (let attempt = 1; ; attempt++) {
       const loaded = await load(path)

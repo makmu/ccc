@@ -5,9 +5,9 @@ using CCC.TestKit;
 
 namespace CCC.Modules.TranslationEditor.Tests;
 
-public class ReadModelTests : IAsyncLifetime
+public class ProjectionTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("translation_editor", services => services.AddTranslationEditor());
+    private readonly ProjectionFixture _fixture = new("translation_editor", services => services.AddTranslationEditor());
     private readonly Guid _team = Guid.NewGuid();
     private readonly Guid _project = Guid.NewGuid();
 

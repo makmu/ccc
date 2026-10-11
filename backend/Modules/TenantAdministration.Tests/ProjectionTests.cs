@@ -5,9 +5,9 @@ using CCC.TestKit;
 
 namespace CCC.Modules.TenantAdministration.Tests;
 
-public class ReadModelTests : IAsyncLifetime
+public class ProjectionTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("tenant_administration", services => services.AddTenantAdministration());
+    private readonly ProjectionFixture _fixture = new("tenant_administration", services => services.AddTenantAdministration());
     private readonly Guid _tenant = Guid.NewGuid();
     private readonly Guid _basic = Guid.NewGuid();
     private readonly Guid _premium = Guid.NewGuid();

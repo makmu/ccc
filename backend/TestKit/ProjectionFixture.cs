@@ -1,6 +1,6 @@
 using CCC.Abstractions;
 using CCC.EventStore;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,7 +10,7 @@ namespace CCC.TestKit;
 
 // Runs a module's projection against a throwaway database on the server given by
 // CCC_TEST_POSTGRES, defaulting to the local development server.
-public sealed class ReadModelFixture(string schema, Func<IServiceCollection, IServiceCollection> addModule)
+public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IServiceCollection> addModule)
 {
     private static readonly TimeSpan CatchUpTimeout = TimeSpan.FromSeconds(5);
 
@@ -83,7 +83,7 @@ public sealed class ReadModelFixture(string schema, Func<IServiceCollection, ISe
                 .AddLogging()
                 .AddSingleton(new ProjectionRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
                 .AddEventStore(ConnectionString)
-                .AddReadModelDatabase(ConnectionString))
+                .AddProjectionDatabase(ConnectionString))
             .BuildServiceProvider();
 
         foreach (var service in _services.GetServices<IHostedService>())

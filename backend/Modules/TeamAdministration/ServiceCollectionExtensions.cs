@@ -1,5 +1,5 @@
 using CCC.Abstractions;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using CCC.Modules.TeamAdministration.Commands;
 using CCC.Modules.TeamAdministration.Queries;
 using Microsoft.Extensions.DependencyInjection;

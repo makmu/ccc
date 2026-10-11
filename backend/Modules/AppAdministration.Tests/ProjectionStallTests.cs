@@ -5,7 +5,7 @@ namespace CCC.Modules.AppAdministration.Tests;
 
 public class ProjectionStallTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("app_administration", services => services.AddAppAdministration());
+    private readonly ProjectionFixture _fixture = new("app_administration", services => services.AddAppAdministration());
 
     public Task InitializeAsync() => _fixture.InitializeAsync();
 

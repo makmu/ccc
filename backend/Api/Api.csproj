@@ -18,7 +18,7 @@
         <ProjectReference Include="..\Modules\TenantAdministration\TenantAdministration.csproj" />
         <ProjectReference Include="..\Modules\TranslationDelivery\TranslationDelivery.csproj" />
         <ProjectReference Include="..\Modules\TranslationEditor\TranslationEditor.csproj" />
-        <ProjectReference Include="..\ReadModels\ReadModels.csproj" />
+        <ProjectReference Include="..\ProjectionBase\ProjectionBase.csproj" />
     </ItemGroup>
 
 </Project>

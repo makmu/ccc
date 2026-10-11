@@ -1,6 +1,6 @@
 using CCC.Abstractions;
 using CCC.Domain.Types;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using Dapper;
 
 namespace CCC.Modules.TeamAdministration.Queries;
@@ -11,7 +11,7 @@ public record ProjectSummary(Guid Id, string Name, string ReferenceLanguage, IRe
 
 public record ProjectLanguage(string Code, string? ParentCode);
 
-sealed class ProjectsOfTeamHandler(ReadModelDatabase database) : IQueryHandler<ProjectsOfTeam, IReadOnlyList<ProjectSummary>>
+sealed class ProjectsOfTeamHandler(ProjectionDatabase database) : IQueryHandler<ProjectsOfTeam, IReadOnlyList<ProjectSummary>>
 {
     public async Task<IReadOnlyList<ProjectSummary>> HandleAsync(ProjectsOfTeam query, CancellationToken cancellationToken)
     {

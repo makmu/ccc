@@ -2,7 +2,7 @@
 
 ## Decision
 
-We will use **PostgreSQL** as the database system for the **event log**. Read model projections are not bound by this decision — each projection may choose the storage technology best suited to its query requirements (e.g. MongoDB, Redis, or any other).
+We will use **PostgreSQL** as the database system for the **event log**. Projections are not bound by this decision — each projection may choose the storage technology best suited to its query requirements (e.g. MongoDB, Redis, or any other).
 
 ## Context
 
@@ -15,7 +15,7 @@ The event sourcing architecture defined in ADR-002 requires a database for the e
 
 PostgreSQL satisfies all of these requirements while being well-known to the team, reducing operational and development friction.
 
-Read models are rebuilt from the event log and are inherently replaceable, so they are free to use whichever store fits their access patterns best.
+Projections are rebuilt from the event log and are inherently replaceable, so they are free to use whichever store fits their access patterns best.
 
 ## Consequences
 
@@ -24,7 +24,7 @@ Read models are rebuilt from the event log and are inherently replaceable, so th
 - Strong ACID guarantees and support for conditional inserts (e.g. `INSERT ... WHERE`, row-level locking) make it well-suited for CCC-style consistency enforcement.
 - Widely adopted, well-documented, and free and open-source with no licensing cost.
 - The team is already familiar with PostgreSQL, minimising the learning curve.
-- Decoupling the event log from projection storage allows each read model to optimise independently.
+- Decoupling the event log from projection storage allows each projection to optimise independently.
 
 **Negative:**
 - Requires hosting and operating a PostgreSQL instance (managed cloud options mitigate this).

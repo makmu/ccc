@@ -1,5 +1,5 @@
 using CCC.Abstractions;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using Dapper;
 
 namespace CCC.Modules.AppAdministration.Queries;
@@ -8,7 +8,7 @@ public record Users;
 
 public record UserSummary(Guid Id, string Name, string Email);
 
-sealed class UsersHandler(ReadModelDatabase database) : IQueryHandler<Users, IReadOnlyList<UserSummary>>
+sealed class UsersHandler(ProjectionDatabase database) : IQueryHandler<Users, IReadOnlyList<UserSummary>>
 {
     public async Task<IReadOnlyList<UserSummary>> HandleAsync(Users query, CancellationToken cancellationToken)
     {

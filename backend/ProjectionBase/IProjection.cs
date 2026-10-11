@@ -2,12 +2,12 @@ using CCC.EventStore;
 using Dapper;
 using Npgsql;
 
-namespace CCC.ReadModels;
+namespace CCC.ProjectionBase;
 
 public interface IProjection
 {
     // Each projection owns one schema. Raising the version drops the schema and
-    // rebuilds the read model from the start of the event log.
+    // rebuilds the projection from the start of the event log.
     string Schema { get; }
 
     int Version { get; }

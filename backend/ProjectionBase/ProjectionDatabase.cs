@@ -1,8 +1,8 @@
 using Npgsql;
 
-namespace CCC.ReadModels;
+namespace CCC.ProjectionBase;
 
-public sealed class ReadModelDatabase(string connectionString) : IAsyncDisposable
+public sealed class ProjectionDatabase(string connectionString) : IAsyncDisposable
 {
     private readonly NpgsqlDataSource _dataSource = NpgsqlDataSource.Create(connectionString);
 

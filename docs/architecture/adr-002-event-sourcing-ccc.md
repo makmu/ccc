@@ -16,7 +16,7 @@ The model works as follows:
 
 Business logic becomes a pure function: `(context, command) → events[]`. This eliminates side effects from decision-making and makes each feature independently testable and evolvable.
 
-Read models (projections) are built per use-case from the event log and are never the authoritative state.
+Projections are built per use-case from the event log and are never the authoritative state.
 
 ## Consequences
 
@@ -25,7 +25,7 @@ Read models (projections) are built per use-case from the event log and are neve
 - Business logic is pure and independently testable per command.
 - Features are isolated; no coupling through a shared domain model.
 - Projections can be added, changed, or rebuilt at any time without touching core logic.
-- The architecture scales naturally as new commands and read models can be introduced without refactoring existing ones.
+- The architecture scales naturally as new commands and projections can be introduced without refactoring existing ones.
 
 **Negative:**
 - Querying current state requires maintaining projections; there is no single "current state" table to query directly.

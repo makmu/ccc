@@ -1,5 +1,5 @@
 using CCC.Abstractions;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using CCC.Modules.TenantAdministration.Commands;
 using CCC.Modules.TenantAdministration.Queries;
 using Microsoft.Extensions.DependencyInjection;

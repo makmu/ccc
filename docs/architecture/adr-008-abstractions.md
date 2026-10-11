@@ -1,6 +1,6 @@
 # ADR-008: An Abstractions Project for the Handler Contracts
 
-> **Changed by ADR-009:** `Commands` and the read model slices are now modules. `Api` and every module reference `Abstractions`.
+> **Changed by ADR-009:** `Commands` and the projection slices are now modules. `Api` and every module reference `Abstractions`.
 
 ## Decision
 
@@ -10,7 +10,7 @@ A new project, `Abstractions` (namespace `CCC.Abstractions`), holds the contract
 - `IQueryHandler<in TQuery, TResult>`
 - `CommandResult`, `CommandError` and `CommandErrorKind`
 
-`Abstractions` references no other project. `Commands`, every read model slice and `Api` reference it. `Domain` and `EventStore` do not:
+`Abstractions` references no other project. `Commands`, every projection slice and `Api` reference it. `Domain` and `EventStore` do not:
 
 ```
 Api ──► Commands ──────────► Domain ──► EventStore
@@ -63,4 +63,4 @@ A shared query interface could not go into `Commands`, because slices must not r
 ## Related Decisions
 
 - ADR-006: Split the Backend into API, Commands, Domain and EventStore Projects
-- ADR-007: Read Models as Projections, One Project per Slice
+- ADR-007: Projections Answer Queries, One Project per Slice

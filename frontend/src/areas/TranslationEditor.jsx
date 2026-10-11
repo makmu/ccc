@@ -13,7 +13,7 @@ export default function TranslationEditor() {
   const project = useQuery(`${base}/keys`)
   const [pending, setPending] = useState({})
 
-  // Shows a change right away and keeps it until the read model has caught up with it.
+  // Shows a change right away and keeps it until the projection has caught up with it.
   function track(keyId, field, value, isCaughtUp) {
     const id = `${keyId} ${field}`
     setPending(current => ({ ...current, [id]: value }))

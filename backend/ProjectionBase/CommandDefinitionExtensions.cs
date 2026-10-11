@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace CCC.ReadModels;
+namespace CCC.ProjectionBase;
 
 public static class CommandDefinitionExtensions
 {

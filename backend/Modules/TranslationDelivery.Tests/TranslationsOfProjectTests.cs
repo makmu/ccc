@@ -7,7 +7,7 @@ namespace CCC.Modules.TranslationDelivery.Tests;
 
 public class TranslationsOfProjectTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("translation_delivery", services => services.AddTranslationDelivery());
+    private readonly ProjectionFixture _fixture = new("translation_delivery", services => services.AddTranslationDelivery());
     private readonly Guid _team = Guid.NewGuid();
     private readonly Guid _project = Guid.NewGuid();
     private readonly Guid _key = Guid.NewGuid();

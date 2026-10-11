@@ -5,14 +5,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace CCC.ReadModels;
+namespace CCC.ProjectionBase;
 
 // Exactly one runner writes a projection's schema, so neither the bookmark nor the
-// read model tables need locking. Running the API twice would break this.
+// projection tables need locking. Running the API twice would break this.
 sealed class ProjectionRunner<TProjection>(
     TProjection projection,
     IEventStore eventStore,
-    ReadModelDatabase database,
+    ProjectionDatabase database,
     AppendSignal signal,
     ProjectionRetryPolicy retryPolicy,
     ILogger<ProjectionRunner<TProjection>> logger) : BackgroundService

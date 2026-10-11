@@ -1,6 +1,6 @@
 using CCC.Abstractions;
 using CCC.Domain.Types;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using Dapper;
 
 namespace CCC.Modules.TranslationEditor.Queries;
@@ -11,7 +11,7 @@ public record ProjectKeys(string ReferenceLanguage, IReadOnlyList<string> Langua
 
 public record KeyTexts(Guid Id, string Name, string? ReferenceText, IReadOnlyDictionary<string, string> Translations);
 
-sealed class KeysOfProjectHandler(ReadModelDatabase database) : IQueryHandler<KeysOfProject, ProjectKeys?>
+sealed class KeysOfProjectHandler(ProjectionDatabase database) : IQueryHandler<KeysOfProject, ProjectKeys?>
 {
     public async Task<ProjectKeys?> HandleAsync(KeysOfProject query, CancellationToken cancellationToken)
     {

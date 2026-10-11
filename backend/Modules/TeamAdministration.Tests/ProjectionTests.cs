@@ -5,9 +5,9 @@ using CCC.TestKit;
 
 namespace CCC.Modules.TeamAdministration.Tests;
 
-public class ReadModelTests : IAsyncLifetime
+public class ProjectionTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("team_administration", services => services.AddTeamAdministration());
+    private readonly ProjectionFixture _fixture = new("team_administration", services => services.AddTeamAdministration());
     private readonly Guid _team = Guid.NewGuid();
 
     public Task InitializeAsync() => _fixture.InitializeAsync();

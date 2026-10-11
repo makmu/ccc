@@ -44,7 +44,7 @@ Names were canonicalized by calling a string extension before each tag was built
 - Each endpoint is a few lines long: build value objects, send the command, map the result.
 - `Tag` factories take value objects, so a name can't reach a tag without being canonicalized.
 - Concurrency conflicts are turned into a `Conflict` result in one place, `StateContext.TryAppendAsync`.
-- The planned read model slices can reference `Domain` for event types without depending on the API.
+- The planned projection slices can reference `Domain` for event types without depending on the API.
 
 **Negative:**
 - Four projects plus two test projects is more structure than twelve endpoints strictly need.

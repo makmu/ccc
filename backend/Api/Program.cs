@@ -10,7 +10,7 @@ using CCC.Modules.TeamAdministration;
 using CCC.Modules.TenantAdministration;
 using CCC.Modules.TranslationDelivery;
 using CCC.Modules.TranslationEditor;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,15 +29,15 @@ builder.Services.AddSwaggerGen(options =>
 var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
 
-var readModelsConnectionString = builder.Configuration.GetConnectionString("ReadModels")
-    ?? throw new InvalidOperationException("Connection string 'ReadModels' is not configured.");
+var projectionsConnectionString = builder.Configuration.GetConnectionString("Projections")
+    ?? throw new InvalidOperationException("Connection string 'Projections' is not configured.");
 
 builder.Services.AddEventStore(connectionString);
 builder.Services.AddAppAdministration();
 builder.Services.AddTenantAdministration();
 builder.Services.AddTeamAdministration();
 builder.Services.AddTranslationEditor();
-builder.Services.AddReadModelDatabase(readModelsConnectionString);
+builder.Services.AddProjectionDatabase(projectionsConnectionString);
 builder.Services.AddTranslationDelivery();
 
 var app = builder.Build();

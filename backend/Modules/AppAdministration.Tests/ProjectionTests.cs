@@ -4,9 +4,9 @@ using CCC.TestKit;
 
 namespace CCC.Modules.AppAdministration.Tests;
 
-public class ReadModelTests : IAsyncLifetime
+public class ProjectionTests : IAsyncLifetime
 {
-    private readonly ReadModelFixture _fixture = new("app_administration", services => services.AddAppAdministration());
+    private readonly ProjectionFixture _fixture = new("app_administration", services => services.AddAppAdministration());
     private readonly Guid _basic = Guid.NewGuid();
     private readonly Guid _premium = Guid.NewGuid();
     private readonly Guid _alice = Guid.NewGuid();

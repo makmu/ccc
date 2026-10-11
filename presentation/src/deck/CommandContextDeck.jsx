@@ -170,7 +170,7 @@ export default function CommandContextDeck() {
             <p>The current picture is derived by replaying relevant events, not by trusting a single mutable object.</p>
           </div>
           <div className="info-panel">
-            <h3>Read models are separate</h3>
+            <h3>Projections are separate</h3>
             <p>Queries usually use projections optimized for reading, while the event log remains the source of truth.</p>
           </div>
         </div>
@@ -210,7 +210,7 @@ export default function CommandContextDeck() {
             <p>We do not need one giant unified model that must be constantly migrated and pre-optimized for every future use case.</p>
           </div>
           <div className="info-panel">
-            <h3>Independent read models</h3>
+            <h3>Independent projections</h3>
             <p>Each new usage can get its own projection instead of forcing more compromises into a single shared schema.</p>
           </div>
           <div className="info-panel">

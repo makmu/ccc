@@ -1,6 +1,6 @@
 using CCC.Abstractions;
 using CCC.Domain.Types;
-using CCC.ReadModels;
+using CCC.ProjectionBase;
 using Dapper;
 
 namespace CCC.Modules.TenantAdministration.Queries;
@@ -9,7 +9,7 @@ public record TeamsOfTenant(TenantId TenantId);
 
 public record TeamSummary(Guid Id, string Name, string SubscriptionModel);
 
-sealed class TeamsOfTenantHandler(ReadModelDatabase database) : IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>
+sealed class TeamsOfTenantHandler(ProjectionDatabase database) : IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>
 {
     public async Task<IReadOnlyList<TeamSummary>> HandleAsync(TeamsOfTenant query, CancellationToken cancellationToken)
     {

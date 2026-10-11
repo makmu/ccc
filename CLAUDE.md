@@ -1,7 +1,10 @@
 # CCC - Multi-Tenant CMS (Content/Copy Management System)
 
 ## Purpose
-CCC is a demo project. It shows how to build a .NET backend on an event store with dynamic consistency boundaries (DCB), with commands and queries separated (CQS) and read models projected from the event log (CQRS). The frontend is secondary: it only gives access to the commands and queries.
+CCC is a demo project. It shows how to build a .NET backend on an event store with dynamic consistency boundaries (DCB), with commands and queries separated (CQS) and projections built from the event log (CQRS). The frontend is secondary: it only gives access to the commands and queries.
+
+## Terminology
+When this codebase says *projection*, it means a read model: the tables built from the event log to answer queries, together with the `IProjection` that builds them. Don't use the term read model in code or docs.
 
 ## Demo Domain
 A multi-tenant CMS in which users define keys and translations for those keys, such as label texts for user controls in different languages. Keys can also represent welcome texts, mail templates, or any other static data consumed by a target application.
@@ -21,7 +24,7 @@ Read these files whenever you need to explore the project structure, and always 
 ## Build & Run
 ```bash
 dotnet build backend/CCC.sln
-dotnet test backend/CCC.sln    # tests of modules with read models need PostgreSQL
+dotnet test backend/CCC.sln    # tests of modules with projections need PostgreSQL
 dotnet run --project backend/Api/Api.csproj
 ```
 
