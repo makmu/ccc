@@ -23,12 +23,7 @@ builder.Services.AddProblemDetails();
 // In Development, minimal APIs throw on binding failures instead of returning 400.
 builder.Services.AddExceptionHandler(options => options.StatusCodeSelector = exception =>
     exception is BadHttpRequestException badRequest ? badRequest.StatusCode : StatusCodes.Status500InternalServerError);
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SupportNonNullableReferenceTypes();
-    options.SchemaFilter<ConstructorParametersAsRequiredSchemaFilter>();
-});
+builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
@@ -51,8 +46,8 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
 }
 else
 {

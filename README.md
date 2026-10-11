@@ -27,7 +27,7 @@ dotnet run --project backend/Api/Api.csproj
 
 The backend and the projection slice tests need PostgreSQL on `localhost:5432`. The tests use the server in the `CCC_TEST_POSTGRES` connection string instead, if it is set.
 
-Swagger UI is available at `http://localhost:5039/swagger` in development.
+In development, the OpenAPI document is served at `http://localhost:5039/openapi/v1.json` and Swagger UI at `http://localhost:5039/swagger`.
 
 ### Frontend
 
