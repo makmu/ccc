@@ -26,6 +26,7 @@ When these docs say *projection*, they mean a read model: the tables built from 
   - Handlers load all their state in one call and deconstruct the values with the context: `var (idTaken, emailTaken, context) = await loader.LoadAsync(User.Exists(...), User.EmailTaken(...), cancellationToken)`
   - Endpoints take the request's `CancellationToken` and handlers pass it on to every load, append and query
 - `EventStore` — `IEventStore` and its PostgreSQL/Dapper implementation, `StateLoader`, `StateContext.TryAppendAsync` (the conditional append), schema setup, and `AppendSignal`, which wakes the projection runners after every append
+  - The schema also has an `event_view` view with one row per event and tag, which splits each tag into `tag_key` and `tag_value`, for reading the log by tag in SQL. Events without tags don't appear in it. The view can't use the GIN index on `events.tags`, so the event store's own queries filter `events` directly with `tags @> …`
 - `Modules/<Module>.Tests` — a module's tests. Handler tests run against the in-memory `IEventStore` from `TestKit`; projection and query tests run against a throwaway database on the PostgreSQL server in `CCC_TEST_POSTGRES` (defaults to the local development server)
 - `Domain.Tests` — value object tests
 - `Architecture.Tests` — checks the rules in [dependency-rules.md](dependency-rules.md)

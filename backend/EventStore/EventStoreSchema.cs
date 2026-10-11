@@ -21,6 +21,19 @@ public static class EventStoreSchema
 
             CREATE INDEX IF NOT EXISTS idx_events_type    ON events (type);
             CREATE INDEX IF NOT EXISTS idx_events_tags    ON events USING GIN (tags);
+
+            -- For reading the log by tag. It can't use idx_events_tags, so the event store keeps filtering events directly.
+            CREATE OR REPLACE VIEW event_view AS
+            SELECT e.position,
+                   t.tag,
+                   split_part(t.tag, '=', 1)                        AS tag_key,
+                   substring(t.tag FROM position('=' IN t.tag) + 1) AS tag_value,
+                   e.type,
+                   e.payload,
+                   e.timestamp,
+                   e."user"
+            FROM events e
+            CROSS JOIN LATERAL unnest(e.tags) AS t(tag);
             """);
     }
 }
