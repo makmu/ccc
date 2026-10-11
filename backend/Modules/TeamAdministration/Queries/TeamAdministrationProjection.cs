@@ -11,26 +11,16 @@ sealed class TeamAdministrationProjection : IProjection
 
     public int Version => 1;
 
-    public IReadOnlyCollection<string> EventTypes { get; } =
-    [
-        nameof(ProjectAdded),
-        nameof(LanguageAdded),
-    ];
+    public EventHandlers<CommandDefinition> Handlers { get; } = new EventHandlers<CommandDefinition>()
+        .On<ProjectAdded>(AddProject)
+        .On<LanguageAdded>(AddLanguage);
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
         connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
 
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var command = record.Type switch
-        {
-            nameof(ProjectAdded) => AddProject(record.PayloadAs<ProjectAdded>()),
-            nameof(LanguageAdded) => AddLanguage(record.PayloadAs<LanguageAdded>()),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
-    }
+        CancellationToken cancellationToken) =>
+        connection.ExecuteAsync(Handlers.Handle(record).With(transaction, cancellationToken));
 
     private static CommandDefinition InstallTables() =>
         new("""

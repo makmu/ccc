@@ -104,7 +104,7 @@ sealed class ProjectionRunner<TProjection>(
     {
         while (true)
         {
-            var batch = (await eventStore.ReadAsync(_position + 1, BatchSize, [.. projection.EventTypes], cancellationToken)).ToList();
+            var batch = (await eventStore.ReadAsync(_position + 1, BatchSize, [.. projection.Handlers.EventTypes], cancellationToken)).ToList();
             if (batch.Count == 0)
                 return;
 

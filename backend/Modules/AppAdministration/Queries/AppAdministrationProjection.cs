@@ -11,32 +11,19 @@ sealed class AppAdministrationProjection : IProjection
 
     public int Version => 1;
 
-    public IReadOnlyCollection<string> EventTypes { get; } =
-    [
-        nameof(SubscriptionModelAdded),
-        nameof(TenantRegistered),
-        nameof(TenantRenamed),
-        nameof(TenantOwnerAssigned),
-        nameof(UserAdded),
-    ];
+    public EventHandlers<CommandDefinition> Handlers { get; } = new EventHandlers<CommandDefinition>()
+        .On<SubscriptionModelAdded>(AddSubscriptionModel)
+        .On<TenantRegistered>(RegisterTenant)
+        .On<TenantRenamed>(RenameTenant)
+        .On<TenantOwnerAssigned>(AssignTenantOwner)
+        .On<UserAdded>(AddUser);
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
         connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
 
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var command = record.Type switch
-        {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModel(record.PayloadAs<SubscriptionModelAdded>()),
-            nameof(TenantRegistered) => RegisterTenant(record.PayloadAs<TenantRegistered>()),
-            nameof(TenantRenamed) => RenameTenant(record.PayloadAs<TenantRenamed>()),
-            nameof(TenantOwnerAssigned) => AssignTenantOwner(record.PayloadAs<TenantOwnerAssigned>()),
-            nameof(UserAdded) => AddUser(record.PayloadAs<UserAdded>()),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
-    }
+        CancellationToken cancellationToken) =>
+        connection.ExecuteAsync(Handlers.Handle(record).With(transaction, cancellationToken));
 
     private static CommandDefinition InstallTables() =>
         new("""

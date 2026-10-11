@@ -11,38 +11,22 @@ sealed class TranslationEditorProjection : IProjection
 
     public int Version => 2;
 
-    public IReadOnlyCollection<string> EventTypes { get; } =
-    [
-        nameof(ProjectAdded),
-        nameof(LanguageAdded),
-        nameof(KeyAdded),
-        nameof(KeyRenamed),
-        nameof(ReferenceTextProvided),
-        nameof(ReferenceTextWithdrawn),
-        nameof(TranslationProvided),
-        nameof(TranslationWithdrawn),
-    ];
+    public EventHandlers<CommandDefinition> Handlers { get; } = new EventHandlers<CommandDefinition>()
+        .On<ProjectAdded>(AddProject)
+        .On<LanguageAdded>(AddLanguage)
+        .On<KeyAdded>(AddKey)
+        .On<KeyRenamed>(RenameKey)
+        .On<ReferenceTextProvided>(ProvideReferenceText)
+        .On<ReferenceTextWithdrawn>(WithdrawReferenceText)
+        .On<TranslationProvided>(ProvideTranslation)
+        .On<TranslationWithdrawn>(WithdrawTranslation);
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
         connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
 
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var command = record.Type switch
-        {
-            nameof(ProjectAdded) => AddProject(record.PayloadAs<ProjectAdded>()),
-            nameof(LanguageAdded) => AddLanguage(record.PayloadAs<LanguageAdded>()),
-            nameof(KeyAdded) => AddKey(record.PayloadAs<KeyAdded>()),
-            nameof(KeyRenamed) => RenameKey(record.PayloadAs<KeyRenamed>()),
-            nameof(ReferenceTextProvided) => ProvideReferenceText(record.PayloadAs<ReferenceTextProvided>()),
-            nameof(ReferenceTextWithdrawn) => WithdrawReferenceText(record.PayloadAs<ReferenceTextWithdrawn>()),
-            nameof(TranslationProvided) => ProvideTranslation(record.PayloadAs<TranslationProvided>()),
-            nameof(TranslationWithdrawn) => WithdrawTranslation(record.PayloadAs<TranslationWithdrawn>()),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
-    }
+        CancellationToken cancellationToken) =>
+        connection.ExecuteAsync(Handlers.Handle(record).With(transaction, cancellationToken));
 
     private static CommandDefinition InstallTables() =>
         new("""

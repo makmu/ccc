@@ -11,26 +11,16 @@ sealed class TenantAdministrationProjection : IProjection
 
     public int Version => 1;
 
-    public IReadOnlyCollection<string> EventTypes { get; } =
-    [
-        nameof(SubscriptionModelAdded),
-        nameof(TeamAdded),
-    ];
+    public EventHandlers<CommandDefinition> Handlers { get; } = new EventHandlers<CommandDefinition>()
+        .On<SubscriptionModelAdded>(AddSubscriptionModel)
+        .On<TeamAdded>(AddTeam);
 
     public Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken) =>
         connection.ExecuteAsync(InstallTables().With(transaction, cancellationToken));
 
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        var command = record.Type switch
-        {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModel(record.PayloadAs<SubscriptionModelAdded>()),
-            nameof(TeamAdded) => AddTeam(record.PayloadAs<TeamAdded>()),
-            _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
-        };
-        return connection.ExecuteAsync(command.With(transaction, cancellationToken));
-    }
+        CancellationToken cancellationToken) =>
+        connection.ExecuteAsync(Handlers.Handle(record).With(transaction, cancellationToken));
 
     private static CommandDefinition InstallTables() =>
         new("""

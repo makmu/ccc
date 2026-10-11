@@ -1,3 +1,4 @@
+using Dapper;
 using Npgsql;
 
 namespace CCC.EventStore;
@@ -10,7 +11,7 @@ public interface IProjection
 
     int Version { get; }
 
-    IReadOnlyCollection<string> EventTypes { get; }
+    EventHandlers<CommandDefinition> Handlers { get; }
 
     Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken);
 
