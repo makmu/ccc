@@ -66,12 +66,12 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
         return rows;
     }
 
-    public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, params string[] types)
+    public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, params string[] types)
     {
         await using var conn = new NpgsqlConnection(connectionString);
         return await conn.QueryAsync<EventRecord>(
-            """SELECT position, type, payload, timestamp, "user", tags FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position""",
-            new { fromPosition, types });
+            """SELECT position, type, payload, timestamp, "user", tags FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position LIMIT @limit""",
+            new { fromPosition, limit, types });
     }
 
     public async Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter)

@@ -29,9 +29,9 @@ public sealed class InMemoryEventStore : IEventStore
         return Task.CompletedTask;
     }
 
-    public Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, params string[] types) =>
+    public Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, params string[] types) =>
         Task.FromResult<IEnumerable<EventRecord>>(
-            _events.Where(e => e.Position >= fromPosition && types.Contains(e.Type)).ToList());
+            _events.Where(e => e.Position >= fromPosition && types.Contains(e.Type)).Take(limit).ToList());
 
     public Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter) =>
         Task.FromResult<IEnumerable<EventRecord>>(_events.Where(filter.Matches).ToList());

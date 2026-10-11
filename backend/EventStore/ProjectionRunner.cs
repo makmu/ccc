@@ -92,10 +92,12 @@ sealed class ProjectionRunner<TProjection>(
 
     private async Task CatchUpAsync(CancellationToken cancellationToken)
     {
-        var records = await eventStore.ReadAsync(_position + 1, [.. projection.EventTypes]);
-
-        foreach (var batch in records.Chunk(BatchSize))
+        while (true)
         {
+            var batch = (await eventStore.ReadAsync(_position + 1, BatchSize, [.. projection.EventTypes])).ToList();
+            if (batch.Count == 0)
+                return;
+
             await using var connection = await database.OpenAsync(cancellationToken);
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
@@ -107,6 +109,9 @@ sealed class ProjectionRunner<TProjection>(
                 $"UPDATE {projection.Schema}.bookmark SET position = @position", new { position }, transaction);
             await transaction.CommitAsync(cancellationToken);
             _position = position;
+
+            if (batch.Count < BatchSize)
+                return;
         }
     }
 

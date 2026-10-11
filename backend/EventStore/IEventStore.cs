@@ -8,7 +8,7 @@ public interface IEventStore
     // expectedMaxPosition; throws ConcurrencyException otherwise.
     Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags);
 
-    Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, params string[] types);
+    Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, params string[] types);
 
     Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter);
 }
