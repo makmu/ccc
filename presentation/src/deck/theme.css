@@ -806,3 +806,22 @@
     padding: 1.6rem 1.4rem;
   }
 }
+
+.event-table-tagged th,
+.event-table-tagged td {
+  padding: 0.6rem 0.8rem;
+}
+
+.event-table-tagged td code {
+  display: inline-block;
+  margin: 0 0.4rem 0.15rem 0;
+  font-size: 0.82rem;
+}
+
+.context-filter-stack .context-filter-chip {
+  margin-top: 0.5rem;
+}
+
+.context-filter-stack .context-filter-label {
+  min-width: 4rem;
+}

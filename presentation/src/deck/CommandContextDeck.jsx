@@ -6,10 +6,13 @@ import 'reveal.js/dist/theme/black.css'
 import 'reveal.js/plugin/highlight/monokai.css'
 import './theme.css'
 import {
+  addKeyHandlerSnippet,
   eventStoreSnippet,
-  keyEndpointSnippet,
+  projectionSnippet,
+  stateLoaderSnippet,
+  stateModelSnippet,
+  tenantRenameHandlerSnippet,
   tenantRenameInsertSqlSnippet,
-  tenantRenameEndpointSnippet,
 } from './codeSnippets.js'
 import slicesDiagram from './slices.svg'
 
@@ -30,7 +33,7 @@ function SectionLabel({ children }) {
   return <p className="section-label">{children}</p>
 }
 
-function SyncedCode({ children, lineNumbers, fragmentIndexes }) {
+function SyncedCode({ children, lineNumbers, fragmentIndexes, language = 'csharp' }) {
   const wrapperRef = useRef(null)
   const deck = useReveal()
 
@@ -75,7 +78,7 @@ function SyncedCode({ children, lineNumbers, fragmentIndexes }) {
 
   return (
     <div ref={wrapperRef}>
-      <Code language="csharp" lineNumbers={lineNumbers}>
+      <Code language={language} lineNumbers={lineNumbers}>
         {children}
       </Code>
     </div>
@@ -100,7 +103,8 @@ export default function CommandContextDeck() {
               <strong>TL;DR</strong>
               <p>
               A practical event-sourcing model where every command rebuilds only the facts it needs,
-              decides locally, and appends new facts atomically. CCC over aggregates.</p>
+              selected by event type and tags, decides locally, and appends new facts atomically.
+              CCC over aggregates.</p>
             </div>
             <div className="signal-panel warm">
               <span></span>
@@ -414,16 +418,69 @@ export default function CommandContextDeck() {
               <span>2</span>
               <h3>Context</h3>
             </div>
-            <p>Load the smallest relevant slice of history required to make validation and consistency decisions <b>for this command</b>.</p>
+            <p>Load the smallest relevant slice of history required to make validation and consistency decisions <b>for this command</b>: the right event types, carrying the right tags.</p>
           </div>
           <div className="process-step">
             <div className="process-step-heading">
               <span>3</span>
               <h3>Consistency</h3>
             </div>
-            <p>Append new events only if that slice of history has not changed since it was read.</p>
+            <p>Append new events, with their tags, only if that slice of history has not changed since it was read.</p>
           </div>
         </div>
+      </Slide>
+
+      <Slide className="ccc-slide">
+        <SectionLabel>Events carry tags</SectionLabel>
+        <h2 className="slide-title">Tags</h2>
+        <div className="three-column-grid">
+          <div className="info-panel">
+            <h3>Written on append</h3>
+            <p>Every command tags the events it appends with the things they are about, such as <code>tenant-id=42</code> or <code>tenant-name=horizon</code>.</p>
+          </div>
+          <div className="info-panel">
+            <h3>Selected by type and tags</h3>
+            <p>A context is a list of (event type, tags) pairs. An event matches when its type matches and it carries all of those tags.</p>
+          </div>
+          <div className="info-panel">
+            <h3>Indexed by PostgreSQL</h3>
+            <p>Tags are a <code>TEXT[]</code> column with a GIN index, so a containment query like <code>{"tags @> '{tenant-name=horizon}'"}</code> stays fast.</p>
+          </div>
+        </div>
+        <div className="event-table-mockup" aria-label="One event with its tags and a context filter that matches it by type and tag">
+          <div className="event-stream-title">one event, three tags</div>
+          <table className="event-table event-table-tagged">
+            <colgroup>
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '38%' }} />
+              <col style={{ width: '32%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Type</th>
+                <th>Tags</th>
+                <th>Payload</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>43</code></td>
+                <td><code>TenantRenamed</code></td>
+                <td><code>tenant-id=42</code> <code>tenant-name=acme</code> <code>tenant-name=horizon</code></td>
+                <td><code>{'{ TenantId: 42, Name: "Horizon" }'}</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="context-filter-chip">
+            <span className="context-filter-label">context</span>
+            <span>{"type = 'TenantRenamed' AND tags @> '{tenant-name=horizon}'"}</span>
+          </p>
+        </div>
+        <p className="slide-kicker">
+          The rename is tagged with the old and the new name, so later name checks see it whether it took a name or freed one.
+        </p>
       </Slide>
 
       <Slide className="ccc-slide">
@@ -433,87 +490,124 @@ export default function CommandContextDeck() {
           <div className="split-aside">
             <div className="comparison-panel muted">
               <h3>No streamId, no version</h3>
-            <p>Every event lands in one global log with a single growing `position`. There are no stream boundaries to design up front.</p>
-          </div>
-          <div className="comparison-panel accent">
-            <h3>The command picks its own boundary</h3>
-            <p>The rename only cares about tenant names, so its context is every `TenantRegistered` and `TenantRenamed` event &mdash; across all tenants.</p>
+              <p>Every event lands in one global log with a single growing <code>position</code>. There are no stream boundaries to design up front.</p>
+            </div>
+            <div className="comparison-panel accent">
+              <h3>The command picks its own boundary</h3>
+              <p>A rename only cares about its own tenant and the name it wants: events tagged <code>tenant-id</code> of that tenant or <code>tenant-name=horizon</code>.</p>
+            </div>
+            <div className="comparison-panel muted">
+              <h3>Unrelated commands don't race</h3>
+              <p>Renaming another tenant to Umbrella at the same time succeeds, because its context shares no tag with these two.</p>
             </div>
           </div>
           <div className="split-main">
-            <div className="event-table-mockup" aria-label="One global event log where two concurrent renames to the same name are resolved by comparing the max position of a filtered event slice">
-          <div className="event-stream-title">event log without streams</div>
-          <table className="event-table">
-            <colgroup>
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '28%' }} />
-              <col style={{ width: '60%' }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Position</th>
-                <th>Type</th>
-                <th>Payload</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>40</code></td>
-                <td><code>TenantRegistered</code></td>
-                <td><code>{'{ id: "tenant-42", name: "Acme" }'}</code></td>
-              </tr>
-              <tr>
-                <td><code>41</code></td>
-                <td><code>TenantRegistered</code></td>
-                <td><code>{'{ id: "tenant-99", name: "Globex" }'}</code></td>
-              </tr>
-              <tr>
-                <td><code>42</code></td>
-                <td><code>TenantRenamed</code></td>
-                <td><code>{'{ id: "tenant-7", name: "Initech One" }'}</code></td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="context-filter-chip">
-            <span className="context-filter-label">context</span>
-            <span>MAX(position) WHERE type IN (TenantRegistered, TenantRenamed) = <strong>42</strong></span>
-          </p>
-          <div className="event-table-insert-attempt" aria-label="Two concurrent inserts, both having read position 42, one succeeds and one fails">
-            <div className="event-table-attempt-header">
-              <div className="event-table-note event-table-note-centered">-- Both admins read position 42 and both append "Horizon" --</div>
+            <div className="event-table-mockup" aria-label="One global event log where two concurrent renames to the same name overlap in the tenant-name tag, so only the first append succeeds">
+              <div className="event-stream-title">event log with tags</div>
+              <table className="event-table event-table-tagged">
+                <colgroup>
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '24%' }} />
+                  <col style={{ width: '40%' }} />
+                  <col style={{ width: '26%' }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Pos</th>
+                    <th>Type</th>
+                    <th>Tags</th>
+                    <th>Payload</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>40</code></td>
+                    <td><code>TenantRegistered</code></td>
+                    <td><code>tenant-id=42</code> <code>tenant-name=acme</code></td>
+                    <td><code>{'{ Name: "Acme" }'}</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>41</code></td>
+                    <td><code>TenantRegistered</code></td>
+                    <td><code>tenant-id=99</code> <code>tenant-name=globex</code></td>
+                    <td><code>{'{ Name: "Globex" }'}</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>42</code></td>
+                    <td><code>KeyAdded</code></td>
+                    <td><code>team-id=3</code> <code>key-id=12</code> <code>...</code></td>
+                    <td><code>{'{ Name: "welcome" }'}</code></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className="context-filter-stack">
+                <p className="context-filter-chip">
+                  <span className="context-filter-label">Acme</span>
+                  <span>tenant-id=42 OR tenant-name=horizon &rarr; MAX(position) = <strong>40</strong></span>
+                </p>
+                <p className="context-filter-chip">
+                  <span className="context-filter-label">Globex</span>
+                  <span>tenant-id=99 OR tenant-name=horizon &rarr; MAX(position) = <strong>41</strong></span>
+                </p>
+              </div>
+              <div className="event-table-insert-attempt" aria-label="Two concurrent inserts, one succeeds and one fails because the shared tag now has a newer event">
+                <table className="event-table event-table-tagged event-table-success">
+                  <colgroup>
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '40%' }} />
+                    <col style={{ width: '26%' }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td><code>&rarr; 43</code></td>
+                      <td><code>TenantRenamed</code></td>
+                      <td><code>tenant-id=42</code> <code>tenant-name=acme</code> <code>tenant-name=horizon</code></td>
+                      <td><code>{'{ Name: "Horizon" }'}</code></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="event-table-error event-table-ok"><span className="event-table-fail-badge event-table-win-badge">OK</span> Acme appends first: its context still ends at 40, so the rename gets position 43.</p>
+                <table className="event-table event-table-tagged event-table-conflict">
+                  <colgroup>
+                    <col style={{ width: '10%' }} />
+                    <col style={{ width: '24%' }} />
+                    <col style={{ width: '40%' }} />
+                    <col style={{ width: '26%' }} />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td><code>44?</code></td>
+                      <td><code>TenantRenamed</code></td>
+                      <td><code>tenant-id=99</code> <code>tenant-name=globex</code> <code>tenant-name=horizon</code></td>
+                      <td><code>{'{ Name: "Horizon" }'}</code></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="event-table-error"><span className="event-table-fail-badge">X</span><span>Globex fails: 43 carries <code>tenant-name=horizon</code>, so its context now ends at 43 &ne; 41.</span></p>
+              </div>
             </div>
-            <table className="event-table event-table-success">
-              <colgroup>
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '28%' }} />
-                <col style={{ width: '60%' }} />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <td><code>&rarr; 43</code></td>
-                  <td><code>TenantRenamed</code></td>
-                  <td><code>{'{ id: "tenant-42", name: "Horizon" }'}</code></td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="event-table-error event-table-ok"><span className="event-table-fail-badge event-table-win-badge">OK</span> INSERT succeeds: filtered MAX(position) still = 42, so it claims position 43.</p>
-            <table className="event-table event-table-conflict">
-              <colgroup>
-                <col style={{ width: '12%' }} />
-                <col style={{ width: '28%' }} />
-                <col style={{ width: '60%' }} />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <td><code>43?</code></td>
-                  <td><code>TenantRenamed</code></td>
-                  <td><code>{'{ id: "tenant-99", name: "Horizon" }'}</code></td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="event-table-error"><span className="event-table-fail-badge">X</span> INSERT fails: filtered MAX(position) is now 43 &ne; 42 &rarr; 0 rows written.</p>
-            </div>
-            </div>
+          </div>
+        </div>
+      </Slide>
+
+      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
+        <div className="slide-example-grid">
+          <div className="code-explainer example-copy">
+            <SectionLabel>One question, one state model</SectionLabel>
+            <h2 className="slide-title">State Models</h2>
+            <ol className="editorial-list tight">
+              <Fragment as="li" index={0}>A question about the domain, declared once in <code>Domain</code></Fragment>
+              <Fragment as="li" index={1}>Initial state</Fragment>
+              <Fragment as="li" index={2}>Tags select the events</Fragment>
+              <Fragment as="li" index={3}>One reducer per event type</Fragment>
+              <Fragment as="li" index={4}>Is the name taken? Asked across all tenants, by the name tag alone</Fragment>
+            </ol>
+          </div>
+          <div className="example-code">
+            <SyncedCode lineNumbers="|3-4|5|6|7-10|12-18" fragmentIndexes={[0, 1, 2, 3, 4]}>
+              {stateModelSnippet}
+            </SyncedCode>
           </div>
         </div>
       </Slide>
@@ -524,17 +618,40 @@ export default function CommandContextDeck() {
             <SectionLabel>Renaming a tenant</SectionLabel>
             <h2 className="slide-title">Code Example</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Request</Fragment>
-              <Fragment as="li" index={1}>Context</Fragment>
-              <Fragment as="li" index={2}>State slice replay</Fragment>
-              <Fragment as="li" index={3}>Decision 1: valid tenant id</Fragment>
-              <Fragment as="li" index={4}>Decision 2: new tenant name available</Fragment>
-              <Fragment as="li" index={5}>Append `TenantRenamed` only if nothing changed concurrently.</Fragment>
+              <Fragment as="li" index={0}>The endpoint turns the request into a <code>RenameTenant</code> command</Fragment>
+              <Fragment as="li" index={1}>Load three state models in one call</Fragment>
+              <Fragment as="li" index={2}>Decision 1: the tenant exists</Fragment>
+              <Fragment as="li" index={3}>Same name again: nothing to do</Fragment>
+              <Fragment as="li" index={4}>Decision 2: the new name is available</Fragment>
+              <Fragment as="li" index={5}>Append <code>TenantRenamed</code> with its tags, only if nothing changed concurrently</Fragment>
+              <Fragment as="li" index={6}>The result becomes 200, 404 or 409</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-4|6-9|11-26|28-29|31-36|38-48" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
-              {tenantRenameEndpointSnippet}
+            <SyncedCode lineNumbers="|1-5|7-12|14-15|17-18|20-22|24-31|33-35" fragmentIndexes={[0, 1, 2, 3, 4, 5, 6]}>
+              {tenantRenameHandlerSnippet}
+            </SyncedCode>
+          </div>
+        </div>
+      </Slide>
+
+      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
+        <div className="slide-example-grid">
+          <div className="code-explainer example-copy">
+            <SectionLabel>Loading the context</SectionLabel>
+            <h2 className="slide-title">State Loader</h2>
+            <ol className="editorial-list tight">
+              <Fragment as="li" index={0}>Takes every state model of the command</Fragment>
+              <Fragment as="li" index={1}>The context filter is the union of their filters</Fragment>
+              <Fragment as="li" index={2}>One query, so all models see the same snapshot</Fragment>
+              <Fragment as="li" index={3}>Each event goes to the models whose filter it matches</Fragment>
+              <Fragment as="li" index={4}>Remember the last position read</Fragment>
+              <Fragment as="li" index={5}>Filter and position become the append condition</Fragment>
+            </ol>
+          </div>
+          <div className="example-code">
+            <SyncedCode lineNumbers="|1-2|4-6|9-10|12-16|18-19|22" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
+              {stateLoaderSnippet}
             </SyncedCode>
           </div>
         </div>
@@ -546,16 +663,16 @@ export default function CommandContextDeck() {
             <SectionLabel>Appending to the Event Store</SectionLabel>
             <h2 className="slide-title">Digging Deeper</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Raw method signature to append events to the store</Fragment>
+              <Fragment as="li" index={0}>Position and filter from the context, tags for the new event</Fragment>
               <Fragment as="li" index={1}>Serialize event data to JSON</Fragment>
-              <Fragment as="li" index={2}>SQL where clauses from the context filter</Fragment>
+              <Fragment as="li" index={2}>SQL where clause from the context filter</Fragment>
               <Fragment as="li" index={3}>Additional SQL parameters</Fragment>
               <Fragment as="li" index={4}>Build the conditional SQL insert</Fragment>
-              <Fragment as="li" index={5}>Execute the serialized append and fail if the event could not be inserted</Fragment>
+              <Fragment as="li" index={5}>Execute it under the append lock and fail if no row was inserted</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-6|8-8|9-10|12-17|19-27|29-37" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
+            <SyncedCode lineNumbers="|1-4|6|7-8|10-15|17-25|27-33" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
               {eventStoreSnippet}
             </SyncedCode>
           </div>
@@ -568,12 +685,13 @@ export default function CommandContextDeck() {
             <SectionLabel>PostgreSQL Statement</SectionLabel>
             <h2 className="slide-title">Final SQL</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Insert the concrete renamed event</Fragment>
-              <Fragment as="li" index={1}>If the relevant event slice has not changed</Fragment>
+              <Fragment as="li" index={0}>One advisory lock for every append: positions become visible strictly in order</Fragment>
+              <Fragment as="li" index={1}>Insert the renamed event with its tags</Fragment>
+              <Fragment as="li" index={2}>If no event in the context came after position 40</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-5|6-11" fragmentIndexes={[0, 1]}>
+            <SyncedCode language="sql" lineNumbers="|1-2|4-9|10-21" fragmentIndexes={[0, 1, 2]}>
               {tenantRenameInsertSqlSnippet}
             </SyncedCode>
           </div>
@@ -586,32 +704,31 @@ export default function CommandContextDeck() {
             <SectionLabel>Adding a new key</SectionLabel>
             <h2 className="slide-title">More Complex Example</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Endpoint path and input parameters</Fragment>
-              <Fragment as="li" index={1}>Build the context from the relevant event types</Fragment>
-              <Fragment as="li" index={2}>Rebuild state slice</Fragment>
-              <Fragment as="li" index={3}>Check the subscription model limit</Fragment>
-              <Fragment as="li" index={4}>Check whether the key name is still available</Fragment>
+              <Fragment as="li" index={0}>Five state models across team, project and key</Fragment>
+              <Fragment as="li" index={1}>Existence and uniqueness checks</Fragment>
+              <Fragment as="li" index={2}>Second load for the key limit, which never changes, so it stays out of the append condition</Fragment>
+              <Fragment as="li" index={3}>The team's key count is in the condition: concurrent adds can't exceed the limit</Fragment>
+              <Fragment as="li" index={4}>Tag the event with what future commands will ask about</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-7|9-16|18-19|21-24|26-32" fragmentIndexes={[0, 1, 2, 3, 4]}>
-              {keyEndpointSnippet}
+            <SyncedCode lineNumbers="|1-9|11-22|24-25|27-30|32-40" fragmentIndexes={[0, 1, 2, 3, 4]}>
+              {addKeyHandlerSnippet}
             </SyncedCode>
           </div>
         </div>
       </Slide>
-
       <Slide className="ccc-slide">
         <SectionLabel>Why I chose SQL over NoSQL</SectionLabel>
         <h2 className="slide-title">SQL vs. NoSQL</h2>
         <div className="three-column-grid">
           <div className="info-panel accent-border">
             <h3>PostgreSQL</h3>
-            <p>JSONB queries, ACID guarantees, and conditional writes map directly to the consistency checks this approach needs.</p>
+            <p>JSONB payloads, <code>TEXT[]</code> tags with a GIN index, ACID transactions and conditional inserts map directly to the consistency checks this approach needs.</p>
           </div>
           <div className="info-panel accent-border">
             <h3>Why not MongoDB?</h3>
-            <p>I wanted strong transactional behavior and explicit conditional inserts. With SQL, those guarantees are straightforward and easy to reason about.</p>
+            <p>I wanted strong transactional behavior, explicit conditional inserts and an advisory lock that orders every append. With SQL, those guarantees are straightforward and easy to reason about.</p>
           </div>
           <div className="info-panel accent-border">
             <h3>Result</h3>
@@ -626,16 +743,38 @@ export default function CommandContextDeck() {
             <SectionLabel>One more thing...</SectionLabel>
             <h2 className="slide-title">Vertical Slices</h2>
             <ul className="editorial-list tight">
+              <li><b>One module per area of work</b></li>
+              <li><b>Modules talk only through the event log</b></li>
+              <li><b>Each event type is appended by one module</b></li>
+              <li><b>Each module owns its projections</b></li>
               <li><b>Grow without refactoring</b></li>
-              <li><b>Scales to many teams</b> </li>
-              <li><b>No microservice spaghetti</b></li>
-              <li><b>CQRS in action</b> </li>
             </ul>
           </div>
           <div className="example-code">
             <div className="slices-diagram">
-              <img src={slicesDiagram} alt="Multiple vertical slices — translation management, server API/CDN, and global search — each independent but reading from and writing to one shared append-only event stream" />
+              <img src={slicesDiagram} alt="Three modules — translation editor, translation delivery and tenant administration — each with its own projection schema, independent but reading from and writing to one shared append-only event stream" />
             </div>
+          </div>
+        </div>
+      </Slide>
+
+      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
+        <div className="slide-example-grid">
+          <div className="code-explainer example-copy">
+            <SectionLabel>Projections</SectionLabel>
+            <h2 className="slide-title">Query Side</h2>
+            <ol className="editorial-list tight">
+              <Fragment as="li" index={0}>Each module owns one PostgreSQL schema</Fragment>
+              <Fragment as="li" index={1}>Raise the version and the schema is rebuilt from the first event</Fragment>
+              <Fragment as="li" index={2}>One handler per event type, which also decides which events the runner reads</Fragment>
+              <Fragment as="li" index={3}>Each event becomes exactly one SQL command</Fragment>
+            </ol>
+            <p>A background runner applies new events right after every append and reports its health at <code>/health</code>.</p>
+          </div>
+          <div className="example-code">
+            <SyncedCode lineNumbers="|3|5|7-13|17-23" fragmentIndexes={[0, 1, 2, 3]}>
+              {projectionSnippet}
+            </SyncedCode>
           </div>
         </div>
       </Slide>
@@ -648,17 +787,18 @@ export default function CommandContextDeck() {
             <h3>Strengths</h3>
             <ul className="editorial-list tight">
               <li>more agile architecture</li>
-              <li>supports dynamic consistency boundaries</li>
-              <li>much more independent command logic</li>
+              <li>consistency boundaries as small as the rule</li>
+              <li>commands only conflict when their contexts share events</li>
+              <li>small state models, reused across commands and queries</li>
             </ul>
           </div>
           <div className="tradeoff-card caution">
             <h3>Costs</h3>
             <ul className="editorial-list tight">
-              <li>developers must think in events only, not aggregates</li>
-              <li>context filters can become complicated</li>
-              <li>performance must be watched carefully</li>
-              <li>less debuggable than classic stream-based event sourcing because there are no clear stream boundaries</li>
+              <li>developers must think in events and tags, not aggregates</li>
+              <li>tags are written on append: a new rule may need a tag that old events lack</li>
+              <li>every append waits for one global lock</li>
+              <li>less debuggable than streams, because there are no stream boundaries to read along</li>
             </ul>
           </div>
         </div>
@@ -672,6 +812,7 @@ export default function CommandContextDeck() {
             <li>Event sourcing gives us architectural agility.</li>
             <li>Aggregates protect consistency, but they also lock in boundaries.</li>
             <li>CCC keeps consistency and moves the boundary to the command.</li>
+            <li>Tags and state models make that boundary as small as the rule.</li>
           </ul>
           <div className="closing-band">
             <div className="closing-band-qr">

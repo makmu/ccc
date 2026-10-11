@@ -1,9 +1,89 @@
+export const stateModelSnippet = `public static class Tenant
+{
+    public static StateModel<TenantName?> Name(
+        TenantId tenantId) =>
+        StateModel.Init<TenantName?>(null)
+            .Where(Tag.TenantId(tenantId))
+            .When<TenantRegistered>(
+                (e, _) => TenantName.From(e.Name))
+            .When<TenantRenamed>(
+                (e, _) => TenantName.From(e.Name));
+
+    public static StateModel<bool> NameTaken(
+        TenantName name) =>
+        StateModel.Init(false)
+            .Where(Tag.TenantName(name))
+            .When<TenantRegistered>((_, _) => true)
+            .When<TenantRenamed>((e, _) =>
+                CanonicalForm.Of(e.Name) == name.Canonical);
+}`
+
+export const tenantRenameHandlerSnippet = `sealed class RenameTenantHandler(IStateLoader loader)
+    : ICommandHandler<RenameTenant>
+{
+    public async Task<CommandResult> HandleAsync(
+        RenameTenant command, CancellationToken ct)
+    {
+        var (name, alreadyNamed, nameTaken, context) =
+            await loader.LoadAsync(
+                Tenant.Name(command.TenantId),
+                Tenant.IsNamed(command.TenantId, command.Name),
+                Tenant.NameTaken(command.Name),
+                ct);
+
+        if (name is not { } currentName)
+            return CommandResult.NotFound("Tenant not found.");
+
+        if (alreadyNamed)
+            return CommandResult.Ok;
+
+        if (nameTaken)
+            return CommandResult.Conflict(
+                "A tenant with this name already exists.");
+
+        var appended = await context.TryAppendAsync(
+            new TenantRenamed(
+                command.TenantId.Value, command.Name.Value),
+            Tags.From(
+                Tag.TenantId(command.TenantId),
+                Tag.TenantName(currentName),
+                Tag.TenantName(command.Name)),
+            ct);
+
+        return appended
+            ? CommandResult.Ok
+            : CommandResult.ConcurrentModification;
+    }
+}`
+
+export const stateLoaderSnippet = `public async Task<StateContext> LoadAsync(
+    IReadOnlyList<IStateModel> models, CancellationToken ct)
+{
+    var filters = models.Select(m => m.Filter).ToArray();
+    var union = new EventFilter(
+        filters.SelectMany(f => f.Entries).ToList());
+    var maxPosition = -1L;
+
+    foreach (var record in
+        await eventStore.LoadAsync(union, ct))
+    {
+        for (var i = 0; i < models.Count; i++)
+        {
+            if (filters[i].Matches(record))
+                models[i].Apply(record);
+        }
+
+        if (record.Position > maxPosition)
+            maxPosition = record.Position;
+    }
+
+    return new StateContext(eventStore, union, maxPosition);
+}`
+
 export const eventStoreSnippet = `public async Task AppendAsync(
-    string eventType,
-    object eventPayload,
-    Guid user,
-    long expectedMaxPosition,
-    EventFilter contextFilter)
+    string eventType, object eventPayload, Guid user,
+    long expectedMaxPosition, EventFilter contextFilter,
+    string[] tags, CancellationToken ct)
 {
     var json = JsonSerializer.Serialize(eventPayload);
     var (whereClause, parameters) =
@@ -12,13 +92,13 @@ export const eventStoreSnippet = `public async Task AppendAsync(
     parameters.Add("type", eventType);
     parameters.Add("payload", json);
     parameters.Add("user", user);
+    parameters.Add("tags", tags);
     parameters.Add(
-        "expectedMaxPosition",
-        expectedMaxPosition);
+        "expectedMaxPosition", expectedMaxPosition);
 
     var sql = $"""
-        INSERT INTO events (type, payload, \"user\")
-        SELECT @type, @payload::jsonb, @user
+        INSERT INTO events (type, payload, "user", tags)
+        SELECT @type, @payload::jsonb, @user, @tags
         WHERE (
             SELECT COALESCE(MAX(position), -1)
             FROM events
@@ -26,113 +106,101 @@ export const eventStoreSnippet = `public async Task AppendAsync(
         ) = @expectedMaxPosition
         """;
 
-    var rows = await ExecuteWithSerializableRetriesAsync(
-        sql, parameters);
+    var rows = await ExecuteUnderAppendLockAsync(
+        sql, parameters, ct);
 
     if (rows == 0)
-    {
         throw new ConcurrencyException(
             "The event store was modified " +
             "by a concurrent operation.");
-    }
 }`
 
-export const tenantRenameInsertSqlSnippet = `INSERT INTO events ("type", "payload", "user")
+export const tenantRenameInsertSqlSnippet = `BEGIN; -- READ COMMITTED
+SELECT pg_advisory_xact_lock(@AppendLockKey);
+
+INSERT INTO events (type, payload, "user", tags)
 SELECT
     'TenantRenamed',
-    '{ "tenantId": "tenant-42", "name": "Acme One" }'::jsonb,
-    '7f4a0f2d-8b4a-4fcb-9a1d-3d2a6f7b8c91'
+    '{ "TenantId": "42", "Name": "Horizon" }'::jsonb,
+    '00000000-0000-0000-0000-000000000000',
+    '{tenant-id=42,tenant-name=acme,tenant-name=horizon}'
 WHERE (
     SELECT COALESCE(MAX(position), -1)
     FROM events
-    WHERE type = 'TenantRegistered'
-       OR type = 'TenantRenamed'
-) = 42;`
+    WHERE (type = 'TenantRegistered'
+           AND tags @> '{tenant-id=42}')
+       OR (type = 'TenantRenamed'
+           AND tags @> '{tenant-id=42}')
+       OR (type = 'TenantRegistered'
+           AND tags @> '{tenant-name=horizon}')
+       OR (type = 'TenantRenamed'
+           AND tags @> '{tenant-name=horizon}')
+) = 40;
 
-export const tenantRenameEndpointSnippet = `app.MapPost("/tenants/{tenantId}/rename",
-    async (Guid tenantId,
-           RenameTenantRequest request,
-           CommandContextBuilder contextBuilder) =>
+COMMIT;`
+
+export const addKeyHandlerSnippet = `var (subscription, projectInTeam, idTaken,
+     nameTaken, keysAdded, context) =
+    await loader.LoadAsync(
+        Team.Subscription(command.TeamId),
+        Project.InTeam(command.TeamId, command.ProjectId),
+        Key.IdTaken(command.Id),
+        Key.NameTaken(command.ProjectId, command.Name),
+        Team.KeysAdded(command.TeamId),
+        ct);
+
+if (subscription is not { } subscriptionModelId)
+    return CommandResult.NotFound("Team not found.");
+
+if (!projectInTeam)
+    return CommandResult.NotFound(
+        "Project not found in this team.");
+
+if (idTaken)
+    return CommandResult.Conflict("Key ID already taken.");
+
+if (nameTaken)
+    return CommandResult.Conflict("Key name already taken.");
+
+var (keyLimit, _) = await loader.LoadAsync(
+    Subscription.KeyLimit(subscriptionModelId), ct);
+
+if (keysAdded >= keyLimit)
+    return CommandResult.Conflict(
+        "The key limit for this team's subscription " +
+        "model has been reached.");
+
+var appended = await context.TryAppendAsync(
+    new KeyAdded(command.Id.Value,
+        command.Name.Value, command.ProjectId.Value),
+    Tags.From(
+        Tag.TeamId(command.TeamId),
+        Tag.ProjectId(command.ProjectId),
+        Tag.KeyId(command.Id),
+        Tag.KeyName(command.Name)),
+    ct);`
+
+export const projectionSnippet = `sealed class TranslationsProjection : IProjection
 {
-    var context = await contextBuilder
-        .Where<TenantRegistered>()
-        .Where<TenantRenamed>()
-        .LoadAsync();
+    public string Schema => "translation_delivery";
 
-    var currentNames = new Dictionary<Guid, string>();
-    foreach (var e in context.Events)
-    {
-        if (e.Type == nameof(TenantRegistered))
-        {
-            var added = JsonSerializer
-                .Deserialize<TenantRegistered>(e.Payload)!;
-            currentNames[added.Id] = added.Name;
-        }
-        else
-        {
-            var renamed = JsonSerializer
-                .Deserialize<TenantRenamed>(e.Payload)!;
-            currentNames[renamed.TenantId] = renamed.Name;
-        }
-    }
+    public int Version => 2;
 
-    if (!currentNames.ContainsKey(tenantId))
-        return Results.NotFound("Tenant not found.");
+    public EventHandlers<CommandDefinition> Handlers { get; } =
+        new EventHandlers<CommandDefinition>()
+            .On<ProjectAdded>(AddProject)
+            .On<LanguageAdded>(AddLanguage)
+            .On<KeyAdded>(AddKey)
+            .On<KeyRenamed>(RenameKey)
+            .On<TranslationProvided>(ProvideTranslation);
 
-    if (currentNames.Any(
-        o => o.Key != tenantId && o.Value == request.Name))
-    {
-        return Results.Conflict(
-            "A tenant with this name already exists.");
-    }
+    // ... InstallAsync, ApplyAsync and more events
 
-    try
-    {
-        await context.AppendAsync(
-            new TenantRenamed(tenantId, request.Name));
-    }
-    catch (ConcurrencyException)
-    {
-        return Results.Conflict(
-            "A concurrent operation modified the event store. " +
-            "Please retry.");
-    }
-
-    return Results.Ok();
-});`
-
-export const keyEndpointSnippet = `app.MapPost(
-    "/teams/{teamId}/projects/{projectId}/keys",
-    async (
-        Guid teamId,
-        Guid projectId,
-        AddKeyRequest request,
-        CommandContextBuilder contextBuilder) =>
-{
-    var context = await contextBuilder
-        .Where<TeamAdded>(w => w.With(e => e.Id, teamId))
-        .Where<ProjectAdded>(w => w.With(e => e.TeamId, teamId))
-        .Where<SubscriptionModelAdded>()
-        .Where<KeyAdded>()
-        .Where<KeyRenamed>(
-            w => w.With(e => e.ProjectId, projectId))
-        .LoadAsync();
-
-    // ... rebuild project, team, subscription model,
-    // ... and current key state
-
-    if (keys.Count >= subscriptionModel.KeyLimit)
-        return Results.Conflict(
-            "The key limit for this team's subscription model " +
-            "has been reached.");
-
-    if (CurrentKeyNames(
-        keys.Where(k => k.ProjectId == projectId),
-        keyRenames).Contains(request.Name))
-    {
-        return Results.Conflict(
-            "A key with this name already exists in this project.");
-    }
-
-    // ... append event
-});`
+    private static CommandDefinition RenameKey(KeyRenamed e) =>
+        new("""
+            UPDATE translation_delivery.texts
+            SET key_name = @Name
+            WHERE project_id = @ProjectId
+              AND key_id = @KeyId;
+            """, e);
+}`
