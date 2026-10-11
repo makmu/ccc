@@ -6,7 +6,7 @@ namespace CCC.Api.TranslationEditor.Commands;
 
 static class AddKeyEndpoint
 {
-    public record AddKeyRequest(Guid Id, string Name);
+    public sealed record AddKeyRequest(Guid Id, string Name);
 
     public static void MapAddKey(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys",

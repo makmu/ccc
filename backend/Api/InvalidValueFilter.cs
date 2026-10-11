@@ -2,7 +2,7 @@ using CCC.Domain.Types;
 
 namespace CCC.Api;
 
-class InvalidValueFilter : IEndpointFilter
+sealed class InvalidValueFilter : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

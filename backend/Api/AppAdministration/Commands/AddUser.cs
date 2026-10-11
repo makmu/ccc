@@ -6,7 +6,7 @@ namespace CCC.Api.AppAdministration.Commands;
 
 static class AddUserEndpoint
 {
-    public record AddUserRequest(Guid Id, string Name, string Email);
+    public sealed record AddUserRequest(Guid Id, string Name, string Email);
 
     public static void MapAddUser(this IEndpointRouteBuilder app) =>
         app.MapPost("/users",

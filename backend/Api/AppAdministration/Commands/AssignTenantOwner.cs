@@ -6,7 +6,7 @@ namespace CCC.Api.AppAdministration.Commands;
 
 static class AssignTenantOwnerEndpoint
 {
-    public record AssignTenantOwnerRequest(Guid UserId);
+    public sealed record AssignTenantOwnerRequest(Guid UserId);
 
     public static void MapAssignTenantOwner(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants/{tenantId}/owners",

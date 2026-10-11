@@ -6,7 +6,7 @@ namespace CCC.Api.AppAdministration.Commands;
 
 static class AddSubscriptionModelEndpoint
 {
-    public record AddSubscriptionModelRequest(Guid Id, string Name, int KeyLimit);
+    public sealed record AddSubscriptionModelRequest(Guid Id, string Name, int KeyLimit);
 
     public static void MapAddSubscriptionModel(this IEndpointRouteBuilder app) =>
         app.MapPost("/subscription-models",

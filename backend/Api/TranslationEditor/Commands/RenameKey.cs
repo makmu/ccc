@@ -6,7 +6,7 @@ namespace CCC.Api.TranslationEditor.Commands;
 
 static class RenameKeyEndpoint
 {
-    public record RenameKeyRequest(string Name);
+    public sealed record RenameKeyRequest(string Name);
 
     public static void MapRenameKey(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/rename",

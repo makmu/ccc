@@ -6,7 +6,7 @@ namespace CCC.Api.TenantAdministration.Commands;
 
 static class RenameTenantEndpoint
 {
-    public record RenameTenantRequest(string Name);
+    public sealed record RenameTenantRequest(string Name);
 
     public static void MapRenameTenant(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants/{tenantId}/rename",

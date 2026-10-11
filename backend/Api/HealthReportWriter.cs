@@ -4,9 +4,9 @@ namespace CCC.Api;
 
 static class HealthReportWriter
 {
-    public record HealthResponse(string Status, IReadOnlyDictionary<string, CheckResponse> Checks);
+    public sealed record HealthResponse(string Status, IReadOnlyDictionary<string, CheckResponse> Checks);
 
-    public record CheckResponse(string Status, string? Description, IReadOnlyDictionary<string, object> Data);
+    public sealed record CheckResponse(string Status, string? Description, IReadOnlyDictionary<string, object> Data);
 
     public static Task WriteAsync(HttpContext context, HealthReport report) =>
         context.Response.WriteAsJsonAsync(new HealthResponse(

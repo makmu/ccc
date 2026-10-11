@@ -1,6 +1,6 @@
 namespace CCC.Api;
 
-class RequestAbortedFilter : IEndpointFilter
+sealed class RequestAbortedFilter : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

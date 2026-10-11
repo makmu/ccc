@@ -27,8 +27,10 @@ sealed class DetailsOfTenantHandler(IStateLoader loader) : IQueryHandler<Details
         await loader.LoadAsync(subscriptionModelNames, cancellationToken);
 
         var subscriptionModels = subscriptionModelIds
-            .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(id.Value, model.State?.Value!))
-            .OrderBy(model => model.Name)
+            .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(
+                id.Value,
+                model.State?.Value ?? throw new InvalidOperationException($"Subscription model {id.Value} has no name.")))
+            .OrderBy(model => model.Name, StringComparer.Ordinal)
             .ToList();
         return new TenantDetails(query.TenantId.Value, tenantName.Value, subscriptionModels);
     }

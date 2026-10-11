@@ -6,7 +6,7 @@ namespace CCC.Api.TenantAdministration.Commands;
 
 static class AddTeamEndpoint
 {
-    public record AddTeamRequest(Guid Id, string Name, Guid SubscriptionModelId);
+    public sealed record AddTeamRequest(Guid Id, string Name, Guid SubscriptionModelId);
 
     public static void MapAddTeam(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants/{tenantId}/teams",

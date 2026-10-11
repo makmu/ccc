@@ -5,7 +5,7 @@ using Dapper;
 
 namespace CCC.EventStore;
 
-class PostgresEventStore(EventStoreDatabase database, AppendSignal signal) : IEventStore
+sealed class PostgresEventStore(EventStoreDatabase database, AppendSignal signal) : IEventStore
 {
     // Positions come from a sequence and are taken before commit, so two concurrent
     // appends could commit out of position order, and a reader that tracks the last

@@ -6,7 +6,7 @@ namespace CCC.Api.TeamAdministration.Commands;
 
 static class AddLanguageEndpoint
 {
-    public record AddLanguageRequest(string LanguageCode, string ParentLanguageCode);
+    public sealed record AddLanguageRequest(string LanguageCode, string ParentLanguageCode);
 
     public static void MapAddLanguage(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/languages",

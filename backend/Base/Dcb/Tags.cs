@@ -33,7 +33,13 @@ public sealed partial class Tags : IEquatable<Tags>
 
     public bool Equals(Tags? other) => other is not null && _values.SequenceEqual(other._values);
     public override bool Equals(object? o) => Equals(o as Tags);
-    public override int GetHashCode() => _values.Aggregate(17, (h, v) => h * 31 + v.GetHashCode());
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var value in _values)
+            hash.Add(value);
+        return hash.ToHashCode();
+    }
 
     [GeneratedRegex(@"^\S+$")]
     private static partial Regex Valid();

@@ -6,7 +6,7 @@ namespace CCC.Api.AppAdministration.Commands;
 
 static class RegisterTenantEndpoint
 {
-    public record RegisterTenantRequest(Guid Id, string Name, IReadOnlyList<Guid> SubscriptionModelIds);
+    public sealed record RegisterTenantRequest(Guid Id, string Name, IReadOnlyList<Guid> SubscriptionModelIds);
 
     public static void MapRegisterTenant(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants",

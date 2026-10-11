@@ -7,7 +7,7 @@ namespace CCC.EventStore;
 // sees the reader's field type as System.Array and refuses to bind the
 // constructor parameter), and without a handler it would also expand a string[]
 // parameter into a comma-separated list, which breaks "tags @> @tags".
-class StringArrayTypeHandler : SqlMapper.TypeHandler<string[]>
+sealed class StringArrayTypeHandler : SqlMapper.TypeHandler<string[]>
 {
     public override void SetValue(IDbDataParameter parameter, string[]? value)
         => parameter.Value = value ?? [];

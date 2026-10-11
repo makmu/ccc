@@ -3,7 +3,7 @@ using Dapper;
 
 namespace CCC.EventStore;
 
-class DateTimeOffsetTypeHandler : SqlMapper.TypeHandler<DateTimeOffset>
+sealed class DateTimeOffsetTypeHandler : SqlMapper.TypeHandler<DateTimeOffset>
 {
     public override void SetValue(IDbDataParameter parameter, DateTimeOffset value)
         => parameter.Value = value;

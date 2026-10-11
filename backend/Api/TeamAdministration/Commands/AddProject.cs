@@ -6,7 +6,7 @@ namespace CCC.Api.TeamAdministration.Commands;
 
 static class AddProjectEndpoint
 {
-    public record AddProjectRequest(Guid Id, string Name, string ReferenceLanguage);
+    public sealed record AddProjectRequest(Guid Id, string Name, string ReferenceLanguage);
 
     public static void MapAddProject(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects",
