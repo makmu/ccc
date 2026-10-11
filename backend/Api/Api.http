@@ -246,6 +246,12 @@ Content-Type: application/json
 
 { "name": "heading" }
 
+### 200 rename key to its own name, no event appended
+POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{keyId}}/rename
+Content-Type: application/json
+
+{ "name": "heading" }
+
 ### 409 rename key to a taken name
 # response: "A key with this name already exists in this project."
 POST {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/keys/{{secondKeyId}}/rename

@@ -120,16 +120,16 @@ public class KeyTests
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A key with this name already exists in this project.");
     }
 
-    // The name check runs before the no-op check, so a key's own name counts
-    // as taken. This pins down today's behaviour, it doesn't endorse it.
     [Fact]
-    public async Task RenameKey_to_its_own_name_is_a_conflict()
+    public async Task RenameKey_to_its_own_name_appends_nothing()
     {
         var (team, project, key) = await _fixture.GivenKey("title");
+        var eventsBefore = _fixture.Store.Events.Count;
 
         var result = await _fixture.Handle(new RenameKey(team, project, key, KeyName.From("title")));
 
-        CommandAssert.Failed(result, CommandErrorKind.Conflict, "A key with this name already exists in this project.");
+        CommandAssert.Succeeded(result);
+        Assert.Equal(eventsBefore, _fixture.Store.Events.Count);
     }
 
     [Fact]

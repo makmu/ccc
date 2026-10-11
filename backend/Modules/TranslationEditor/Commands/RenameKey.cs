@@ -29,11 +29,11 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
         if (!keyExists || name is not { } currentName)
             return CommandResult.NotFound("Key not found in this project.");
 
-        if (nameTaken)
-            return CommandResult.Conflict("A key with this name already exists in this project.");
-
         if (alreadyNamed)
             return CommandResult.Ok;
+
+        if (nameTaken)
+            return CommandResult.Conflict("A key with this name already exists in this project.");
 
         var appended = await context.TryAppendAsync(
             new KeyRenamed(command.KeyId.Value, command.ProjectId.Value, command.Name.Value),
