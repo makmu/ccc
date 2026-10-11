@@ -7,9 +7,7 @@ import 'reveal.js/plugin/highlight/monokai.css'
 import './theme.css'
 import {
   addKeyHandlerSnippet,
-  eventStoreSnippet,
   projectionSnippet,
-  stateLoaderSnippet,
   stateModelSnippet,
   tenantRenameHandlerSnippet,
   tenantRenameInsertSqlSnippet,
@@ -619,16 +617,16 @@ export default function CommandContextDeck() {
             <h2 className="slide-title">Code Example</h2>
             <ol className="editorial-list tight">
               <Fragment as="li" index={0}>The endpoint turns the request into a <code>RenameTenant</code> command</Fragment>
-              <Fragment as="li" index={1}>Load three state models in one call</Fragment>
-              <Fragment as="li" index={2}>Decision 1: the tenant exists</Fragment>
-              <Fragment as="li" index={3}>Same name again: nothing to do</Fragment>
-              <Fragment as="li" index={4}>Decision 2: the new name is available</Fragment>
-              <Fragment as="li" index={5}>Append <code>TenantRenamed</code> with its tags, only if nothing changed concurrently</Fragment>
-              <Fragment as="li" index={6}>The result becomes 200, 404 or 409</Fragment>
+              <Fragment as="li" index={1}>One variable per state model, named after its answer</Fragment>
+              <Fragment as="li" index={2}>Load them all in one call</Fragment>
+              <Fragment as="li" index={3}>Decision 1: the tenant exists</Fragment>
+              <Fragment as="li" index={4}>Same name again: nothing to do</Fragment>
+              <Fragment as="li" index={5}>Decision 2: the new name is available</Fragment>
+              <Fragment as="li" index={6}>Append <code>TenantRenamed</code> with its tags, only if nothing changed concurrently</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-5|7-12|14-15|17-18|20-22|24-31|33-35" fragmentIndexes={[0, 1, 2, 3, 4, 5, 6]}>
+            <SyncedCode lineNumbers="|1-5|7-10|11-12|14-15|17-18|20-22|24-31" fragmentIndexes={[0, 1, 2, 3, 4, 5, 6]}>
               {tenantRenameHandlerSnippet}
             </SyncedCode>
           </div>
@@ -638,60 +636,17 @@ export default function CommandContextDeck() {
       <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
         <div className="slide-example-grid">
           <div className="code-explainer example-copy">
-            <SectionLabel>Loading the context</SectionLabel>
-            <h2 className="slide-title">State Loader</h2>
-            <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Takes every state model of the command</Fragment>
-              <Fragment as="li" index={1}>The context filter is the union of their filters</Fragment>
-              <Fragment as="li" index={2}>One query, so all models see the same snapshot</Fragment>
-              <Fragment as="li" index={3}>Each event goes to the models whose filter it matches</Fragment>
-              <Fragment as="li" index={4}>Remember the last position read</Fragment>
-              <Fragment as="li" index={5}>Filter and position become the append condition</Fragment>
-            </ol>
-          </div>
-          <div className="example-code">
-            <SyncedCode lineNumbers="|1-2|4-6|9-10|12-16|18-19|22" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
-              {stateLoaderSnippet}
-            </SyncedCode>
-          </div>
-        </div>
-      </Slide>
-
-      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
-        <div className="slide-example-grid">
-          <div className="code-explainer example-copy">
-            <SectionLabel>Appending to the Event Store</SectionLabel>
-            <h2 className="slide-title">Digging Deeper</h2>
-            <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Position and filter from the context, tags for the new event</Fragment>
-              <Fragment as="li" index={1}>Serialize event data to JSON</Fragment>
-              <Fragment as="li" index={2}>SQL where clause from the context filter</Fragment>
-              <Fragment as="li" index={3}>Additional SQL parameters</Fragment>
-              <Fragment as="li" index={4}>Build the conditional SQL insert</Fragment>
-              <Fragment as="li" index={5}>Execute it under the append lock and fail if no row was inserted</Fragment>
-            </ol>
-          </div>
-          <div className="example-code">
-            <SyncedCode lineNumbers="|1-4|6|7-8|10-15|17-25|27-33" fragmentIndexes={[0, 1, 2, 3, 4, 5]}>
-              {eventStoreSnippet}
-            </SyncedCode>
-          </div>
-        </div>
-      </Slide>
-
-      <Slide className="ccc-slide ccc-slide-code ccc-slide-code-example">
-        <div className="slide-example-grid">
-          <div className="code-explainer example-copy">
-            <SectionLabel>PostgreSQL Statement</SectionLabel>
+            <SectionLabel>What TryAppendAsync sends</SectionLabel>
             <h2 className="slide-title">Final SQL</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>One advisory lock for every append: positions become visible strictly in order</Fragment>
-              <Fragment as="li" index={1}>Insert the renamed event with its tags</Fragment>
-              <Fragment as="li" index={2}>If no event in the context came after position 40</Fragment>
+              <Fragment as="li" index={0}>One lock for every append: positions become visible in order</Fragment>
+              <Fragment as="li" index={1}>The new event with its tags</Fragment>
+              <Fragment as="li" index={2}>The context: the filters of the three state models</Fragment>
+              <Fragment as="li" index={3}>The last position the handler read</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode language="sql" lineNumbers="|1-2|4-9|10-21" fragmentIndexes={[0, 1, 2]}>
+            <SyncedCode language="sql" lineNumbers="|1-2|4-9|13-20|21" fragmentIndexes={[0, 1, 2, 3]}>
               {tenantRenameInsertSqlSnippet}
             </SyncedCode>
           </div>
@@ -704,15 +659,15 @@ export default function CommandContextDeck() {
             <SectionLabel>Adding a new key</SectionLabel>
             <h2 className="slide-title">More Complex Example</h2>
             <ol className="editorial-list tight">
-              <Fragment as="li" index={0}>Five state models across team, project and key</Fragment>
-              <Fragment as="li" index={1}>Existence and uniqueness checks</Fragment>
-              <Fragment as="li" index={2}>Second load for the key limit, which never changes, so it stays out of the append condition</Fragment>
-              <Fragment as="li" index={3}>The team's key count is in the condition: concurrent adds can't exceed the limit</Fragment>
-              <Fragment as="li" index={4}>Tag the event with what future commands will ask about</Fragment>
+              <Fragment as="li" index={0}>Five state models, one load</Fragment>
+              <Fragment as="li" index={1}>Existence and uniqueness</Fragment>
+              <Fragment as="li" index={2}>Key limit: a second load, outside the condition</Fragment>
+              <Fragment as="li" index={3}>The key count in the condition guards the limit</Fragment>
+              <Fragment as="li" index={4}>Tag what future commands will ask about</Fragment>
             </ol>
           </div>
           <div className="example-code">
-            <SyncedCode lineNumbers="|1-9|11-22|24-25|27-30|32-40" fragmentIndexes={[0, 1, 2, 3, 4]}>
+            <SyncedCode lineNumbers="|1-10|12-23|25-26|28-31|33-41" fragmentIndexes={[0, 1, 2, 3, 4]}>
               {addKeyHandlerSnippet}
             </SyncedCode>
           </div>

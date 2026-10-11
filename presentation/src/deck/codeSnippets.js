@@ -24,20 +24,20 @@ export const tenantRenameHandlerSnippet = `sealed class RenameTenantHandler(ISta
     public async Task<CommandResult> HandleAsync(
         RenameTenant command, CancellationToken ct)
     {
-        var (name, alreadyNamed, nameTaken, context) =
-            await loader.LoadAsync(
-                Tenant.Name(command.TenantId),
-                Tenant.IsNamed(command.TenantId, command.Name),
-                Tenant.NameTaken(command.Name),
-                ct);
+        var name = Tenant.Name(command.TenantId);
+        var alreadyNamed =
+            Tenant.IsNamed(command.TenantId, command.Name);
+        var nameTaken = Tenant.NameTaken(command.Name);
+        var context = await loader.LoadAsync(
+            [name, alreadyNamed, nameTaken], ct);
 
-        if (name is not { } currentName)
+        if (name.IsNull(out var currentName))
             return CommandResult.NotFound("Tenant not found.");
 
-        if (alreadyNamed)
+        if (alreadyNamed.IsTrue())
             return CommandResult.Ok;
 
-        if (nameTaken)
+        if (nameTaken.IsTrue())
             return CommandResult.Conflict(
                 "A tenant with this name already exists.");
 
@@ -54,65 +54,6 @@ export const tenantRenameHandlerSnippet = `sealed class RenameTenantHandler(ISta
             ? CommandResult.Ok
             : CommandResult.ConcurrentModification;
     }
-}`
-
-export const stateLoaderSnippet = `public async Task<StateContext> LoadAsync(
-    IReadOnlyList<IStateModel> models, CancellationToken ct)
-{
-    var filters = models.Select(m => m.Filter).ToArray();
-    var union = new EventFilter(
-        filters.SelectMany(f => f.Entries).ToList());
-    var maxPosition = -1L;
-
-    foreach (var record in
-        await eventStore.LoadAsync(union, ct))
-    {
-        for (var i = 0; i < models.Count; i++)
-        {
-            if (filters[i].Matches(record))
-                models[i].Apply(record);
-        }
-
-        if (record.Position > maxPosition)
-            maxPosition = record.Position;
-    }
-
-    return new StateContext(eventStore, union, maxPosition);
-}`
-
-export const eventStoreSnippet = `public async Task AppendAsync(
-    string eventType, object eventPayload, Guid user,
-    long expectedMaxPosition, EventFilter contextFilter,
-    string[] tags, CancellationToken ct)
-{
-    var json = JsonSerializer.Serialize(eventPayload);
-    var (whereClause, parameters) =
-        BuildFilterConditions(contextFilter);
-
-    parameters.Add("type", eventType);
-    parameters.Add("payload", json);
-    parameters.Add("user", user);
-    parameters.Add("tags", tags);
-    parameters.Add(
-        "expectedMaxPosition", expectedMaxPosition);
-
-    var sql = $"""
-        INSERT INTO events (type, payload, "user", tags)
-        SELECT @type, @payload::jsonb, @user, @tags
-        WHERE (
-            SELECT COALESCE(MAX(position), -1)
-            FROM events
-            WHERE {whereClause}
-        ) = @expectedMaxPosition
-        """;
-
-    var rows = await ExecuteUnderAppendLockAsync(
-        sql, parameters, ct);
-
-    if (rows == 0)
-        throw new ConcurrencyException(
-            "The event store was modified " +
-            "by a concurrent operation.");
 }`
 
 export const tenantRenameInsertSqlSnippet = `BEGIN; -- READ COMMITTED
@@ -139,33 +80,34 @@ WHERE (
 
 COMMIT;`
 
-export const addKeyHandlerSnippet = `var (subscription, projectInTeam, idTaken,
-     nameTaken, keysAdded, context) =
-    await loader.LoadAsync(
-        Team.Subscription(command.TeamId),
-        Project.InTeam(command.TeamId, command.ProjectId),
-        Key.IdTaken(command.Id),
-        Key.NameTaken(command.ProjectId, command.Name),
-        Team.KeysAdded(command.TeamId),
-        ct);
+export const addKeyHandlerSnippet = `var subscription = Team.Subscription(command.TeamId);
+var projectInTeam =
+    Project.InTeam(command.TeamId, command.ProjectId);
+var idTaken = Key.IdTaken(command.Id);
+var nameTaken =
+    Key.NameTaken(command.ProjectId, command.Name);
+var keysAdded = Team.KeysAdded(command.TeamId);
+var context = await loader.LoadAsync(
+    [subscription, projectInTeam, idTaken,
+     nameTaken, keysAdded], ct);
 
-if (subscription is not { } subscriptionModelId)
+if (subscription.IsNull(out var subscriptionModelId))
     return CommandResult.NotFound("Team not found.");
 
-if (!projectInTeam)
+if (projectInTeam.IsFalse())
     return CommandResult.NotFound(
         "Project not found in this team.");
 
-if (idTaken)
+if (idTaken.IsTrue())
     return CommandResult.Conflict("Key ID already taken.");
 
-if (nameTaken)
+if (nameTaken.IsTrue())
     return CommandResult.Conflict("Key name already taken.");
 
-var (keyLimit, _) = await loader.LoadAsync(
-    Subscription.KeyLimit(subscriptionModelId), ct);
+var keyLimit = Subscription.KeyLimit(subscriptionModelId);
+await loader.LoadAsync([keyLimit], ct);
 
-if (keysAdded >= keyLimit)
+if (keysAdded.Value >= keyLimit.Value)
     return CommandResult.Conflict(
         "The key limit for this team's subscription " +
         "model has been reached.");
