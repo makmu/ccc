@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <RootNamespace>CCC.Abstractions</RootNamespace>
+      <RootNamespace>CCC.Base.Abstractions</RootNamespace>
     </PropertyGroup>
 
 </Project>

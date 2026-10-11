@@ -8,7 +8,7 @@ The repository is not intended to be a generic content management system. Its ma
 
 ## Repository Structure
 
-- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into `Api`, one project per module, `Domain`, `Dcb`, `EventStore` and `ProjectionBase` (see ADR-006, ADR-009, ADR-011 and ADR-012)
+- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into `Api`, one project per module under `Modules/`, `Domain`, `EventStore`, and the shared projects `Abstractions`, `Dcb`, `Projections` and `TestKit` under `Base/` (see ADR-006, ADR-009, ADR-011, ADR-012 and ADR-013)
 - `frontend/` - React frontend for exploring and exercising the sample application
 - `presentation/` - standalone React/RevealJS slide deck used to explain CCC in this repository
 - `docs/architecture/` - architecture decision records for the main technical choices
@@ -69,3 +69,4 @@ The browser-hosted presentation runs on Vite's default dev port unless that port
 | [ADR-010: Projections Stall After Repeated Failures](docs/architecture/adr-010-stalled-projections.md) | Defines when a projection gives up, how the stall is recorded, and how to unstall it |
 | [ADR-011: Projection Infrastructure in a ProjectionBase Project](docs/architecture/adr-011-projection-base.md) | Moves the projection runner and its helpers out of the event store |
 | [ADR-012: State Model Primitives in a Dependency-Free Dcb Project](docs/architecture/adr-012-dcb.md) | Moves state models, tags and event records into a project that references nothing, so the domain no longer depends on the event store |
+| [ADR-013: A Base Folder for the Shared Projects](docs/architecture/adr-013-base-folder.md) | Groups `Abstractions`, `Dcb`, `Projections` and `TestKit` under `Base/`, with `CCC.Base.*` namespaces |

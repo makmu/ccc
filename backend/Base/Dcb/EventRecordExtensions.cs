@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace CCC.Dcb;
+namespace CCC.Base.Dcb;
 
 public static class EventRecordExtensions
 {

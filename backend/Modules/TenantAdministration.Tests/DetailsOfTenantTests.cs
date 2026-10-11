@@ -1,9 +1,9 @@
+using CCC.Base.TestKit;
 using CCC.Domain.Types;
 using CCC.Modules.AppAdministration.Commands;
 using CCC.Modules.TenantAdministration.Commands;
 using CCC.Modules.TenantAdministration.Queries;
-using CCC.TestKit;
-using static CCC.TestKit.CommandFixture;
+using static CCC.Base.TestKit.CommandFixture;
 
 namespace CCC.Modules.TenantAdministration.Tests;
 

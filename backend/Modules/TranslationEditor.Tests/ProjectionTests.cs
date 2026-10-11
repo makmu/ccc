@@ -1,7 +1,7 @@
+using CCC.Base.TestKit;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
 using CCC.Modules.TranslationEditor.Queries;
-using CCC.TestKit;
 
 namespace CCC.Modules.TranslationEditor.Tests;
 

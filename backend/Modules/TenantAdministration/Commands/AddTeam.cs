@@ -1,5 +1,5 @@
-using CCC.Abstractions;
-using CCC.Dcb;
+using CCC.Base.Abstractions;
+using CCC.Base.Dcb;
 using CCC.Domain.Events;
 using CCC.Domain.State;
 using CCC.Domain.Types;

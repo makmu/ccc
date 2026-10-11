@@ -1,4 +1,4 @@
-namespace CCC.Dcb;
+namespace CCC.Base.Dcb;
 
 sealed class AllStateModel(IStateModel<bool>[] models) : IStateModel<bool>
 {

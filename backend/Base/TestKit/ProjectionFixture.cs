@@ -1,12 +1,12 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
+using CCC.Base.Projections;
 using CCC.EventStore;
-using CCC.ProjectionBase;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 
-namespace CCC.TestKit;
+namespace CCC.Base.TestKit;
 
 // Runs a module's projection against a throwaway database on the server given by
 // CCC_TEST_POSTGRES, defaulting to the local development server.

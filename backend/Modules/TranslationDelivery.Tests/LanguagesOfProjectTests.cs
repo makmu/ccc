@@ -1,7 +1,7 @@
+using CCC.Base.TestKit;
 using CCC.Domain.Types;
 using CCC.Modules.TranslationDelivery.Queries;
-using CCC.TestKit;
-using static CCC.TestKit.CommandFixture;
+using static CCC.Base.TestKit.CommandFixture;
 
 namespace CCC.Modules.TranslationDelivery.Tests;
 

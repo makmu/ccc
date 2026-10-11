@@ -1,8 +1,8 @@
-using CCC.Dcb;
+using CCC.Base.Dcb;
 using Dapper;
 using Npgsql;
 
-namespace CCC.ProjectionBase;
+namespace CCC.Base.Projections;
 
 public interface IProjection
 {

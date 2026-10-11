@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TenantAdministration\TenantAdministration.csproj" />
-        <ProjectReference Include="..\..\TestKit\TestKit.csproj" />
+        <ProjectReference Include="..\..\Base\TestKit\TestKit.csproj" />
     </ItemGroup>
 
     <ItemGroup>

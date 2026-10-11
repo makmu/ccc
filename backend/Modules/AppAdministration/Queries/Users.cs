@@ -1,5 +1,5 @@
-using CCC.Abstractions;
-using CCC.ProjectionBase;
+using CCC.Base.Abstractions;
+using CCC.Base.Projections;
 using Dapper;
 
 namespace CCC.Modules.AppAdministration.Queries;

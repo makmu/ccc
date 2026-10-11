@@ -1,8 +1,8 @@
 using System.Text.Json;
-using CCC.Dcb;
+using CCC.Base.Dcb;
 using CCC.EventStore;
 
-namespace CCC.TestKit;
+namespace CCC.Base.TestKit;
 
 public sealed class InMemoryEventStore : IEventStore
 {

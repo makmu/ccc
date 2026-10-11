@@ -1,4 +1,4 @@
-using CCC.Dcb;
+using CCC.Base.Dcb;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
 

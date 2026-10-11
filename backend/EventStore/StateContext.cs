@@ -1,4 +1,4 @@
-using CCC.Dcb;
+using CCC.Base.Dcb;
 namespace CCC.EventStore;
 
 public class StateContext(IEventStore eventStore, EventFilter filter, long maxPosition)

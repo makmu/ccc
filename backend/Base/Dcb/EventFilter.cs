@@ -1,4 +1,4 @@
-namespace CCC.Dcb;
+namespace CCC.Base.Dcb;
 
 public record EventFilter(IReadOnlyList<EventFilter.Entry> Entries)
 {

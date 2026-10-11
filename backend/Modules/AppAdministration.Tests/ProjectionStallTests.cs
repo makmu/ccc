@@ -1,5 +1,5 @@
+using CCC.Base.TestKit;
 using CCC.Domain.Events;
-using CCC.TestKit;
 
 namespace CCC.Modules.AppAdministration.Tests;
 

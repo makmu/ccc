@@ -2,7 +2,7 @@ using CCC.EventStore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace CCC.ProjectionBase;
+namespace CCC.Base.Projections;
 
 public static class ServiceCollectionExtensions
 {

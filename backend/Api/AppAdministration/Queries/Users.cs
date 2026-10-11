@@ -1,4 +1,4 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
 using CCC.Modules.AppAdministration.Queries;
 
 namespace CCC.Api.AppAdministration.Queries;

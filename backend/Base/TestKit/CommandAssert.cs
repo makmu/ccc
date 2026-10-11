@@ -1,6 +1,6 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
 
-namespace CCC.TestKit;
+namespace CCC.Base.TestKit;
 
 public static class CommandAssert
 {

@@ -1,6 +1,6 @@
 using System.Data;
 using System.Text.Json;
-using CCC.Dcb;
+using CCC.Base.Dcb;
 using Dapper;
 using Npgsql;
 

@@ -1,9 +1,9 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
+using CCC.Base.TestKit;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
 using CCC.Modules.AppAdministration.Commands;
-using CCC.TestKit;
-using static CCC.TestKit.CommandFixture;
+using static CCC.Base.TestKit.CommandFixture;
 
 namespace CCC.Modules.AppAdministration.Tests;
 

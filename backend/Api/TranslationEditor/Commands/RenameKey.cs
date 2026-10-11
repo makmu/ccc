@@ -1,4 +1,4 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
 using CCC.Domain.Types;
 using CCC.Modules.TranslationEditor.Commands;
 

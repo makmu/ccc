@@ -1,11 +1,11 @@
-using CCC.Abstractions;
-using CCC.Dcb;
+using CCC.Base.Abstractions;
+using CCC.Base.Dcb;
+using CCC.Base.TestKit;
 using CCC.Domain.Events;
 using CCC.Domain.State;
 using CCC.Domain.Types;
 using CCC.Modules.TranslationEditor.Commands;
-using CCC.TestKit;
-using static CCC.TestKit.CommandFixture;
+using static CCC.Base.TestKit.CommandFixture;
 
 namespace CCC.Modules.TranslationEditor.Tests;
 

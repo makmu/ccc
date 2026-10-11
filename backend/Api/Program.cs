@@ -4,13 +4,13 @@ using CCC.Api.TenantAdministration;
 using CCC.Api.TranslationDelivery;
 using CCC.Api.TranslationEditor;
 using CCC.Api;
+using CCC.Base.Projections;
 using CCC.EventStore;
 using CCC.Modules.AppAdministration;
 using CCC.Modules.TeamAdministration;
 using CCC.Modules.TenantAdministration;
 using CCC.Modules.TranslationDelivery;
 using CCC.Modules.TranslationEditor;
-using CCC.ProjectionBase;
 
 var builder = WebApplication.CreateBuilder(args);
 

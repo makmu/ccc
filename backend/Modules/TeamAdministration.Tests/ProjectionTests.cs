@@ -1,7 +1,7 @@
+using CCC.Base.TestKit;
 using CCC.Domain.Events;
 using CCC.Domain.Types;
 using CCC.Modules.TeamAdministration.Queries;
-using CCC.TestKit;
 
 namespace CCC.Modules.TeamAdministration.Tests;
 

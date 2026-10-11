@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TranslationEditor\TranslationEditor.csproj" />
-        <ProjectReference Include="..\..\TestKit\TestKit.csproj" />
+        <ProjectReference Include="..\..\Base\TestKit\TestKit.csproj" />
     </ItemGroup>
 
     <ItemGroup>

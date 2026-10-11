@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <RootNamespace>CCC.ProjectionBase</RootNamespace>
+      <RootNamespace>CCC.Base.Projections</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,7 +13,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Dcb\Dcb.csproj" />
-        <ProjectReference Include="..\EventStore\EventStore.csproj" />
+        <ProjectReference Include="..\..\EventStore\EventStore.csproj" />
     </ItemGroup>
 
 </Project>

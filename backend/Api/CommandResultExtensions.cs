@@ -1,4 +1,4 @@
-using CCC.Abstractions;
+using CCC.Base.Abstractions;
 
 namespace CCC.Api;
 

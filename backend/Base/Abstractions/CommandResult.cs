@@ -1,4 +1,4 @@
-namespace CCC.Abstractions;
+namespace CCC.Base.Abstractions;
 
 public sealed record CommandResult
 {

@@ -1,4 +1,4 @@
-namespace CCC.ProjectionBase;
+namespace CCC.Base.Projections;
 
 public sealed record ProjectionRetryPolicy(int MaxRetries, TimeSpan FirstDelay)
 {

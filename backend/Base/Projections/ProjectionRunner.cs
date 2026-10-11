@@ -1,12 +1,12 @@
 using System.Threading.Channels;
-using CCC.Dcb;
+using CCC.Base.Dcb;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace CCC.ProjectionBase;
+namespace CCC.Base.Projections;
 
 // Exactly one runner writes a projection's schema, so neither the bookmark nor the
 // projection tables need locking. Running the API twice would break this.

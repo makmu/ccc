@@ -1,4 +1,4 @@
-namespace CCC.Dcb;
+namespace CCC.Base.Dcb;
 
 public sealed class EventHandlers<TResult>
 {

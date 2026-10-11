@@ -1,6 +1,6 @@
-using CCC.Dcb;
+using CCC.Base.Dcb;
+using CCC.Base.Projections;
 using CCC.Domain.Events;
-using CCC.ProjectionBase;
 using Dapper;
 using Npgsql;
 

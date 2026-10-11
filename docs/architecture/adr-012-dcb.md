@@ -1,5 +1,7 @@
 # ADR-012: State Model Primitives in a Dependency-Free Dcb Project
 
+> **Changed by ADR-013:** `Dcb` now lives in `backend/Base/Dcb`, with the namespace `CCC.Base.Dcb`, and `ProjectionBase` is now `Projections`.
+
 ## Decision
 
 The building blocks of dynamic consistency boundaries move from `EventStore` into a new project `Dcb`, with the namespace `CCC.Dcb`:

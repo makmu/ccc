@@ -1,6 +1,6 @@
 using System.Reflection;
-using CCC.Abstractions;
-using CCC.ProjectionBase;
+using CCC.Base.Abstractions;
+using CCC.Base.Projections;
 using NetArchTest.Rules;
 
 namespace CCC.Architecture.Tests;
@@ -12,7 +12,7 @@ public class DependencyRuleTests
     private static readonly Assembly Dcb = Assembly.Load("Dcb");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
-    private static readonly Assembly ProjectionBase = Assembly.Load("ProjectionBase");
+    private static readonly Assembly Projections = Assembly.Load("Projections");
     private static readonly Assembly[] Modules =
     [
         Assembly.Load("AppAdministration"),
@@ -26,36 +26,36 @@ public class DependencyRuleTests
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Dcb", "CCC.Domain", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
+            "CCC.Base.Dcb", "CCC.Domain", "CCC.EventStore", "CCC.Base.Projections", "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void Dcb_depends_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Dcb),
-            "CCC.Abstractions", "CCC.Domain", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api",
+            "CCC.Base.Abstractions", "CCC.Domain", "CCC.EventStore", "CCC.Base.Projections", "CCC.Modules", "CCC.Api",
             "Dapper", "Npgsql", "Microsoft");
     }
 
     [Fact]
-    public void EventStore_knows_nothing_about_the_domain_or_the_projection_base()
+    public void EventStore_knows_nothing_about_the_domain_or_the_projections()
     {
         AssertNoDependency(Types.InAssembly(EventStore),
-            "CCC.Abstractions", "CCC.Domain", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api");
+            "CCC.Base.Abstractions", "CCC.Domain", "CCC.Base.Projections", "CCC.Modules", "CCC.Api");
     }
 
     [Fact]
-    public void ProjectionBase_knows_nothing_about_the_domain()
+    public void Projections_know_nothing_about_the_domain()
     {
-        AssertNoDependency(Types.InAssembly(ProjectionBase),
-            "CCC.Abstractions", "CCC.Domain", "CCC.Modules", "CCC.Api");
+        AssertNoDependency(Types.InAssembly(Projections),
+            "CCC.Base.Abstractions", "CCC.Domain", "CCC.Modules", "CCC.Api");
     }
 
     [Fact]
     public void Domain_depends_on_nothing_but_Dcb()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Abstractions", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Modules", "CCC.Api", "Microsoft");
+            "CCC.Base.Abstractions", "CCC.EventStore", "CCC.Base.Projections", "CCC.Modules", "CCC.Api", "Microsoft");
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class DependencyRuleTests
     {
         AssertNoDependency(
             Types.InAssembly(Api).That().DoNotHaveName("Program"),
-            "CCC.Dcb", "CCC.EventStore", "CCC.ProjectionBase", "CCC.Domain.State");
+            "CCC.Base.Dcb", "CCC.EventStore", "CCC.Base.Projections", "CCC.Domain.State");
     }
 
     [Fact]

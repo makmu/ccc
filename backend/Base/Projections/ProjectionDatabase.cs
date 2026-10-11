@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace CCC.ProjectionBase;
+namespace CCC.Base.Projections;
 
 public sealed class ProjectionDatabase(string connectionString) : IAsyncDisposable
 {
