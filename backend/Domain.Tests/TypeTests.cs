@@ -34,17 +34,35 @@ public class TypeTests
     }
 
     [Theory]
-    [InlineData("Acme", "acme")]
-    [InlineData("  Acme Corp  ", "acme corp")]
-    [InlineData("ÄRGER", "ärger")]
-    public void Names_keep_the_input_and_canonicalize_by_trimming_and_lowercasing(string input, string canonical)
+    [InlineData("Acme", "Acme", "acme")]
+    [InlineData("  Acme Corp  ", "Acme Corp", "acme corp")]
+    [InlineData("ÄRGER", "ÄRGER", "ärger")]
+    public void Names_trim_the_input_and_canonicalize_by_lowercasing(string input, string value, string canonical)
     {
         var name = TenantName.From(input);
 
-        Assert.Equal(input, name.Value);
+        Assert.Equal(value, name.Value);
         Assert.Equal(canonical, name.Canonical);
         Assert.Equal(canonical, TeamName.From(input).Canonical);
         Assert.Equal(canonical, ProjectName.From(input).Canonical);
+    }
+
+    [Fact]
+    public void Names_codes_and_email_addresses_trim_surrounding_whitespace()
+    {
+        Assert.Equal("Web", TeamName.From(" Web\t").Value);
+        Assert.Equal("Web", ProjectName.From(" Web\t").Value);
+        Assert.Equal("Title", KeyName.From(" Title\n").Value);
+        Assert.Equal("Alice", UserName.From(" Alice ").Value);
+        Assert.Equal("Basic", SubscriptionModelName.From(" Basic ").Value);
+        Assert.Equal("de-AT", LanguageCode.From(" de-AT ").Value);
+        Assert.Equal("alice@example.com", EmailAddress.From(" alice@example.com ").Value);
+    }
+
+    [Fact]
+    public void Text_keeps_surrounding_whitespace()
+    {
+        Assert.Equal(" Hello ", Text.From(" Hello ").Value);
     }
 
     [Theory]

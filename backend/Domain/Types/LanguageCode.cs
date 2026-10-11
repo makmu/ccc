@@ -9,7 +9,7 @@ public readonly record struct LanguageCode
     public static LanguageCode From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Language code must not be empty.")
-            : new LanguageCode(value);
+            : new LanguageCode(value.Trim());
 
     public override string ToString() => Value;
 }

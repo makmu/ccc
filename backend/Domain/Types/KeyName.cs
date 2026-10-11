@@ -1,7 +1,5 @@
 namespace CCC.Domain.Types;
 
-// Tagged exactly as entered. Unlike tenant, team and project names, key names
-// are case-sensitive.
 public readonly record struct KeyName
 {
     public string Value { get; }
@@ -11,7 +9,7 @@ public readonly record struct KeyName
     public static KeyName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Key name must not be empty.")
-            : new KeyName(value);
+            : new KeyName(value.Trim());
 
     public override string ToString() => Value;
 }

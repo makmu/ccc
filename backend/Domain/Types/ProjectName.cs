@@ -11,7 +11,7 @@ public readonly record struct ProjectName
     public static ProjectName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Project name must not be empty.")
-            : new ProjectName(value);
+            : new ProjectName(value.Trim());
 
     public override string ToString() => Value;
 }

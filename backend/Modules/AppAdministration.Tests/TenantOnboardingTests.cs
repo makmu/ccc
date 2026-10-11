@@ -21,7 +21,7 @@ public class TenantOnboardingTests
 
         CommandAssert.Succeeded(result);
         var registered = _fixture.LastEvent<TenantRegistered>();
-        Assert.Equal(" Acme ", registered.Name);
+        Assert.Equal("Acme", registered.Name);
         Assert.Equal([subscription.Value], registered.SubscriptionModelIds);
         Assert.Equal([$"tenant-id={id}", "tenant-name=acme"], _fixture.LastTags());
     }

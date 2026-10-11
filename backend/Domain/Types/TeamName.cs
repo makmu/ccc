@@ -11,7 +11,7 @@ public readonly record struct TeamName
     public static TeamName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Team name must not be empty.")
-            : new TeamName(value);
+            : new TeamName(value.Trim());
 
     public override string ToString() => Value;
 }

@@ -11,7 +11,7 @@ public readonly record struct TenantName
     public static TenantName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Tenant name must not be empty.")
-            : new TenantName(value);
+            : new TenantName(value.Trim());
 
     public override string ToString() => Value;
 }

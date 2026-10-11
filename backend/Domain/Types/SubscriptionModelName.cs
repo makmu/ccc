@@ -9,7 +9,7 @@ public readonly record struct SubscriptionModelName
     public static SubscriptionModelName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("Subscription model name must not be empty.")
-            : new SubscriptionModelName(value);
+            : new SubscriptionModelName(value.Trim());
 
     public override string ToString() => Value;
 }

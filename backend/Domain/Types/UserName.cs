@@ -9,7 +9,7 @@ public readonly record struct UserName
     public static UserName From(string? value) =>
         string.IsNullOrWhiteSpace(value)
             ? throw new InvalidValueException("User name must not be empty.")
-            : new UserName(value);
+            : new UserName(value.Trim());
 
     public override string ToString() => Value;
 }
