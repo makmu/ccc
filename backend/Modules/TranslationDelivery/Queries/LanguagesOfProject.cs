@@ -9,11 +9,12 @@ public record LanguagesOfProject(TeamId TeamId, ProjectId ProjectId);
 
 sealed class LanguagesOfProjectHandler(IStateLoader loader) : IQueryHandler<LanguagesOfProject, IReadOnlyList<string>?>
 {
-    public async Task<IReadOnlyList<string>?> HandleAsync(LanguagesOfProject query)
+    public async Task<IReadOnlyList<string>?> HandleAsync(LanguagesOfProject query, CancellationToken cancellationToken)
     {
         var (inTeam, languages, _) = await loader.LoadAsync(
             Project.InTeam(query.TeamId, query.ProjectId),
-            Project.Languages(query.ProjectId));
+            Project.Languages(query.ProjectId),
+            cancellationToken);
 
         return inTeam ? languages.Select(language => language.Value).ToList() : null;
     }

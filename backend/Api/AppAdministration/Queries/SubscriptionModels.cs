@@ -7,6 +7,7 @@ static class SubscriptionModelsEndpoint
 {
     public static void MapSubscriptionModels(this IEndpointRouteBuilder app) =>
         app.MapGet("/subscription-models",
-            async (IQueryHandler<SubscriptionModels, IReadOnlyList<SubscriptionModelSummary>> handler) =>
-                Results.Ok(await handler.HandleAsync(new SubscriptionModels())));
+            async (IQueryHandler<SubscriptionModels, IReadOnlyList<SubscriptionModelSummary>> handler,
+                CancellationToken cancellationToken) =>
+                Results.Ok(await handler.HandleAsync(new SubscriptionModels(), cancellationToken)));
 }

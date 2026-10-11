@@ -10,13 +10,13 @@ static class AddProjectEndpoint
 
     public static void MapAddProject(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects",
-            async (Guid teamId, AddProjectRequest request, ICommandHandler<AddProject> handler) =>
+            async (Guid teamId, AddProjectRequest request, ICommandHandler<AddProject> handler, CancellationToken cancellationToken) =>
             {
                 var command = new AddProject(
                     TeamId.From(teamId),
                     ProjectId.From(request.Id),
                     ProjectName.From(request.Name),
                     LanguageCode.From(request.ReferenceLanguage));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

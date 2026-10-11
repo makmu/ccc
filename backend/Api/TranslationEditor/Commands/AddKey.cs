@@ -10,13 +10,14 @@ static class AddKeyEndpoint
 
     public static void MapAddKey(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys",
-            async (Guid teamId, Guid projectId, AddKeyRequest request, ICommandHandler<AddKey> handler) =>
+            async (Guid teamId, Guid projectId, AddKeyRequest request, ICommandHandler<AddKey> handler,
+                CancellationToken cancellationToken) =>
             {
                 var command = new AddKey(
                     TeamId.From(teamId),
                     ProjectId.From(projectId),
                     KeyId.From(request.Id),
                     KeyName.From(request.Name));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

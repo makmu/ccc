@@ -10,7 +10,7 @@ public record RegisterTenant(TenantId Id, TenantName Name, IReadOnlyList<Subscri
 
 sealed class RegisterTenantHandler(IStateLoader loader) : ICommandHandler<RegisterTenant>
 {
-    public async Task<CommandResult> HandleAsync(RegisterTenant command)
+    public async Task<CommandResult> HandleAsync(RegisterTenant command, CancellationToken cancellationToken)
     {
         if (command.SubscriptionModelIds.Count == 0)
             return CommandResult.Invalid("At least one subscription model must be referenced.");
@@ -18,7 +18,8 @@ sealed class RegisterTenantHandler(IStateLoader loader) : ICommandHandler<Regist
         var (idTaken, nameTaken, subscriptionsExist, context) = await loader.LoadAsync(
             Tenant.Exists(command.Id),
             Tenant.NameTaken(command.Name),
-            Subscription.AllExist(command.SubscriptionModelIds));
+            Subscription.AllExist(command.SubscriptionModelIds),
+            cancellationToken);
 
         if (idTaken)
             return CommandResult.Conflict("A tenant with this id already exists.");
@@ -31,7 +32,8 @@ sealed class RegisterTenantHandler(IStateLoader loader) : ICommandHandler<Regist
 
         var appended = await context.TryAppendAsync(
             new TenantRegistered(command.Id.Value, command.Name.Value, command.SubscriptionModelIds.Select(id => id.Value).Distinct().ToList()),
-            Tags.From(Tag.TenantId(command.Id), Tag.TenantName(command.Name)));
+            Tags.From(Tag.TenantId(command.Id), Tag.TenantName(command.Name)),
+            cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

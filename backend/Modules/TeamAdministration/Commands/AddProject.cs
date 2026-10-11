@@ -10,12 +10,13 @@ public record AddProject(TeamId TeamId, ProjectId Id, ProjectName Name, Language
 
 sealed class AddProjectHandler(IStateLoader loader) : ICommandHandler<AddProject>
 {
-    public async Task<CommandResult> HandleAsync(AddProject command)
+    public async Task<CommandResult> HandleAsync(AddProject command, CancellationToken cancellationToken)
     {
         var (teamExists, idTaken, nameTaken, context) = await loader.LoadAsync(
             Team.Exists(command.TeamId),
             Project.IdTaken(command.Id),
-            Project.NameTaken(command.TeamId, command.Name));
+            Project.NameTaken(command.TeamId, command.Name),
+            cancellationToken);
 
         if (!teamExists)
             return CommandResult.NotFound("Team not found.");
@@ -32,7 +33,8 @@ sealed class AddProjectHandler(IStateLoader loader) : ICommandHandler<AddProject
                 Tag.ProjectId(command.Id),
                 Tag.TeamId(command.TeamId),
                 Tag.ProjectName(command.Name),
-                Tag.LanguageCode(command.ReferenceLanguage)));
+                Tag.LanguageCode(command.ReferenceLanguage)),
+                cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

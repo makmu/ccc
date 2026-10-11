@@ -7,7 +7,7 @@ public class StateLoader(IEventStore eventStore) : IStateLoader
     // one would let a concurrent append land between two queries. The price is
     // in-memory tag re-matching: a record only matching model A still comes back
     // when model B's entries are part of the same union.
-    public async Task<StateContext> LoadAsync(IReadOnlyList<IStateModel> models)
+    public async Task<StateContext> LoadAsync(IReadOnlyList<IStateModel> models, CancellationToken cancellationToken)
     {
         var filters = models.Select(model => model.Filter).ToArray();
         var union = new EventFilter(filters.SelectMany(filter => filter.Entries).ToList());
@@ -15,7 +15,7 @@ public class StateLoader(IEventStore eventStore) : IStateLoader
 
         if (union.Entries.Count > 0)
         {
-            foreach (var record in await eventStore.LoadAsync(union))
+            foreach (var record in await eventStore.LoadAsync(union, cancellationToken))
             {
                 for (var i = 0; i < models.Count; i++)
                 {

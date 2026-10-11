@@ -15,15 +15,16 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
     // so the conditional append's MAX(position) check is exact in READ COMMITTED.
     private const long AppendLockKey = 0x4343435F4556;
 
-    public async Task AppendAsync(string type, object payload, Guid user)
+    public async Task AppendAsync(string type, object payload, Guid user, CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(payload);
         await ExecuteUnderAppendLockAsync(
             """INSERT INTO events (type, payload, "user") VALUES (@type, @payload::jsonb, @user)""",
-            new { type, payload = json, user });
+            new { type, payload = json, user }, cancellationToken);
     }
 
-    public async Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags)
+    public async Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags,
+        CancellationToken cancellationToken)
     {
         var json = JsonSerializer.Serialize(eventPayload);
         var (whereClause, parameters) = BuildFilterConditions(contextFilter);
@@ -44,21 +45,24 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
             ) = @expectedMaxPosition
             """;
 
-        var rows = await ExecuteUnderAppendLockAsync(sql, parameters);
+        var rows = await ExecuteUnderAppendLockAsync(sql, parameters, cancellationToken);
 
         if (rows == 0)
             throw new ConcurrencyException("The event store was modified by a concurrent operation.");
     }
 
-    private async Task<int> ExecuteUnderAppendLockAsync(string sql, object parameters)
+    private async Task<int> ExecuteUnderAppendLockAsync(string sql, object parameters, CancellationToken cancellationToken)
     {
         await using var conn = new NpgsqlConnection(connectionString);
-        await conn.OpenAsync();
-        await using var tx = await conn.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await conn.OpenAsync(cancellationToken);
+        await using var tx = await conn.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
-        await conn.ExecuteAsync("SELECT pg_advisory_xact_lock(@AppendLockKey)", new { AppendLockKey }, tx);
-        var rows = await conn.ExecuteAsync(sql, parameters, tx);
+        await conn.ExecuteAsync(new CommandDefinition(
+            "SELECT pg_advisory_xact_lock(@AppendLockKey)", new { AppendLockKey }, tx, cancellationToken: cancellationToken));
+        var rows = await conn.ExecuteAsync(new CommandDefinition(sql, parameters, tx, cancellationToken: cancellationToken));
 
+        // Not cancellable: a commit that succeeds on the server but reports a cancellation
+        // would skip the signal, and projections would not see the event until the next append.
         await tx.CommitAsync();
 
         if (rows > 0)
@@ -66,15 +70,15 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
         return rows;
     }
 
-    public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, params string[] types)
+    public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, string[] types, CancellationToken cancellationToken)
     {
         await using var conn = new NpgsqlConnection(connectionString);
-        return await conn.QueryAsync<EventRecord>(
+        return await conn.QueryAsync<EventRecord>(new CommandDefinition(
             """SELECT position, type, payload, timestamp, "user", tags FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position LIMIT @limit""",
-            new { fromPosition, limit, types });
+            new { fromPosition, limit, types }, cancellationToken: cancellationToken));
     }
 
-    public async Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter)
+    public async Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter, CancellationToken cancellationToken)
     {
         var (whereClause, parameters) = BuildFilterConditions(filter);
 
@@ -86,7 +90,7 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
             """;
 
         await using var conn = new NpgsqlConnection(connectionString);
-        return await conn.QueryAsync<EventRecord>(sql, parameters);
+        return await conn.QueryAsync<EventRecord>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
     }
 
     private static (string WhereClause, DynamicParameters Parameters) BuildFilterConditions(EventFilter filter)

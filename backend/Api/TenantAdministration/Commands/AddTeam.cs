@@ -10,13 +10,13 @@ static class AddTeamEndpoint
 
     public static void MapAddTeam(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants/{tenantId}/teams",
-            async (Guid tenantId, AddTeamRequest request, ICommandHandler<AddTeam> handler) =>
+            async (Guid tenantId, AddTeamRequest request, ICommandHandler<AddTeam> handler, CancellationToken cancellationToken) =>
             {
                 var command = new AddTeam(
                     TenantId.From(tenantId),
                     TeamId.From(request.Id),
                     TeamName.From(request.Name),
                     SubscriptionModelId.From(request.SubscriptionModelId));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

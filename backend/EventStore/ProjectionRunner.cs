@@ -94,7 +94,7 @@ sealed class ProjectionRunner<TProjection>(
             await connection.ExecuteAsync(Rebuild(bookmark).With(transaction, cancellationToken));
         }
 
-        await projection.InstallAsync(connection, transaction);
+        await projection.InstallAsync(connection, transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         _position = bookmark.Position;
         _stalled = bookmark.Stalled;
@@ -104,7 +104,7 @@ sealed class ProjectionRunner<TProjection>(
     {
         while (true)
         {
-            var batch = (await eventStore.ReadAsync(_position + 1, BatchSize, [.. projection.EventTypes])).ToList();
+            var batch = (await eventStore.ReadAsync(_position + 1, BatchSize, [.. projection.EventTypes], cancellationToken)).ToList();
             if (batch.Count == 0)
                 return;
 
@@ -112,7 +112,7 @@ sealed class ProjectionRunner<TProjection>(
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
             foreach (var record in batch)
-                await ApplyAsync(record, connection, transaction);
+                await ApplyAsync(record, connection, transaction, cancellationToken);
 
             var position = batch[^1].Position;
             await connection.ExecuteAsync(MoveBookmark(position).With(transaction, cancellationToken));
@@ -124,11 +124,12 @@ sealed class ProjectionRunner<TProjection>(
         }
     }
 
-    private async Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction)
+    private async Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await projection.ApplyAsync(record, connection, transaction);
+            await projection.ApplyAsync(record, connection, transaction, cancellationToken);
         }
         catch (Exception ex) when (ex is not (OperationCanceledException or NpgsqlException { IsTransient: true }))
         {

@@ -2,5 +2,5 @@ namespace CCC.Abstractions;
 
 public interface ICommandHandler<in TCommand>
 {
-    Task<CommandResult> HandleAsync(TCommand command);
+    Task<CommandResult> HandleAsync(TCommand command, CancellationToken cancellationToken);
 }

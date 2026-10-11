@@ -10,10 +10,10 @@ public record TenantSummary(Guid Id, string Name, string[] SubscriptionModels, s
 
 sealed class TenantsHandler(ReadModelDatabase database) : IQueryHandler<Tenants, IReadOnlyList<TenantSummary>>
 {
-    public async Task<IReadOnlyList<TenantSummary>> HandleAsync(Tenants query)
+    public async Task<IReadOnlyList<TenantSummary>> HandleAsync(Tenants query, CancellationToken cancellationToken)
     {
-        await using var connection = await database.OpenAsync();
-        var tenants = await connection.QueryAsync<TenantSummary>("""
+        await using var connection = await database.OpenAsync(cancellationToken);
+        var tenants = await connection.QueryAsync<TenantSummary>(new CommandDefinition("""
             SELECT
                 t.tenant_id AS Id,
                 t.name AS Name,
@@ -33,7 +33,7 @@ sealed class TenantsHandler(ReadModelDatabase database) : IQueryHandler<Tenants,
                 ) AS Owners
             FROM app_administration.tenants t
             ORDER BY t.name
-            """);
+            """, cancellationToken: cancellationToken));
         return tenants.AsList();
     }
 }

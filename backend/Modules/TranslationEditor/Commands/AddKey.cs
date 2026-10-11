@@ -10,14 +10,15 @@ public record AddKey(TeamId TeamId, ProjectId ProjectId, KeyId Id, KeyName Name)
 
 sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
 {
-    public async Task<CommandResult> HandleAsync(AddKey command)
+    public async Task<CommandResult> HandleAsync(AddKey command, CancellationToken cancellationToken)
     {
         var (subscription, projectInTeam, idTaken, nameTaken, keysAdded, context) = await loader.LoadAsync(
             Team.Subscription(command.TeamId),
             Project.InTeam(command.TeamId, command.ProjectId),
             Key.IdTaken(command.Id),
             Key.NameTaken(command.ProjectId, command.Name),
-            Team.KeysAdded(command.TeamId));
+            Team.KeysAdded(command.TeamId),
+            cancellationToken);
 
         if (subscription is not { } subscriptionModelId)
             return CommandResult.NotFound("Team not found.");
@@ -34,7 +35,7 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         // The limit sits behind the team's subscription, so it needs a second read.
         // It stays out of the append condition because it never changes. The team's
         // key count is in the condition, and that is what guards the limit.
-        var (keyLimit, _) = await loader.LoadAsync(Subscription.KeyLimit(subscriptionModelId));
+        var (keyLimit, _) = await loader.LoadAsync(Subscription.KeyLimit(subscriptionModelId), cancellationToken);
 
         if (keysAdded >= keyLimit)
             return CommandResult.Conflict("The key limit for this team's subscription model has been reached.");
@@ -45,7 +46,8 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
                 Tag.TeamId(command.TeamId),
                 Tag.ProjectId(command.ProjectId),
                 Tag.KeyId(command.Id),
-                Tag.KeyName(command.Name)));
+                Tag.KeyName(command.Name)),
+            cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

@@ -10,9 +10,9 @@ static class AddUserEndpoint
 
     public static void MapAddUser(this IEndpointRouteBuilder app) =>
         app.MapPost("/users",
-            async (AddUserRequest request, ICommandHandler<AddUser> handler) =>
+            async (AddUserRequest request, ICommandHandler<AddUser> handler, CancellationToken cancellationToken) =>
             {
                 var command = new AddUser(UserId.From(request.Id), UserName.From(request.Name), EmailAddress.From(request.Email));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

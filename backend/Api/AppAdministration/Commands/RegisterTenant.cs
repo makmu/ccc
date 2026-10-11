@@ -10,12 +10,12 @@ static class RegisterTenantEndpoint
 
     public static void MapRegisterTenant(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants",
-            async (RegisterTenantRequest request, ICommandHandler<RegisterTenant> handler) =>
+            async (RegisterTenantRequest request, ICommandHandler<RegisterTenant> handler, CancellationToken cancellationToken) =>
             {
                 var command = new RegisterTenant(
                     TenantId.From(request.Id),
                     TenantName.From(request.Name),
                     request.SubscriptionModelIds.Select(SubscriptionModelId.From).ToList());
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

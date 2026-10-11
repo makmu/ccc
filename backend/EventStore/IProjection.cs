@@ -12,7 +12,7 @@ public interface IProjection
 
     IReadOnlyCollection<string> EventTypes { get; }
 
-    Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction);
+    Task InstallAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken);
 
-    Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction);
+    Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken);
 }

@@ -10,7 +10,7 @@ public record RenameKey(TeamId TeamId, ProjectId ProjectId, KeyId KeyId, KeyName
 
 sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
 {
-    public async Task<CommandResult> HandleAsync(RenameKey command)
+    public async Task<CommandResult> HandleAsync(RenameKey command, CancellationToken cancellationToken)
     {
         var (teamExists, projectInTeam, keyExists, name, nameTaken, alreadyNamed, context) = await loader.LoadAsync(
             Team.Exists(command.TeamId),
@@ -18,7 +18,8 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
             Key.Exists(command.TeamId, command.ProjectId, command.KeyId),
             Key.Name(command.KeyId),
             Key.NameTaken(command.ProjectId, command.Name),
-            Key.IsNamed(command.KeyId, command.Name));
+            Key.IsNamed(command.KeyId, command.Name),
+            cancellationToken);
 
         if (!teamExists)
             return CommandResult.NotFound("Team not found.");
@@ -39,7 +40,8 @@ sealed class RenameKeyHandler(IStateLoader loader) : ICommandHandler<RenameKey>
             new KeyRenamed(command.KeyId.Value, command.ProjectId.Value, command.Name.Value),
             Tags.From(
                 Tag.TeamId(command.TeamId),
-                Tag.KeyId(command.KeyId), Tag.ProjectId(command.ProjectId), Tag.KeyName(currentName), Tag.KeyName(command.Name)));
+                Tag.KeyId(command.KeyId), Tag.ProjectId(command.ProjectId), Tag.KeyName(currentName), Tag.KeyName(command.Name)),
+            cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

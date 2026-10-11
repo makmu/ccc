@@ -10,13 +10,14 @@ static class AddLanguageEndpoint
 
     public static void MapAddLanguage(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/languages",
-            async (Guid teamId, Guid projectId, AddLanguageRequest request, ICommandHandler<AddLanguage> handler) =>
+            async (Guid teamId, Guid projectId, AddLanguageRequest request, ICommandHandler<AddLanguage> handler,
+                CancellationToken cancellationToken) =>
             {
                 var command = new AddLanguage(
                     TeamId.From(teamId),
                     ProjectId.From(projectId),
                     LanguageCode.From(request.LanguageCode),
                     LanguageCode.From(request.ParentLanguageCode));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

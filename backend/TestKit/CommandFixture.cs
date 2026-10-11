@@ -35,10 +35,10 @@ public sealed class CommandFixture
     public InMemoryEventStore Store { get; } = new();
 
     public Task<CommandResult> Handle<TCommand>(TCommand command) =>
-        _services.GetRequiredService<ICommandHandler<TCommand>>().HandleAsync(command);
+        _services.GetRequiredService<ICommandHandler<TCommand>>().HandleAsync(command, CancellationToken.None);
 
     public Task<TResult> Query<TQuery, TResult>(TQuery query) =>
-        _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query);
+        _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query, CancellationToken.None);
 
     public async Task Given<TCommand>(TCommand command)
     {

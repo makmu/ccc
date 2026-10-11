@@ -10,9 +10,10 @@ static class AssignTenantOwnerEndpoint
 
     public static void MapAssignTenantOwner(this IEndpointRouteBuilder app) =>
         app.MapPost("/tenants/{tenantId}/owners",
-            async (Guid tenantId, AssignTenantOwnerRequest request, ICommandHandler<AssignTenantOwner> handler) =>
+            async (Guid tenantId, AssignTenantOwnerRequest request, ICommandHandler<AssignTenantOwner> handler,
+                CancellationToken cancellationToken) =>
             {
                 var command = new AssignTenantOwner(TenantId.From(tenantId), UserId.From(request.UserId));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

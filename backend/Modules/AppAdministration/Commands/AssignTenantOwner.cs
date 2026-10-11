@@ -10,12 +10,13 @@ public record AssignTenantOwner(TenantId TenantId, UserId UserId);
 
 sealed class AssignTenantOwnerHandler(IStateLoader loader) : ICommandHandler<AssignTenantOwner>
 {
-    public async Task<CommandResult> HandleAsync(AssignTenantOwner command)
+    public async Task<CommandResult> HandleAsync(AssignTenantOwner command, CancellationToken cancellationToken)
     {
         var (tenantExists, userExists, alreadyOwner, context) = await loader.LoadAsync(
             Tenant.Exists(command.TenantId),
             User.Exists(command.UserId),
-            User.IsTenantOwner(command.UserId, command.TenantId));
+            User.IsTenantOwner(command.UserId, command.TenantId),
+            cancellationToken);
 
         if (!tenantExists)
             return CommandResult.NotFound("Tenant not found.");
@@ -28,7 +29,8 @@ sealed class AssignTenantOwnerHandler(IStateLoader loader) : ICommandHandler<Ass
 
         var appended = await context.TryAppendAsync(
             new TenantOwnerAssigned(command.UserId.Value, command.TenantId.Value),
-            Tags.From(Tag.TenantId(command.TenantId), Tag.UserId(command.UserId)));
+            Tags.From(Tag.TenantId(command.TenantId), Tag.UserId(command.UserId)),
+            cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

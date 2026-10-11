@@ -8,9 +8,11 @@ static class LanguagesOfProjectEndpoint
 {
     public static void MapLanguagesOfProject(this IEndpointRouteBuilder app) =>
         app.MapGet("/teams/{teamId}/projects/{projectId}/languages",
-            async (Guid teamId, Guid projectId, IQueryHandler<LanguagesOfProject, IReadOnlyList<string>?> handler) =>
+            async (Guid teamId, Guid projectId, IQueryHandler<LanguagesOfProject, IReadOnlyList<string>?> handler,
+                CancellationToken cancellationToken) =>
             {
-                var languages = await handler.HandleAsync(new LanguagesOfProject(TeamId.From(teamId), ProjectId.From(projectId)));
+                var query = new LanguagesOfProject(TeamId.From(teamId), ProjectId.From(projectId));
+                var languages = await handler.HandleAsync(query, cancellationToken);
                 return languages is null ? Results.NotFound("Project not found in this team.") : Results.Ok(languages);
             });
 }

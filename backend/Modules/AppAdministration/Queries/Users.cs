@@ -10,14 +10,14 @@ public record UserSummary(Guid Id, string Name, string Email);
 
 sealed class UsersHandler(ReadModelDatabase database) : IQueryHandler<Users, IReadOnlyList<UserSummary>>
 {
-    public async Task<IReadOnlyList<UserSummary>> HandleAsync(Users query)
+    public async Task<IReadOnlyList<UserSummary>> HandleAsync(Users query, CancellationToken cancellationToken)
     {
-        await using var connection = await database.OpenAsync();
-        var users = await connection.QueryAsync<UserSummary>("""
+        await using var connection = await database.OpenAsync(cancellationToken);
+        var users = await connection.QueryAsync<UserSummary>(new CommandDefinition("""
             SELECT user_id AS Id, name AS Name, email AS Email
             FROM app_administration.users
             ORDER BY name
-            """);
+            """, cancellationToken: cancellationToken));
         return users.AsList();
     }
 }

@@ -54,7 +54,9 @@ else
 
 await EventStoreSchema.CreateAsync(connectionString);
 
-var api = app.MapGroup("").AddEndpointFilter<InvalidValueFilter>();
+var api = app.MapGroup("")
+    .AddEndpointFilter<RequestAbortedFilter>()
+    .AddEndpointFilter<InvalidValueFilter>();
 api.MapAppAdministration();
 api.MapTenantAdministration();
 api.MapTeamAdministration();

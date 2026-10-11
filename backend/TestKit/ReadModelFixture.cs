@@ -68,12 +68,12 @@ public sealed class ReadModelFixture(string schema, Func<IServiceCollection, ISe
     }
 
     public Task Given<TEvent>(TEvent @event) =>
-        _services.GetRequiredService<IEventStore>().AppendAsync(typeof(TEvent).Name, @event!, Guid.Empty);
+        _services.GetRequiredService<IEventStore>().AppendAsync(typeof(TEvent).Name, @event!, Guid.Empty, CancellationToken.None);
 
     public async Task<TResult> Query<TQuery, TResult>(TQuery query)
     {
         await WaitForCatchUpAsync();
-        return await _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query);
+        return await _services.GetRequiredService<IQueryHandler<TQuery, TResult>>().HandleAsync(query, CancellationToken.None);
     }
 
     private async Task StartAsync()

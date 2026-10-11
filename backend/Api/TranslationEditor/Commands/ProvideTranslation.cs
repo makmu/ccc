@@ -10,7 +10,8 @@ static class ProvideTranslationEndpoint
 
     public static void MapProvideTranslation(this IEndpointRouteBuilder app) =>
         app.MapPost("/teams/{teamId}/projects/{projectId}/keys/{keyId}/translations",
-            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, ICommandHandler<ProvideTranslation> handler) =>
+            async (Guid teamId, Guid projectId, Guid keyId, ProvideTranslationRequest request, ICommandHandler<ProvideTranslation> handler,
+                CancellationToken cancellationToken) =>
             {
                 var command = new ProvideTranslation(
                     TeamId.From(teamId),
@@ -18,6 +19,6 @@ static class ProvideTranslationEndpoint
                     KeyId.From(keyId),
                     LanguageCode.From(request.LanguageCode),
                     request.Text is null ? null : Text.From(request.Text));
-                return (await handler.HandleAsync(command)).ToHttpResult();
+                return (await handler.HandleAsync(command, cancellationToken)).ToHttpResult();
             });
 }

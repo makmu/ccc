@@ -13,17 +13,18 @@ public record TenantSubscriptionModel(Guid Id, string Name);
 
 sealed class DetailsOfTenantHandler(IStateLoader loader) : IQueryHandler<DetailsOfTenant, TenantDetails?>
 {
-    public async Task<TenantDetails?> HandleAsync(DetailsOfTenant query)
+    public async Task<TenantDetails?> HandleAsync(DetailsOfTenant query, CancellationToken cancellationToken)
     {
         var (name, subscriptionModelIds, _) = await loader.LoadAsync(
             Tenant.Name(query.TenantId),
-            Tenant.SubscriptionModels(query.TenantId));
+            Tenant.SubscriptionModels(query.TenantId),
+            cancellationToken);
 
         if (name is not { } tenantName)
             return null;
 
         var subscriptionModelNames = subscriptionModelIds.Select(Subscription.Name).ToList();
-        await loader.LoadAsync(subscriptionModelNames);
+        await loader.LoadAsync(subscriptionModelNames, cancellationToken);
 
         var subscriptionModels = subscriptionModelIds
             .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(id.Value, model.State?.Value!))

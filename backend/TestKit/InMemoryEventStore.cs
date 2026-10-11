@@ -11,13 +11,14 @@ public sealed class InMemoryEventStore : IEventStore
 
     public Action? BeforeConditionalAppend { get; set; }
 
-    public Task AppendAsync(string type, object payload, Guid user)
+    public Task AppendAsync(string type, object payload, Guid user, CancellationToken cancellationToken)
     {
         Add(type, payload, user, []);
         return Task.CompletedTask;
     }
 
-    public Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags)
+    public Task AppendAsync(string eventType, object eventPayload, Guid user, long expectedMaxPosition, EventFilter contextFilter, string[] tags,
+        CancellationToken cancellationToken)
     {
         BeforeConditionalAppend?.Invoke();
 
@@ -29,11 +30,11 @@ public sealed class InMemoryEventStore : IEventStore
         return Task.CompletedTask;
     }
 
-    public Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, params string[] types) =>
+    public Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, string[] types, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<EventRecord>>(
             _events.Where(e => e.Position >= fromPosition && types.Contains(e.Type)).Take(limit).ToList());
 
-    public Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter) =>
+    public Task<IEnumerable<EventRecord>> LoadAsync(EventFilter filter, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<EventRecord>>(_events.Where(filter.Matches).ToList());
 
     public void Append<TEvent>(TEvent @event, Tags tags) => Add(typeof(TEvent).Name, @event!, Guid.Empty, tags.ToArray());

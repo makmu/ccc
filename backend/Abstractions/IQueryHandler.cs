@@ -2,5 +2,5 @@ namespace CCC.Abstractions;
 
 public interface IQueryHandler<in TQuery, TResult>
 {
-    Task<TResult> HandleAsync(TQuery query);
+    Task<TResult> HandleAsync(TQuery query, CancellationToken cancellationToken);
 }

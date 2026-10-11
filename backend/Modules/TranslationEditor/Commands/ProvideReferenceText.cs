@@ -10,13 +10,14 @@ public record ProvideReferenceText(TeamId TeamId, ProjectId ProjectId, KeyId Key
 
 sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<ProvideReferenceText>
 {
-    public async Task<CommandResult> HandleAsync(ProvideReferenceText command)
+    public async Task<CommandResult> HandleAsync(ProvideReferenceText command, CancellationToken cancellationToken)
     {
         var (teamExists, projectInTeam, keyExists, alreadyProvided, context) = await loader.LoadAsync(
             Team.Exists(command.TeamId),
             Project.InTeam(command.TeamId, command.ProjectId),
             Key.Exists(command.TeamId, command.ProjectId, command.KeyId),
-            Key.HasReferenceText(command.KeyId, command.Text));
+            Key.HasReferenceText(command.KeyId, command.Text),
+            cancellationToken);
 
         if (!teamExists)
             return CommandResult.NotFound("Team not found.");
@@ -32,8 +33,10 @@ sealed class ProvideReferenceTextHandler(IStateLoader loader) : ICommandHandler<
 
         var tags = Tags.From(Tag.KeyId(command.KeyId));
         var appended = command.Text is { } text
-            ? await context.TryAppendAsync(new ReferenceTextProvided(command.KeyId.Value, command.ProjectId.Value, text.Value), tags)
-            : await context.TryAppendAsync(new ReferenceTextWithdrawn(command.KeyId.Value, command.ProjectId.Value), tags);
+            ? await context.TryAppendAsync(
+                new ReferenceTextProvided(command.KeyId.Value, command.ProjectId.Value, text.Value), tags, cancellationToken)
+            : await context.TryAppendAsync(
+                new ReferenceTextWithdrawn(command.KeyId.Value, command.ProjectId.Value), tags, cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

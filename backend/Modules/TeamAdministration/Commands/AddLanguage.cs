@@ -10,14 +10,15 @@ public record AddLanguage(TeamId TeamId, ProjectId ProjectId, LanguageCode Langu
 
 sealed class AddLanguageHandler(IStateLoader loader) : ICommandHandler<AddLanguage>
 {
-    public async Task<CommandResult> HandleAsync(AddLanguage command)
+    public async Task<CommandResult> HandleAsync(AddLanguage command, CancellationToken cancellationToken)
     {
         var (teamExists, projectInTeam, languageAdded, validParent, isReference, context) = await loader.LoadAsync(
             Team.Exists(command.TeamId),
             Project.InTeam(command.TeamId, command.ProjectId),
             Language.InProject(command.ProjectId, command.LanguageCode),
             Language.ValidParent(command.ProjectId, command.ParentLanguageCode),
-            Language.IsReference(command.ProjectId, command.LanguageCode));
+            Language.IsReference(command.ProjectId, command.LanguageCode),
+            cancellationToken);
 
         if (!teamExists)
             return CommandResult.NotFound("Team not found.");
@@ -36,7 +37,8 @@ sealed class AddLanguageHandler(IStateLoader loader) : ICommandHandler<AddLangua
 
         var appended = await context.TryAppendAsync(
             new LanguageAdded(command.LanguageCode.Value, command.ParentLanguageCode.Value, command.ProjectId.Value),
-            Tags.From(Tag.ProjectId(command.ProjectId), Tag.LanguageCode(command.LanguageCode)));
+            Tags.From(Tag.ProjectId(command.ProjectId), Tag.LanguageCode(command.LanguageCode)),
+            cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }

@@ -10,12 +10,13 @@ public record RenameTenant(TenantId TenantId, TenantName Name);
 
 sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTenant>
 {
-    public async Task<CommandResult> HandleAsync(RenameTenant command)
+    public async Task<CommandResult> HandleAsync(RenameTenant command, CancellationToken cancellationToken)
     {
         var (name, alreadyNamed, nameTaken, context) = await loader.LoadAsync(
             Tenant.Name(command.TenantId),
             Tenant.IsNamed(command.TenantId, command.Name),
-            Tenant.NameTaken(command.Name));
+            Tenant.NameTaken(command.Name),
+            cancellationToken);
 
         if (name is not { } currentName)
             return CommandResult.NotFound("Tenant not found.");
@@ -33,7 +34,8 @@ sealed class RenameTenantHandler(IStateLoader loader) : ICommandHandler<RenameTe
             Tags.From(
                 Tag.TenantId(command.TenantId),
                 Tag.TenantName(currentName),
-                Tag.TenantName(command.Name)));
+                Tag.TenantName(command.Name)),
+                cancellationToken);
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }
 }
