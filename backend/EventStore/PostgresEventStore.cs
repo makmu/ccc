@@ -116,6 +116,6 @@ class PostgresEventStore(EventStoreDatabase database, AppendSignal signal) : IEv
             entryIndex++;
         }
 
-        return (string.Join(" OR ", conditions), parameters);
+        return (conditions.Count == 0 ? "FALSE" : string.Join(" OR ", conditions), parameters);
     }
 }
