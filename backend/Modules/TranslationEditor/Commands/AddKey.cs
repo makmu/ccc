@@ -15,7 +15,7 @@ sealed class AddKeyHandler(IStateLoader loader) : ICommandHandler<AddKey>
         var (subscription, projectInTeam, idTaken, nameTaken, keysAdded, context) = await loader.LoadAsync(
             Team.Subscription(command.TeamId),
             Project.InTeam(command.TeamId, command.ProjectId),
-            Key.Exists(command.TeamId, command.ProjectId, command.Id),
+            Key.IdTaken(command.Id),
             Key.NameTaken(command.ProjectId, command.Name),
             Team.KeysAdded(command.TeamId));
 

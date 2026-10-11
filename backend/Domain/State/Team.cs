@@ -11,9 +11,8 @@ public static class Team
             .Where(Tag.TeamId(teamId))
             .When<TeamAdded>((_, _) => true);
 
-    public static StateModel<bool> IdTaken(TenantId tenantId, TeamId teamId) =>
+    public static StateModel<bool> IdTaken(TeamId teamId) =>
         StateModel.Init(false)
-            .Where(Tag.TenantId(tenantId))
             .Where(Tag.TeamId(teamId))
             .When<TeamAdded>((_, _) => true);
 

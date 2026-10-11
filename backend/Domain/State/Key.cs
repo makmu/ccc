@@ -13,6 +13,11 @@ public static class Key
             .Where(Tag.KeyId(keyId))
             .When<KeyAdded>((_, _) => true);
 
+    public static StateModel<bool> IdTaken(KeyId keyId) =>
+        StateModel.Init(false)
+            .Where(Tag.KeyId(keyId))
+            .When<KeyAdded>((_, _) => true);
+
     public static StateModel<bool> NameTaken(ProjectId projectId, KeyName name) =>
         StateModel.Init(false)
             .Where(Tag.ProjectId(projectId))

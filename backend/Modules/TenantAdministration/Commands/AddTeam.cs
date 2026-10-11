@@ -15,7 +15,7 @@ sealed class AddTeamHandler(IStateLoader loader) : ICommandHandler<AddTeam>
         var (tenantExists, hasSubscription, idTaken, nameTaken, context) = await loader.LoadAsync(
             Tenant.Exists(command.TenantId),
             Tenant.HasSubscription(command.TenantId, command.SubscriptionModelId),
-            Team.IdTaken(command.TenantId, command.Id),
+            Team.IdTaken(command.Id),
             Team.NameTaken(command.TenantId, command.Name));
 
         if (!tenantExists)

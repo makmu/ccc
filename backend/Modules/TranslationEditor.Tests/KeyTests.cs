@@ -55,6 +55,17 @@ public class KeyTests
     }
 
     [Fact]
+    public async Task AddKey_rejects_an_id_taken_in_another_project()
+    {
+        var (_, _, key) = await _fixture.GivenKey("title");
+        var (team, project) = await _fixture.GivenProject();
+
+        var result = await _fixture.Handle(new AddKey(team, project, key, KeyName.From("other")));
+
+        CommandAssert.Failed(result, CommandErrorKind.Conflict, "Key ID already taken.");
+    }
+
+    [Fact]
     public async Task AddKey_rejects_a_taken_name()
     {
         var (team, project, _) = await _fixture.GivenKey("title");

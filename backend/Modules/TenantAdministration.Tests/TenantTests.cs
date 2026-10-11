@@ -101,4 +101,15 @@ public class TenantTests
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A team with this id or name already exists in this tenant.");
     }
+
+    [Fact]
+    public async Task AddTeam_rejects_an_id_taken_in_another_tenant()
+    {
+        var (_, team) = await _fixture.GivenTeam();
+        var (tenant, subscription) = await _fixture.GivenTenant();
+
+        var result = await _fixture.Handle(new AddTeam(tenant, team, TeamName.From("Team B"), subscription));
+
+        CommandAssert.Failed(result, CommandErrorKind.Conflict, "A team with this id or name already exists in this tenant.");
+    }
 }
