@@ -19,6 +19,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.RespectNullableAnnotations = true;
     options.SerializerOptions.RespectRequiredConstructorParameters = true;
 });
+builder.Services.AddProblemDetails();
+// In Development, minimal APIs throw on binding failures instead of returning 400.
+builder.Services.AddExceptionHandler(options => options.StatusCodeSelector = exception =>
+    exception is BadHttpRequestException badRequest ? badRequest.StatusCode : StatusCodes.Status500InternalServerError);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -41,6 +45,9 @@ builder.Services.AddProjectionDatabase(projectionsConnectionString);
 builder.Services.AddTranslationDelivery();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {

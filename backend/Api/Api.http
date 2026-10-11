@@ -4,7 +4,9 @@
 #
 # Each request title starts with the expected status code. A "# response:"
 # line under the title holds the expected body, recorded before the
-# project split. Requests without one return an empty body.
+# project split. Requests without one return an empty body. Errors are
+# application/problem+json, and their expected bodies leave out the
+# "traceId", which differs on every request.
 
 @baseUrl = http://localhost:5039
 @subscriptionId = 11111111-1111-1111-1111-111111111111
