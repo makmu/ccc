@@ -379,6 +379,10 @@ dialog form {
   gap: 0.5rem;
 }
 
+.dialog-actions .leading {
+  margin-right: auto;
+}
+
 @media (max-width: 720px) {
   .shell {
     grid-template-columns: 1fr;

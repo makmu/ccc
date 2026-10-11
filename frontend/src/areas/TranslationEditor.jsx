@@ -25,7 +25,10 @@ export default function TranslationEditor() {
       }))
   }
 
-  const pendingOf = (key, field) => pending[`${key.id} ${field}`]
+  function shown(key, field, current) {
+    const id = `${key.id} ${field}`
+    return id in pending ? pending[id] : current
+  }
 
   async function addKey(form) {
     const id = newId()
@@ -39,11 +42,10 @@ export default function TranslationEditor() {
     track(key.id, nameField, name, current => current?.name === name)
   }
 
-  async function provideText(key, language, isReference, form) {
-    const text = form.get('text')
+  async function provideText(key, language, isReference, text) {
     if (isReference) await command(`${base}/keys/${key.id}/reference-text`, { text })
     else await command(`${base}/keys/${key.id}/translations`, { languageCode: language, text })
-    track(key.id, language, text, current => textIn(current, language, isReference) === text)
+    track(key.id, language, text, current => (textIn(current, language, isReference) ?? null) === text)
   }
 
   return (
@@ -69,16 +71,16 @@ export default function TranslationEditor() {
                 </thead>
                 <tbody>
                   {keys.map(key => {
-                    const name = pendingOf(key, nameField) ?? key.name
+                    const name = shown(key, nameField, key.name)
                     const cell = (language, isReference) => (
                       <TextCell
                         key={language}
                         keyName={name}
                         language={language}
                         isReference={isReference}
-                        text={pendingOf(key, language) ?? textIn(key, language, isReference)}
-                        referenceText={pendingOf(key, referenceLanguage) ?? key.referenceText}
-                        onProvide={form => provideText(key, language, isReference, form)}
+                        text={shown(key, language, textIn(key, language, isReference))}
+                        referenceText={shown(key, referenceLanguage, key.referenceText)}
+                        onProvide={text => provideText(key, language, isReference, text)}
                       />
                     )
                     return (
@@ -117,20 +119,27 @@ function textIn(key, language, isReference) {
 
 function TextCell({ keyName, language, isReference, text, referenceText, onProvide }) {
   const label = isReference ? 'Provide reference text' : 'Provide translation'
+  const withdrawal = {
+    label: isReference ? 'Withdraw reference text' : 'Withdraw translation',
+    onRun: () => onProvide(null),
+  }
   return (
     <td>
       <ActionDialog
         label={label}
         title={isReference ? `Reference text for ${keyName}` : `${language} translation for ${keyName}`}
-        trigger={text ?? <span className="quiet">Add text</span>}
+        trigger={text == null
+          ? <span className="quiet">Add text</span>
+          : text === '' ? <span className="quiet">Empty text</span> : text}
         triggerLabel={`${label} in ${language} for ${keyName}`}
         className="cell"
-        onRun={onProvide}
+        onRun={form => onProvide(form.get('text'))}
+        secondaryAction={text == null ? undefined : withdrawal}
       >
         {!isReference && (
           <p className="quiet">Reference text: {referenceText ?? 'none yet'}</p>
         )}
-        <Field label="Text"><textarea name="text" rows="3" defaultValue={text ?? ''} required /></Field>
+        <Field label="Text"><textarea name="text" rows="3" defaultValue={text ?? ''} /></Field>
       </ActionDialog>
     </td>
   )
