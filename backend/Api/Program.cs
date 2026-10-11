@@ -11,6 +11,7 @@ using CCC.Modules.TeamAdministration;
 using CCC.Modules.TenantAdministration;
 using CCC.Modules.TranslationDelivery;
 using CCC.Modules.TranslationEditor;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,8 @@ else
 }
 
 await EventStoreSchema.CreateAsync(connectionString);
+
+app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthReportWriter.WriteAsync });
 
 var api = app.MapGroup("")
     .AddEndpointFilter<RequestAbortedFilter>()

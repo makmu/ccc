@@ -3,6 +3,7 @@ using CCC.Base.Projections;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
 
@@ -66,6 +67,13 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
                 throw new TimeoutException($"The {schema} projection did not stall within {CatchUpTimeout}.");
             await Task.Delay(10);
         }
+    }
+
+    public async Task<HealthReportEntry> HealthAsync()
+    {
+        var report = await _services.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync(registration => registration.Name == schema);
+        return report.Entries[schema];
     }
 
     public Task Given<TEvent>(TEvent @event) =>

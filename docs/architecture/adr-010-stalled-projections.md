@@ -30,7 +30,7 @@ Until now, a runner retried every failure forever, with a backoff of up to a min
 - A short database outage still recovers on its own.
 
 **Negative:**
-- A stalled projection stays stale until someone notices and acts. Queries don't report that their projection is stalled.
+- A stalled projection stays stale until someone notices and acts. Queries don't report that their projection is stalled; only `/health` does, with the stall reason.
 - Unstalling without a `Version` change takes SQL and a restart, because there is no endpoint for it.
 - A failure that would have gone away by itself, but that Npgsql doesn't mark as transient, now stalls the projection.
 

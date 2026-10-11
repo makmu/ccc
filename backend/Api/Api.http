@@ -338,3 +338,7 @@ GET {{baseUrl}}/teams/{{teamId}}/projects/{{projectId}}/languages
 ### 404 languages of a project in another team
 # response: {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"detail":"Project not found in this team."}
 GET {{baseUrl}}/teams/{{unknownId}}/projects/{{projectId}}/languages
+
+### 200 health of every projection, all caught up
+# response: {"status":"Healthy","checks":{"app_administration":{"status":"Healthy","description":"Caught up at position 5.","data":{"version":1,"position":5}},"tenant_administration":{"status":"Healthy","description":"Caught up at position 6.","data":{"version":1,"position":6}},"team_administration":{"status":"Healthy","description":"Caught up at position 8.","data":{"version":1,"position":8}},"translation_editor":{"status":"Healthy","description":"Caught up at position 15.","data":{"version":2,"position":15}},"translation_delivery":{"status":"Healthy","description":"Caught up at position 15.","data":{"version":2,"position":15}}}}
+GET {{baseUrl}}/health
