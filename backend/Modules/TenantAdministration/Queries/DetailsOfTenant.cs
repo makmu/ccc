@@ -26,7 +26,7 @@ sealed class DetailsOfTenantHandler(IStateLoader loader) : IQueryHandler<Details
         await loader.LoadAsync(subscriptionModelNames);
 
         var subscriptionModels = subscriptionModelIds
-            .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(id.Value, model.State!))
+            .Zip(subscriptionModelNames, (id, model) => new TenantSubscriptionModel(id.Value, model.State?.Value!))
             .OrderBy(model => model.Name)
             .ToList();
         return new TenantDetails(query.TenantId.Value, tenantName.Value, subscriptionModels);

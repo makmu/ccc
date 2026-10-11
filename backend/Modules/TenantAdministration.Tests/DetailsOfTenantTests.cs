@@ -22,8 +22,8 @@ public class DetailsOfTenantTests
     {
         var premium = NewSubscriptionModelId();
         var basic = NewSubscriptionModelId();
-        await _fixture.Given(new AddSubscriptionModel(premium, "Premium", KeyLimit.From(1000)));
-        await _fixture.Given(new AddSubscriptionModel(basic, "Basic", KeyLimit.From(10)));
+        await _fixture.Given(new AddSubscriptionModel(premium, SubscriptionModelName.From("Premium"), KeyLimit.From(1000)));
+        await _fixture.Given(new AddSubscriptionModel(basic, SubscriptionModelName.From("Basic"), KeyLimit.From(10)));
         var tenant = NewTenantId();
         await _fixture.Given(new RegisterTenant(tenant, TenantName.From("Acme"), [premium, basic]));
         await _fixture.Given(new RenameTenant(tenant, TenantName.From("Acme Corp")));

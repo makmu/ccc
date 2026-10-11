@@ -65,14 +65,14 @@ public sealed class CommandFixture
     public async Task<SubscriptionModelId> GivenSubscriptionModel(int keyLimit = 10)
     {
         var id = NewSubscriptionModelId();
-        await Given(new AddSubscriptionModel(id, "Basic", KeyLimit.From(keyLimit)));
+        await Given(new AddSubscriptionModel(id, SubscriptionModelName.From("Basic"), KeyLimit.From(keyLimit)));
         return id;
     }
 
     public async Task<UserId> GivenUser(string email = "alice@example.com")
     {
         var id = NewUserId();
-        await Given(new AddUser(id, "Alice", EmailAddress.From(email)));
+        await Given(new AddUser(id, UserName.From("Alice"), EmailAddress.From(email)));
         return id;
     }
 

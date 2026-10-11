@@ -29,6 +29,8 @@ public class TypeTests
         Assert.Throws<InvalidValueException>(() => KeyName.From(input));
         Assert.Throws<InvalidValueException>(() => LanguageCode.From(input));
         Assert.Throws<InvalidValueException>(() => EmailAddress.From(input));
+        Assert.Throws<InvalidValueException>(() => UserName.From(input));
+        Assert.Throws<InvalidValueException>(() => SubscriptionModelName.From(input));
     }
 
     [Theory]

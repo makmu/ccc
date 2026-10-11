@@ -14,7 +14,7 @@ static class AddSubscriptionModelEndpoint
             {
                 var command = new AddSubscriptionModel(
                     SubscriptionModelId.From(request.Id),
-                    request.Name,
+                    SubscriptionModelName.From(request.Name),
                     KeyLimit.From(request.KeyLimit));
                 return (await handler.HandleAsync(command)).ToHttpResult();
             });

@@ -6,7 +6,7 @@ using CCC.EventStore;
 
 namespace CCC.Modules.AppAdministration.Commands;
 
-public record AddUser(UserId Id, string Name, EmailAddress Email);
+public record AddUser(UserId Id, UserName Name, EmailAddress Email);
 
 sealed class AddUserHandler(IStateLoader loader) : ICommandHandler<AddUser>
 {
@@ -23,7 +23,7 @@ sealed class AddUserHandler(IStateLoader loader) : ICommandHandler<AddUser>
             return CommandResult.Conflict("A user with this email address already exists.");
 
         var appended = await context.TryAppendAsync(
-            new UserAdded(command.Id.Value, command.Name, command.Email.Value),
+            new UserAdded(command.Id.Value, command.Name.Value, command.Email.Value),
             Tags.From(Tag.UserId(command.Id), Tag.UserEmail(command.Email)));
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }

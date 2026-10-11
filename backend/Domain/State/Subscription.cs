@@ -14,10 +14,10 @@ public static class Subscription
     public static IStateModel<bool> AllExist(IEnumerable<SubscriptionModelId> subscriptionIds) =>
         StateModel.All(subscriptionIds.Select(Exists));
 
-    public static StateModel<string?> Name(SubscriptionModelId subscriptionId) =>
-        StateModel.Init<string?>(null)
+    public static StateModel<SubscriptionModelName?> Name(SubscriptionModelId subscriptionId) =>
+        StateModel.Init<SubscriptionModelName?>(null)
             .Where(Tag.SubscriptionId(subscriptionId))
-            .When<SubscriptionModelAdded>((e, _) => e.Name);
+            .When<SubscriptionModelAdded>((e, _) => SubscriptionModelName.From(e.Name));
 
     // Inside this class, a bare KeyLimit means this method, so the type is qualified.
     public static StateModel<KeyLimit> KeyLimit(SubscriptionModelId subscriptionId) =>

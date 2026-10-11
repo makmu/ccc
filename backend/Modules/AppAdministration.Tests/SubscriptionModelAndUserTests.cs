@@ -16,7 +16,7 @@ public class SubscriptionModelAndUserTests
     {
         var id = NewSubscriptionModelId();
 
-        var result = await _fixture.Handle(new AddSubscriptionModel(id, "Basic", KeyLimit.From(5)));
+        var result = await _fixture.Handle(new AddSubscriptionModel(id, SubscriptionModelName.From("Basic"), KeyLimit.From(5)));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new SubscriptionModelAdded(id.Value, "Basic", 5), _fixture.LastEvent<SubscriptionModelAdded>());
@@ -28,7 +28,7 @@ public class SubscriptionModelAndUserTests
     {
         var id = await _fixture.GivenSubscriptionModel();
 
-        var result = await _fixture.Handle(new AddSubscriptionModel(id, "Other", KeyLimit.From(1)));
+        var result = await _fixture.Handle(new AddSubscriptionModel(id, SubscriptionModelName.From("Other"), KeyLimit.From(1)));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A subscription model with this id already exists.");
     }
@@ -38,7 +38,7 @@ public class SubscriptionModelAndUserTests
     {
         var id = NewUserId();
 
-        var result = await _fixture.Handle(new AddUser(id, "Alice", EmailAddress.From("alice@example.com")));
+        var result = await _fixture.Handle(new AddUser(id, UserName.From("Alice"), EmailAddress.From("alice@example.com")));
 
         CommandAssert.Succeeded(result);
         Assert.Equal(new UserAdded(id.Value, "Alice", "alice@example.com"), _fixture.LastEvent<UserAdded>());
@@ -49,7 +49,7 @@ public class SubscriptionModelAndUserTests
     {
         var id = await _fixture.GivenUser();
 
-        var result = await _fixture.Handle(new AddUser(id, "Bob", EmailAddress.From("bob@example.com")));
+        var result = await _fixture.Handle(new AddUser(id, UserName.From("Bob"), EmailAddress.From("bob@example.com")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A user with this id already exists.");
     }
@@ -59,7 +59,7 @@ public class SubscriptionModelAndUserTests
     {
         await _fixture.GivenUser("alice@example.com");
 
-        var result = await _fixture.Handle(new AddUser(NewUserId(), "Alice 2", EmailAddress.From("alice@example.com")));
+        var result = await _fixture.Handle(new AddUser(NewUserId(), UserName.From("Alice 2"), EmailAddress.From("alice@example.com")));
 
         CommandAssert.Failed(result, CommandErrorKind.Conflict, "A user with this email address already exists.");
     }
