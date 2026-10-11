@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CCC.Domain.Events;
 using CCC.EventStore;
 using Dapper;
@@ -38,8 +37,8 @@ sealed class TeamAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(ProjectAdded) => AddProjectAsync(Payload<ProjectAdded>(record), connection, transaction),
-            nameof(LanguageAdded) => AddLanguageAsync(Payload<LanguageAdded>(record), connection, transaction),
+            nameof(ProjectAdded) => AddProjectAsync(record.PayloadAs<ProjectAdded>(), connection, transaction),
+            nameof(LanguageAdded) => AddLanguageAsync(record.PayloadAs<LanguageAdded>(), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
 
@@ -57,6 +56,4 @@ sealed class TeamAdministrationProjection : IProjection
             INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
             VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
             """, e, transaction);
-
-    private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CCC.Domain.Events;
 using CCC.EventStore;
 using Dapper;
@@ -56,11 +55,11 @@ sealed class AppAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(Payload<SubscriptionModelAdded>(record), connection, transaction),
-            nameof(TenantRegistered) => RegisterTenantAsync(Payload<TenantRegistered>(record), connection, transaction),
-            nameof(TenantRenamed) => RenameTenantAsync(Payload<TenantRenamed>(record), connection, transaction),
-            nameof(TenantOwnerAssigned) => AssignTenantOwnerAsync(Payload<TenantOwnerAssigned>(record), connection, transaction),
-            nameof(UserAdded) => AddUserAsync(Payload<UserAdded>(record), connection, transaction),
+            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(record.PayloadAs<SubscriptionModelAdded>(), connection, transaction),
+            nameof(TenantRegistered) => RegisterTenantAsync(record.PayloadAs<TenantRegistered>(), connection, transaction),
+            nameof(TenantRenamed) => RenameTenantAsync(record.PayloadAs<TenantRenamed>(), connection, transaction),
+            nameof(TenantOwnerAssigned) => AssignTenantOwnerAsync(record.PayloadAs<TenantOwnerAssigned>(), connection, transaction),
+            nameof(UserAdded) => AddUserAsync(record.PayloadAs<UserAdded>(), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
 
@@ -99,6 +98,4 @@ sealed class AppAdministrationProjection : IProjection
             INSERT INTO app_administration.users (user_id, name, email)
             VALUES (@Id, @Name, @Email);
             """, e, transaction);
-
-    private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

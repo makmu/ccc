@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CCC.Domain.Events;
 using CCC.EventStore;
 using Dapper;
@@ -36,8 +35,8 @@ sealed class TenantAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(Payload<SubscriptionModelAdded>(record), connection, transaction),
-            nameof(TeamAdded) => AddTeamAsync(Payload<TeamAdded>(record), connection, transaction),
+            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(record.PayloadAs<SubscriptionModelAdded>(), connection, transaction),
+            nameof(TeamAdded) => AddTeamAsync(record.PayloadAs<TeamAdded>(), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
 
@@ -52,6 +51,4 @@ sealed class TenantAdministrationProjection : IProjection
             INSERT INTO tenant_administration.teams (team_id, tenant_id, name, subscription_model_id)
             VALUES (@Id, @TenantId, @Name, @SubscriptionModelId);
             """, e, transaction);
-
-    private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

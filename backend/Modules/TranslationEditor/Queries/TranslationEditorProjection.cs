@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CCC.Domain.Events;
 using CCC.EventStore;
 using Dapper;
@@ -56,14 +55,14 @@ sealed class TranslationEditorProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(ProjectAdded) => AddProjectAsync(Payload<ProjectAdded>(record), connection, transaction),
-            nameof(LanguageAdded) => AddLanguageAsync(Payload<LanguageAdded>(record), connection, transaction),
-            nameof(KeyAdded) => AddKeyAsync(Payload<KeyAdded>(record), connection, transaction),
-            nameof(KeyRenamed) => RenameKeyAsync(Payload<KeyRenamed>(record), connection, transaction),
-            nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(Payload<ReferenceTextProvided>(record), connection, transaction),
-            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(Payload<ReferenceTextWithdrawn>(record), connection, transaction),
-            nameof(TranslationProvided) => ProvideTranslationAsync(Payload<TranslationProvided>(record), connection, transaction),
-            nameof(TranslationWithdrawn) => WithdrawTranslationAsync(Payload<TranslationWithdrawn>(record), connection, transaction),
+            nameof(ProjectAdded) => AddProjectAsync(record.PayloadAs<ProjectAdded>(), connection, transaction),
+            nameof(LanguageAdded) => AddLanguageAsync(record.PayloadAs<LanguageAdded>(), connection, transaction),
+            nameof(KeyAdded) => AddKeyAsync(record.PayloadAs<KeyAdded>(), connection, transaction),
+            nameof(KeyRenamed) => RenameKeyAsync(record.PayloadAs<KeyRenamed>(), connection, transaction),
+            nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(record.PayloadAs<ReferenceTextProvided>(), connection, transaction),
+            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(record.PayloadAs<ReferenceTextWithdrawn>(), connection, transaction),
+            nameof(TranslationProvided) => ProvideTranslationAsync(record.PayloadAs<TranslationProvided>(), connection, transaction),
+            nameof(TranslationWithdrawn) => WithdrawTranslationAsync(record.PayloadAs<TranslationWithdrawn>(), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
 
@@ -112,6 +111,4 @@ sealed class TranslationEditorProjection : IProjection
             DELETE FROM translation_editor.translations
             WHERE key_id = @KeyId AND language_code = @LanguageCode;
             """, e, transaction);
-
-    private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

@@ -1,4 +1,3 @@
-using System.Text.Json;
 
 namespace CCC.EventStore;
 
@@ -31,14 +30,7 @@ public sealed class StateModel<T>(T initialState) : IStateModel<T>
     public StateModel<T> When<TEvent>(Func<TEvent, T, T> reduce)
     {
         _reducers[typeof(TEvent).Name] =
-            (record, state) =>
-            {
-                var deserializedEvent = JsonSerializer.Deserialize<TEvent>(record.Payload);
-                if (deserializedEvent is null)
-                    throw new InvalidOperationException($"Failed to deserialize event of type {typeof(TEvent).Name}");
-                
-                return reduce(deserializedEvent, state);
-            };
+            (record, state) => reduce(record.PayloadAs<TEvent>(), state);
         return this;
     }
 
