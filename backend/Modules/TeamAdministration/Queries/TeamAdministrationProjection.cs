@@ -38,21 +38,25 @@ sealed class TeamAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(ProjectAdded) => connection.ExecuteAsync("""
-                INSERT INTO team_administration.projects (project_id, team_id, name, reference_language)
-                VALUES (@Id, @TeamId, @Name, @ReferenceLanguage);
-
-                INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
-                VALUES (@Id, @ReferenceLanguage, NULL);
-                """, Payload<ProjectAdded>(record), transaction),
-
-            nameof(LanguageAdded) => connection.ExecuteAsync("""
-                INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
-                VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
-                """, Payload<LanguageAdded>(record), transaction),
-
+            nameof(ProjectAdded) => AddProjectAsync(Payload<ProjectAdded>(record), connection, transaction),
+            nameof(LanguageAdded) => AddLanguageAsync(Payload<LanguageAdded>(record), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
+
+    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO team_administration.projects (project_id, team_id, name, reference_language)
+            VALUES (@Id, @TeamId, @Name, @ReferenceLanguage);
+
+            INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
+            VALUES (@Id, @ReferenceLanguage, NULL);
+            """, e, transaction);
+
+    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO team_administration.languages (project_id, language_code, parent_language_code)
+            VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
+            """, e, transaction);
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

@@ -6,9 +6,6 @@ using Npgsql;
 
 namespace CCC.Modules.TranslationDelivery.Queries;
 
-// One row per key and project language, holding the text that language shows:
-// its own text, or else the text it inherits from the nearest ancestor that has
-// one. The reference language is the root of every language tree.
 sealed class TranslationsProjection : IProjection
 {
     public string Schema => "translation_delivery";
@@ -56,60 +53,59 @@ sealed class TranslationsProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(ProjectAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_delivery.projects (project_id, team_id, reference_language_code)
-                VALUES (@Id, @TeamId, @ReferenceLanguage);
-
-                INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
-                VALUES (@Id, @ReferenceLanguage, NULL);
-                """, Payload<ProjectAdded>(record), transaction),
-
-            nameof(LanguageAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
-                VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
-
-                INSERT INTO translation_delivery.texts (project_id, language_code, key_id, key_name, text, source_language_code)
-                SELECT project_id, @LanguageCode, key_id, key_name, text, source_language_code
-                FROM translation_delivery.texts
-                WHERE project_id = @ProjectId AND language_code = @ParentLanguageCode;
-                """, Payload<LanguageAdded>(record), transaction),
-
-            nameof(KeyAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_delivery.texts (project_id, language_code, key_id, key_name)
-                SELECT project_id, language_code, @Id, @Name
-                FROM translation_delivery.languages
-                WHERE project_id = @ProjectId;
-                """, Payload<KeyAdded>(record), transaction),
-
-            nameof(KeyRenamed) => connection.ExecuteAsync("""
-                UPDATE translation_delivery.texts
-                SET key_name = @Name
-                WHERE project_id = @ProjectId AND key_id = @KeyId;
-                """, Payload<KeyRenamed>(record), transaction),
-
+            nameof(ProjectAdded) => AddProjectAsync(Payload<ProjectAdded>(record), connection, transaction),
+            nameof(LanguageAdded) => AddLanguageAsync(Payload<LanguageAdded>(record), connection, transaction),
+            nameof(KeyAdded) => AddKeyAsync(Payload<KeyAdded>(record), connection, transaction),
+            nameof(KeyRenamed) => RenameKeyAsync(Payload<KeyRenamed>(record), connection, transaction),
             nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(Payload<ReferenceTextProvided>(record), connection, transaction),
-
             nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(Payload<ReferenceTextWithdrawn>(record), connection, transaction),
-
             nameof(TranslationProvided) => ProvideTextAsync(Payload<TranslationProvided>(record), connection, transaction),
-
             nameof(TranslationWithdrawn) => WithdrawTextAsync(Payload<TranslationWithdrawn>(record), connection, transaction),
-
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
 
+    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_delivery.projects (project_id, team_id, reference_language_code)
+            VALUES (@Id, @TeamId, @ReferenceLanguage);
+
+            INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
+            VALUES (@Id, @ReferenceLanguage, NULL);
+            """, e, transaction);
+
+    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_delivery.languages (project_id, language_code, parent_language_code)
+            VALUES (@ProjectId, @LanguageCode, @ParentLanguageCode);
+
+            INSERT INTO translation_delivery.texts (project_id, language_code, key_id, key_name, text, source_language_code)
+            SELECT project_id, @LanguageCode, key_id, key_name, text, source_language_code
+            FROM translation_delivery.texts
+            WHERE project_id = @ProjectId AND language_code = @ParentLanguageCode;
+            """, e, transaction);
+
+    private static Task AddKeyAsync(KeyAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_delivery.texts (project_id, language_code, key_id, key_name)
+            SELECT project_id, language_code, @Id, @Name
+            FROM translation_delivery.languages
+            WHERE project_id = @ProjectId;
+            """, e, transaction);
+
+    private static Task RenameKeyAsync(KeyRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            UPDATE translation_delivery.texts
+            SET key_name = @Name
+            WHERE project_id = @ProjectId AND key_id = @KeyId;
+            """, e, transaction);
+
     private static async Task ProvideReferenceTextAsync(ReferenceTextProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
-        var referenceLanguageCode = await connection.ExecuteScalarAsync<string>(
-            "SELECT reference_language_code FROM translation_delivery.projects WHERE project_id = @ProjectId",
-            e, transaction);
+        var referenceLanguageCode = await ReferenceLanguageCodeAsync(e.ProjectId, connection, transaction);
 
-        await ProvideTextAsync(new TranslationProvided(e.KeyId, e.ProjectId, referenceLanguageCode!, e.Text), connection, transaction);
+        await ProvideTextAsync(new TranslationProvided(e.KeyId, e.ProjectId, referenceLanguageCode, e.Text), connection, transaction);
     }
 
-    // Sets the language's own text, then hands it down to every descendant that
-    // reaches this language through inherited texts only. A descendant with its own
-    // text keeps it, and so does its subtree.
     private static Task ProvideTextAsync(TranslationProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         connection.ExecuteAsync("""
             UPDATE translation_delivery.texts
@@ -138,11 +134,9 @@ sealed class TranslationsProjection : IProjection
 
     private static async Task WithdrawReferenceTextAsync(ReferenceTextWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
-        var referenceLanguageCode = await connection.ExecuteScalarAsync<string>(
-            "SELECT reference_language_code FROM translation_delivery.projects WHERE project_id = @ProjectId",
-            e, transaction);
+        var referenceLanguageCode = await ReferenceLanguageCodeAsync(e.ProjectId, connection, transaction);
 
-        await WithdrawTextAsync(new TranslationWithdrawn(e.KeyId, e.ProjectId, referenceLanguageCode!), connection, transaction);
+        await WithdrawTextAsync(new TranslationWithdrawn(e.KeyId, e.ProjectId, referenceLanguageCode), connection, transaction);
     }
 
     private static Task WithdrawTextAsync(TranslationWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
@@ -158,6 +152,11 @@ sealed class TranslationsProjection : IProjection
             SET text = (SELECT text FROM parent), source_language_code = (SELECT source_language_code FROM parent)
             WHERE project_id = @ProjectId AND key_id = @KeyId AND source_language_code = @LanguageCode;
             """, e, transaction);
+
+    private static async Task<string> ReferenceLanguageCodeAsync(Guid projectId, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        (await connection.ExecuteScalarAsync<string>(
+            "SELECT reference_language_code FROM translation_delivery.projects WHERE project_id = @projectId",
+            new { projectId }, transaction))!;
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

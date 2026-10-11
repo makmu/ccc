@@ -36,18 +36,22 @@ sealed class TenantAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(SubscriptionModelAdded) => connection.ExecuteAsync("""
-                INSERT INTO tenant_administration.subscription_models (subscription_model_id, name)
-                VALUES (@Id, @Name);
-                """, Payload<SubscriptionModelAdded>(record), transaction),
-
-            nameof(TeamAdded) => connection.ExecuteAsync("""
-                INSERT INTO tenant_administration.teams (team_id, tenant_id, name, subscription_model_id)
-                VALUES (@Id, @TenantId, @Name, @SubscriptionModelId);
-                """, Payload<TeamAdded>(record), transaction),
-
+            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(Payload<SubscriptionModelAdded>(record), connection, transaction),
+            nameof(TeamAdded) => AddTeamAsync(Payload<TeamAdded>(record), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
+
+    private static Task AddSubscriptionModelAsync(SubscriptionModelAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO tenant_administration.subscription_models (subscription_model_id, name)
+            VALUES (@Id, @Name);
+            """, e, transaction);
+
+    private static Task AddTeamAsync(TeamAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO tenant_administration.teams (team_id, tenant_id, name, subscription_model_id)
+            VALUES (@Id, @TenantId, @Name, @SubscriptionModelId);
+            """, e, transaction);
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

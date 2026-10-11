@@ -56,46 +56,62 @@ sealed class TranslationEditorProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(ProjectAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_editor.projects (project_id, team_id, reference_language)
-                VALUES (@Id, @TeamId, @ReferenceLanguage);
-                """, Payload<ProjectAdded>(record), transaction),
-
-            nameof(LanguageAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_editor.languages (project_id, language_code)
-                VALUES (@ProjectId, @LanguageCode);
-                """, Payload<LanguageAdded>(record), transaction),
-
-            nameof(KeyAdded) => connection.ExecuteAsync("""
-                INSERT INTO translation_editor.keys (key_id, project_id, name)
-                VALUES (@Id, @ProjectId, @Name);
-                """, Payload<KeyAdded>(record), transaction),
-
-            nameof(KeyRenamed) => connection.ExecuteAsync("""
-                UPDATE translation_editor.keys SET name = @Name WHERE key_id = @KeyId;
-                """, Payload<KeyRenamed>(record), transaction),
-
-            nameof(ReferenceTextProvided) => connection.ExecuteAsync("""
-                UPDATE translation_editor.keys SET reference_text = @Text WHERE key_id = @KeyId;
-                """, Payload<ReferenceTextProvided>(record), transaction),
-
-            nameof(ReferenceTextWithdrawn) => connection.ExecuteAsync("""
-                UPDATE translation_editor.keys SET reference_text = NULL WHERE key_id = @KeyId;
-                """, Payload<ReferenceTextWithdrawn>(record), transaction),
-
-            nameof(TranslationProvided) => connection.ExecuteAsync("""
-                INSERT INTO translation_editor.translations (key_id, language_code, text)
-                VALUES (@KeyId, @LanguageCode, @Text)
-                ON CONFLICT (key_id, language_code) DO UPDATE SET text = EXCLUDED.text;
-                """, Payload<TranslationProvided>(record), transaction),
-
-            nameof(TranslationWithdrawn) => connection.ExecuteAsync("""
-                DELETE FROM translation_editor.translations
-                WHERE key_id = @KeyId AND language_code = @LanguageCode;
-                """, Payload<TranslationWithdrawn>(record), transaction),
-
+            nameof(ProjectAdded) => AddProjectAsync(Payload<ProjectAdded>(record), connection, transaction),
+            nameof(LanguageAdded) => AddLanguageAsync(Payload<LanguageAdded>(record), connection, transaction),
+            nameof(KeyAdded) => AddKeyAsync(Payload<KeyAdded>(record), connection, transaction),
+            nameof(KeyRenamed) => RenameKeyAsync(Payload<KeyRenamed>(record), connection, transaction),
+            nameof(ReferenceTextProvided) => ProvideReferenceTextAsync(Payload<ReferenceTextProvided>(record), connection, transaction),
+            nameof(ReferenceTextWithdrawn) => WithdrawReferenceTextAsync(Payload<ReferenceTextWithdrawn>(record), connection, transaction),
+            nameof(TranslationProvided) => ProvideTranslationAsync(Payload<TranslationProvided>(record), connection, transaction),
+            nameof(TranslationWithdrawn) => WithdrawTranslationAsync(Payload<TranslationWithdrawn>(record), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
+
+    private static Task AddProjectAsync(ProjectAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_editor.projects (project_id, team_id, reference_language)
+            VALUES (@Id, @TeamId, @ReferenceLanguage);
+            """, e, transaction);
+
+    private static Task AddLanguageAsync(LanguageAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_editor.languages (project_id, language_code)
+            VALUES (@ProjectId, @LanguageCode);
+            """, e, transaction);
+
+    private static Task AddKeyAsync(KeyAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_editor.keys (key_id, project_id, name)
+            VALUES (@Id, @ProjectId, @Name);
+            """, e, transaction);
+
+    private static Task RenameKeyAsync(KeyRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            UPDATE translation_editor.keys SET name = @Name WHERE key_id = @KeyId;
+            """, e, transaction);
+
+    private static Task ProvideReferenceTextAsync(ReferenceTextProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            UPDATE translation_editor.keys SET reference_text = @Text WHERE key_id = @KeyId;
+            """, e, transaction);
+
+    private static Task WithdrawReferenceTextAsync(ReferenceTextWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            UPDATE translation_editor.keys SET reference_text = NULL WHERE key_id = @KeyId;
+            """, e, transaction);
+
+    private static Task ProvideTranslationAsync(TranslationProvided e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO translation_editor.translations (key_id, language_code, text)
+            VALUES (@KeyId, @LanguageCode, @Text)
+            ON CONFLICT (key_id, language_code) DO UPDATE SET text = EXCLUDED.text;
+            """, e, transaction);
+
+    private static Task WithdrawTranslationAsync(TranslationWithdrawn e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            DELETE FROM translation_editor.translations
+            WHERE key_id = @KeyId AND language_code = @LanguageCode;
+            """, e, transaction);
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }

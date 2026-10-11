@@ -56,29 +56,19 @@ sealed class AppAdministrationProjection : IProjection
     public Task ApplyAsync(EventRecord record, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
         record.Type switch
         {
-            nameof(SubscriptionModelAdded) => connection.ExecuteAsync("""
-                INSERT INTO app_administration.subscription_models (subscription_model_id, name, key_limit)
-                VALUES (@Id, @Name, @KeyLimit);
-                """, Payload<SubscriptionModelAdded>(record), transaction),
-
+            nameof(SubscriptionModelAdded) => AddSubscriptionModelAsync(Payload<SubscriptionModelAdded>(record), connection, transaction),
             nameof(TenantRegistered) => RegisterTenantAsync(Payload<TenantRegistered>(record), connection, transaction),
-
-            nameof(TenantRenamed) => connection.ExecuteAsync("""
-                UPDATE app_administration.tenants SET name = @Name WHERE tenant_id = @TenantId;
-                """, Payload<TenantRenamed>(record), transaction),
-
-            nameof(TenantOwnerAssigned) => connection.ExecuteAsync("""
-                INSERT INTO app_administration.tenant_owners (tenant_id, user_id)
-                VALUES (@TenantId, @UserId);
-                """, Payload<TenantOwnerAssigned>(record), transaction),
-
-            nameof(UserAdded) => connection.ExecuteAsync("""
-                INSERT INTO app_administration.users (user_id, name, email)
-                VALUES (@Id, @Name, @Email);
-                """, Payload<UserAdded>(record), transaction),
-
+            nameof(TenantRenamed) => RenameTenantAsync(Payload<TenantRenamed>(record), connection, transaction),
+            nameof(TenantOwnerAssigned) => AssignTenantOwnerAsync(Payload<TenantOwnerAssigned>(record), connection, transaction),
+            nameof(UserAdded) => AddUserAsync(Payload<UserAdded>(record), connection, transaction),
             _ => throw new InvalidOperationException($"Projection {Schema} does not handle {record.Type}."),
         };
+
+    private static Task AddSubscriptionModelAsync(SubscriptionModelAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO app_administration.subscription_models (subscription_model_id, name, key_limit)
+            VALUES (@Id, @Name, @KeyLimit);
+            """, e, transaction);
 
     private static async Task RegisterTenantAsync(TenantRegistered e, NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
@@ -92,6 +82,23 @@ sealed class AppAdministrationProjection : IProjection
             VALUES (@TenantId, @SubscriptionModelId);
             """, e.SubscriptionModelIds.Select(id => new { TenantId = e.Id, SubscriptionModelId = id }), transaction);
     }
+
+    private static Task RenameTenantAsync(TenantRenamed e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            UPDATE app_administration.tenants SET name = @Name WHERE tenant_id = @TenantId;
+            """, e, transaction);
+
+    private static Task AssignTenantOwnerAsync(TenantOwnerAssigned e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO app_administration.tenant_owners (tenant_id, user_id)
+            VALUES (@TenantId, @UserId);
+            """, e, transaction);
+
+    private static Task AddUserAsync(UserAdded e, NpgsqlConnection connection, NpgsqlTransaction transaction) =>
+        connection.ExecuteAsync("""
+            INSERT INTO app_administration.users (user_id, name, email)
+            VALUES (@Id, @Name, @Email);
+            """, e, transaction);
 
     private static T Payload<T>(EventRecord record) => JsonSerializer.Deserialize<T>(record.Payload)!;
 }
