@@ -1,13 +1,13 @@
 using Dapper;
-using Npgsql;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CCC.EventStore;
 
 public static class EventStoreSchema
 {
-    public static async Task CreateAsync(string connectionString)
+    public static async Task CreateAsync(IServiceProvider services)
     {
-        await using var conn = new NpgsqlConnection(connectionString);
+        await using var conn = await services.GetRequiredService<EventStoreDatabase>().OpenAsync(CancellationToken.None);
         await conn.ExecuteAsync("""
             CREATE TABLE IF NOT EXISTS events (
                 position  BIGSERIAL PRIMARY KEY,

@@ -2,11 +2,10 @@ using System.Data;
 using System.Text.Json;
 using CCC.Base.Dcb;
 using Dapper;
-using Npgsql;
 
 namespace CCC.EventStore;
 
-class PostgresEventStore(string connectionString, AppendSignal signal) : IEventStore
+class PostgresEventStore(EventStoreDatabase database, AppendSignal signal) : IEventStore
 {
     // Positions come from a sequence and are taken before commit, so two concurrent
     // appends could commit out of position order, and a reader that tracks the last
@@ -54,8 +53,7 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
 
     private async Task<int> ExecuteUnderAppendLockAsync(string sql, object parameters, CancellationToken cancellationToken)
     {
-        await using var conn = new NpgsqlConnection(connectionString);
-        await conn.OpenAsync(cancellationToken);
+        await using var conn = await database.OpenAsync(cancellationToken);
         await using var tx = await conn.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
         await conn.ExecuteAsync(new CommandDefinition(
@@ -73,7 +71,7 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
 
     public async Task<IEnumerable<EventRecord>> ReadAsync(long fromPosition, int limit, string[] types, CancellationToken cancellationToken)
     {
-        await using var conn = new NpgsqlConnection(connectionString);
+        await using var conn = await database.OpenAsync(cancellationToken);
         return await conn.QueryAsync<EventRecord>(new CommandDefinition(
             """SELECT position, type, payload, timestamp, "user", tags FROM events WHERE position >= @fromPosition AND type = ANY(@types) ORDER BY position LIMIT @limit""",
             new { fromPosition, limit, types }, cancellationToken: cancellationToken));
@@ -90,7 +88,7 @@ class PostgresEventStore(string connectionString, AppendSignal signal) : IEventS
             ORDER BY position
             """;
 
-        await using var conn = new NpgsqlConnection(connectionString);
+        await using var conn = await database.OpenAsync(cancellationToken);
         return await conn.QueryAsync<EventRecord>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
     }
 

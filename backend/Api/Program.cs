@@ -56,7 +56,7 @@ else
     app.UseHttpsRedirection();
 }
 
-await EventStoreSchema.CreateAsync(connectionString);
+await EventStoreSchema.CreateAsync(app.Services);
 
 app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthReportWriter.WriteAsync });
 

@@ -30,7 +30,6 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
         await using (var server = new NpgsqlConnection(ServerConnectionString))
             await server.ExecuteAsync($"CREATE DATABASE {_database}");
 
-        await EventStoreSchema.CreateAsync(ConnectionString);
         await StartAsync();
     }
 
@@ -94,6 +93,7 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
                 .AddProjectionDatabase(ConnectionString))
             .BuildServiceProvider();
 
+        await EventStoreSchema.CreateAsync(_services);
         foreach (var service in _services.GetServices<IHostedService>())
             await service.StartAsync(CancellationToken.None);
     }
