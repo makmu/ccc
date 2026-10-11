@@ -1,6 +1,6 @@
 # Project Structure
 
-All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `net10.0`, `Nullable` and `ImplicitUsings` from `backend/Directory.Build.props`. Project names have no `CCC.` prefix, but each sets `RootNamespace`, so namespaces keep it: the `Domain` project's code lives in `CCC.Domain.*`. Projects in a folder add the folder to their namespace, such as `CCC.Modules.TranslationEditor` and `CCC.Base.Dcb`.
+All backend projects live in `backend/`, share `backend/CCC.sln`, and inherit `net10.0`, `Nullable` and `ImplicitUsings` from `backend/Directory.Build.props`. Package versions live only in `backend/Directory.Packages.props` (Central Package Management), so a `PackageReference` names the package without a version. Project names have no `CCC.` prefix, but each sets `RootNamespace`, so namespaces keep it: the `Domain` project's code lives in `CCC.Domain.*`. Projects in a folder add the folder to their namespace, such as `CCC.Modules.TranslationEditor` and `CCC.Base.Dcb`.
 
 The rules for how these projects may reference each other are in [dependency-rules.md](dependency-rules.md).
 
