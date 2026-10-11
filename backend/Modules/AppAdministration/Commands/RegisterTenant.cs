@@ -30,7 +30,7 @@ sealed class RegisterTenantHandler(IStateLoader loader) : ICommandHandler<Regist
             return CommandResult.NotFound("One or more subscription models were not found.");
 
         var appended = await context.TryAppendAsync(
-            new TenantRegistered(command.Id.Value, command.Name.Value, command.SubscriptionModelIds.Select(id => id.Value).ToList()),
+            new TenantRegistered(command.Id.Value, command.Name.Value, command.SubscriptionModelIds.Select(id => id.Value).Distinct().ToList()),
             Tags.From(Tag.TenantId(command.Id), Tag.TenantName(command.Name)));
         return appended ? CommandResult.Ok : CommandResult.ConcurrentModification;
     }

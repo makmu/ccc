@@ -68,6 +68,17 @@ public class TenantOnboardingTests
     }
 
     [Fact]
+    public async Task RegisterTenant_merges_repeated_subscription_models()
+    {
+        var subscription = await _fixture.GivenSubscriptionModel();
+
+        var result = await _fixture.Handle(new RegisterTenant(NewTenantId(), TenantName.From("Acme"), [subscription, subscription]));
+
+        CommandAssert.Succeeded(result);
+        Assert.Equal([subscription.Value], _fixture.LastEvent<TenantRegistered>().SubscriptionModelIds);
+    }
+
+    [Fact]
     public async Task RegisterTenant_rejects_an_unknown_subscription_model()
     {
         var known = await _fixture.GivenSubscriptionModel();
