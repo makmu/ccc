@@ -11,7 +11,7 @@ public static class StateModel
 public sealed class StateModel<T>(T initialState) : IStateModel<T>
 {
     private readonly List<(string Key, string Value)> _tags = [];
-    private readonly Dictionary<string, Func<EventRecord, T, T>> _reducers = [];
+    private readonly EventHandlers<Func<T, T>> _reducers = new();
 
     public T State { get; private set; } = initialState;
 
@@ -29,8 +29,7 @@ public sealed class StateModel<T>(T initialState) : IStateModel<T>
 
     public StateModel<T> When<TEvent>(Func<TEvent, T, T> reduce)
     {
-        _reducers[typeof(TEvent).Name] =
-            (record, state) => reduce(record.PayloadAs<TEvent>(), state);
+        _reducers.On<TEvent>(e => state => reduce(e, state));
         return this;
     }
 
@@ -39,7 +38,7 @@ public sealed class StateModel<T>(T initialState) : IStateModel<T>
         get
         {
             var tags = Tags.From(_tags.ToArray()).Values;
-            var entries = _reducers.Keys
+            var entries = _reducers.EventTypes
                 .Select(type => new EventFilter.Entry(type, tags))
                 .ToList();
             return new EventFilter(entries);
@@ -48,9 +47,5 @@ public sealed class StateModel<T>(T initialState) : IStateModel<T>
 
     // The loader has already matched this model's tags against the record, so
     // only the event type still needs dispatching.
-    public void Apply(EventRecord record)
-    {
-        if (_reducers.TryGetValue(record.Type, out var reduce))
-            State = reduce(record, State);
-    }
+    public void Apply(EventRecord record) => State = _reducers.Handle(record)(State);
 }
