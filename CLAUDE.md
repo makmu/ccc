@@ -6,6 +6,8 @@ CCC is a demo project. It shows how to build a .NET backend on an event store wi
 ## Terminology
 When this codebase says *projection*, it means a read model: the tables built from the event log to answer queries, together with the `IProjection` that builds them. Don't use the term read model in code or docs.
 
+An *automation* reacts to events by issuing commands, such as adding a default team when a tenant is registered (ADR-014).
+
 ## Demo Domain
 A multi-tenant CMS in which users define keys and translations for those keys, such as label texts for user controls in different languages. Keys can also represent welcome texts, mail templates, or any other static data consumed by a target application.
 

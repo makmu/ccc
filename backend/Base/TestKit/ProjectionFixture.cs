@@ -9,37 +9,26 @@ using Npgsql;
 
 namespace CCC.Base.TestKit;
 
-// Runs a module's projection against a throwaway database on the server given by
-// CCC_TEST_POSTGRES, defaulting to the local development server.
+// Runs a module's projection against a throwaway database.
 public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IServiceCollection> addModule)
 {
     private static readonly TimeSpan CatchUpTimeout = TimeSpan.FromSeconds(5);
 
-    private static readonly string ServerConnectionString =
-        Environment.GetEnvironmentVariable("CCC_TEST_POSTGRES")
-        ?? "Host=localhost:5432;Username=postgres;Password=mypass";
-
-    private readonly string _database = $"ccc_test_{Guid.NewGuid():N}";
+    private readonly TestDatabase _database = new();
     private ServiceProvider _services = null!;
 
-    private string ConnectionString =>
-        new NpgsqlConnectionStringBuilder(ServerConnectionString) { Database = _database }.ConnectionString;
+    private string ConnectionString => _database.ConnectionString;
 
     public async Task InitializeAsync()
     {
-        await using (var server = new NpgsqlConnection(ServerConnectionString))
-            await server.ExecuteAsync($"CREATE DATABASE {_database}");
-
+        await _database.CreateAsync();
         await StartAsync();
     }
 
     public async Task DisposeAsync()
     {
         await StopAsync();
-
-        NpgsqlConnection.ClearAllPools();
-        await using var server = new NpgsqlConnection(ServerConnectionString);
-        await server.ExecuteAsync($"DROP DATABASE {_database} WITH (FORCE)");
+        await _database.DropAsync();
     }
 
     public async Task RestartAsync()

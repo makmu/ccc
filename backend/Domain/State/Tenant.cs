@@ -34,6 +34,11 @@ public static class Tenant
             .Where(Tag.TenantId(tenantId))
             .When<TenantRegistered>((e, _) => e.SubscriptionModelIds.Select(SubscriptionModelId.From).ToList());
 
+    public static StateModel<bool> HasTeams(TenantId tenantId) =>
+        StateModel.Init(false)
+            .Where(Tag.TenantId(tenantId))
+            .When<TeamAdded>((_, _) => true);
+
     public static StateModel<bool> HasSubscription(TenantId tenantId, SubscriptionModelId subscriptionModelId) =>
         StateModel.Init(false)
             .Where(Tag.TenantId(tenantId))
