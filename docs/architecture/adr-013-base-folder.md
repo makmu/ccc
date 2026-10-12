@@ -1,5 +1,7 @@
 # ADR-013: A Base Folder for the Shared Projects
 
+> **Changed by ADR-014 and ADR-015:** `Base` also holds `Automations` and `ModuleHosting`. `ProjectionDatabase` is replaced by `ModuleDatabase<TModule>` in `ModuleHosting`.
+
 ## Decision
 
 The projects that every module builds on, other than `Domain` and `EventStore`, move into the folder `backend/Base`, which is also a solution folder:

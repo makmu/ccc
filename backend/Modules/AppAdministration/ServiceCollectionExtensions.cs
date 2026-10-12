@@ -1,4 +1,5 @@
 using CCC.Base.Abstractions;
+using CCC.Base.ModuleHosting;
 using CCC.Base.Projections;
 using CCC.Modules.AppAdministration.Commands;
 using CCC.Modules.AppAdministration.Queries;
@@ -14,10 +15,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ICommandHandler<RegisterTenant>, RegisterTenantHandler>();
         services.AddTransient<ICommandHandler<AssignTenantOwner>, AssignTenantOwnerHandler>();
         services.AddTransient<ICommandHandler<AddUser>, AddUserHandler>();
-        services.AddProjection<AppAdministrationProjection>();
         services.AddTransient<IQueryHandler<SubscriptionModels, IReadOnlyList<SubscriptionModelSummary>>, SubscriptionModelsHandler>();
         services.AddTransient<IQueryHandler<Tenants, IReadOnlyList<TenantSummary>>, TenantsHandler>();
         services.AddTransient<IQueryHandler<Users, IReadOnlyList<UserSummary>>, UsersHandler>();
+        services.AddModule<AppAdministrationModule>()
+            .AddProjection<AppAdministrationProjection>();
         return services;
     }
 }

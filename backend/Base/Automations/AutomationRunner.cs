@@ -1,6 +1,6 @@
 using CCC.Base.Abstractions;
 using CCC.Base.Dcb;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.Logging;
@@ -9,15 +9,15 @@ using Npgsql;
 namespace CCC.Base.Automations;
 
 // The commands an automation issues append to the event log, while its bookmark lives
-// in the projection database, so no transaction covers both. After a crash between
+// in the module's database, so no transaction covers both. After a crash between
 // the two, the runner reacts to the same event again, and the command has to treat
 // that as already done.
 sealed class AutomationRunner<TAutomation>(
     TAutomation automation,
     IEventStore eventStore,
-    ProjectionDatabase database,
+    ModuleDatabase database,
     AppendSignal signal,
-    ProjectionRetryPolicy retryPolicy,
+    RunnerRetryPolicy retryPolicy,
     ILogger<AutomationRunner<TAutomation>> logger) : EventLogRunner(eventStore, database, signal, retryPolicy, logger)
     where TAutomation : IAutomation
 {

@@ -1,5 +1,5 @@
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using Dapper;
 
 namespace CCC.Modules.AppAdministration.Queries;
@@ -8,7 +8,7 @@ public record SubscriptionModels;
 
 public record SubscriptionModelSummary(Guid Id, string Name, int KeyLimit);
 
-sealed class SubscriptionModelsHandler(ProjectionDatabase database)
+sealed class SubscriptionModelsHandler(ModuleDatabase<AppAdministrationModule> database)
     : IQueryHandler<SubscriptionModels, IReadOnlyList<SubscriptionModelSummary>>
 {
     public async Task<IReadOnlyList<SubscriptionModelSummary>> HandleAsync(SubscriptionModels query, CancellationToken cancellationToken)

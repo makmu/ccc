@@ -4,7 +4,7 @@ using CCC.Api.TenantAdministration;
 using CCC.Api.TranslationDelivery;
 using CCC.Api.TranslationEditor;
 using CCC.Api;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.EventStore;
 using CCC.Modules.AppAdministration;
 using CCC.Modules.TeamAdministration;
@@ -29,15 +29,15 @@ builder.Services.AddOpenApi();
 var connectionString = builder.Configuration.GetConnectionString("EventStore")
     ?? throw new InvalidOperationException("Connection string 'EventStore' is not configured.");
 
-var projectionsConnectionString = builder.Configuration.GetConnectionString("Projections")
-    ?? throw new InvalidOperationException("Connection string 'Projections' is not configured.");
+var modulesConnectionString = builder.Configuration.GetConnectionString("Modules")
+    ?? throw new InvalidOperationException("Connection string 'Modules' is not configured.");
 
 builder.Services.AddEventStore(connectionString);
+builder.Services.AddModuleDatabases(module => builder.Configuration.GetConnectionString(module) ?? modulesConnectionString);
 builder.Services.AddAppAdministration();
 builder.Services.AddTenantAdministration();
 builder.Services.AddTeamAdministration();
 builder.Services.AddTranslationEditor();
-builder.Services.AddProjectionDatabase(projectionsConnectionString);
 builder.Services.AddTranslationDelivery();
 
 var app = builder.Build();

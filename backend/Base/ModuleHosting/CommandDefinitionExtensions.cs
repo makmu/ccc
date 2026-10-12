@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace CCC.Base.Projections;
+namespace CCC.Base.ModuleHosting;
 
 public static class CommandDefinitionExtensions
 {

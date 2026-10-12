@@ -6,16 +6,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
-namespace CCC.Base.Projections;
+namespace CCC.Base.ModuleHosting;
 
-// Follows the event log from a bookmark in the projection database. Exactly one runner
+// Follows the event log from a bookmark in the module's database. Exactly one runner
 // writes a schema, so neither the bookmark nor the schema's tables need locking.
 // Running the API twice would break this.
 public abstract class EventLogRunner(
     IEventStore eventStore,
-    ProjectionDatabase database,
+    ModuleDatabase database,
     AppendSignal signal,
-    ProjectionRetryPolicy retryPolicy,
+    RunnerRetryPolicy retryPolicy,
     ILogger logger) : BackgroundService
 {
     private const int BatchSize = 100;
@@ -25,7 +25,7 @@ public abstract class EventLogRunner(
     private readonly ChannelReader<bool> _appends = signal.Subscribe();
     private bool _stalled;
 
-    protected ProjectionDatabase Database { get; } = database;
+    protected ModuleDatabase Database { get; } = database;
 
     protected ILogger Logger { get; } = logger;
 

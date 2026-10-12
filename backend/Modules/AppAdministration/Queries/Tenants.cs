@@ -1,5 +1,5 @@
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using Dapper;
 
 namespace CCC.Modules.AppAdministration.Queries;
@@ -8,7 +8,7 @@ public record Tenants;
 
 public record TenantSummary(Guid Id, string Name, string[] SubscriptionModels, string[] Owners);
 
-sealed class TenantsHandler(ProjectionDatabase database) : IQueryHandler<Tenants, IReadOnlyList<TenantSummary>>
+sealed class TenantsHandler(ModuleDatabase<AppAdministrationModule> database) : IQueryHandler<Tenants, IReadOnlyList<TenantSummary>>
 {
     public async Task<IReadOnlyList<TenantSummary>> HandleAsync(Tenants query, CancellationToken cancellationToken)
     {

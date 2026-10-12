@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Dcb\Dcb.csproj" />
+        <ProjectReference Include="..\ModuleHosting\ModuleHosting.csproj" />
         <ProjectReference Include="..\..\EventStore\EventStore.csproj" />
     </ItemGroup>
 

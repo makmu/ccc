@@ -7,6 +7,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Base\Abstractions\Abstractions.csproj" />
         <ProjectReference Include="..\..\Base\Dcb\Dcb.csproj" />
+        <ProjectReference Include="..\..\Base\ModuleHosting\ModuleHosting.csproj" />
         <ProjectReference Include="..\..\Domain\Domain.csproj" />
         <ProjectReference Include="..\..\EventStore\EventStore.csproj" />
         <ProjectReference Include="..\..\Base\Projections\Projections.csproj" />

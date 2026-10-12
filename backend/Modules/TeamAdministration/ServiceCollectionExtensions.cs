@@ -1,4 +1,5 @@
 using CCC.Base.Abstractions;
+using CCC.Base.ModuleHosting;
 using CCC.Base.Projections;
 using CCC.Modules.TeamAdministration.Commands;
 using CCC.Modules.TeamAdministration.Queries;
@@ -12,8 +13,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ICommandHandler<AddProject>, AddProjectHandler>();
         services.AddTransient<ICommandHandler<AddLanguage>, AddLanguageHandler>();
-        services.AddProjection<TeamAdministrationProjection>();
         services.AddTransient<IQueryHandler<ProjectsOfTeam, IReadOnlyList<ProjectSummary>>, ProjectsOfTeamHandler>();
+        services.AddModule<TeamAdministrationModule>()
+            .AddProjection<TeamAdministrationProjection>();
         return services;
     }
 }

@@ -22,6 +22,20 @@ public class ProjectionHealthTests : IAsyncLifetime
         var health = await _fixture.HealthAsync();
 
         Assert.Equal(HealthStatus.Healthy, health.Status);
+        Assert.Equal(["version", "position"], health.Data.Keys);
+    }
+
+    [Fact]
+    public async Task A_projection_whose_version_is_not_installed_is_unhealthy()
+    {
+        await _fixture.Query<Users, IReadOnlyList<UserSummary>>(new Users());
+        await _fixture.GivenInstalledVersion(99);
+
+        var health = await _fixture.HealthAsync();
+
+        Assert.Equal(HealthStatus.Unhealthy, health.Status);
+        Assert.Equal("Version 1 is not installed, so its queries answer from version 99.", health.Description);
+        Assert.Equal(99, health.Data["version"]);
     }
 
     [Fact]

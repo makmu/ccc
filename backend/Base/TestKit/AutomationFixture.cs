@@ -1,6 +1,6 @@
 using System.Text.Json;
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.Domain.Types;
 using CCC.EventStore;
 using CCC.Modules.AppAdministration.Commands;
@@ -71,7 +71,7 @@ public sealed class AutomationFixture(string schema, Func<IServiceCollection, IS
         await connection.ExecuteAsync($"UPDATE {schema}.bookmark SET position = 0");
     }
 
-    public async Task<ProjectionBookmark> WaitForStallAsync()
+    public async Task<Bookmark> WaitForStallAsync()
     {
         var deadline = DateTime.UtcNow + CatchUpTimeout;
         while (true)
@@ -97,10 +97,10 @@ public sealed class AutomationFixture(string schema, Func<IServiceCollection, IS
         return await connection.ExecuteScalarAsync<bool>($"SELECT to_regclass('{schema}.bookmark') IS NOT NULL");
     }
 
-    private async Task<ProjectionBookmark> BookmarkAsync()
+    private async Task<Bookmark> BookmarkAsync()
     {
         await using var connection = new NpgsqlConnection(_database.ConnectionString);
-        return await connection.QuerySingleAsync<ProjectionBookmark>(
+        return await connection.QuerySingleAsync<Bookmark>(
             $"SELECT position, stalled_at AS stalledAt, stall_reason AS stallReason FROM {schema}.bookmark");
     }
 
@@ -119,9 +119,9 @@ public sealed class AutomationFixture(string schema, Func<IServiceCollection, IS
     {
         _services = addModules(new ServiceCollection()
                 .AddLogging()
-                .AddSingleton(new ProjectionRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
+                .AddSingleton(new RunnerRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
                 .AddEventStore(_database.ConnectionString)
-                .AddProjectionDatabase(_database.ConnectionString))
+                .AddModuleDatabases(_ => _database.ConnectionString))
             .BuildServiceProvider();
 
         await EventStoreSchema.CreateAsync(_services);

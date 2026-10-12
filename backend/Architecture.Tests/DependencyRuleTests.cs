@@ -1,6 +1,7 @@
 using System.Reflection;
 using CCC.Base.Abstractions;
 using CCC.Base.Automations;
+using CCC.Base.ModuleHosting;
 using CCC.Base.Projections;
 using NetArchTest.Rules;
 
@@ -14,6 +15,7 @@ public class DependencyRuleTests
     private static readonly Assembly Dcb = Assembly.Load("Dcb");
     private static readonly Assembly Domain = Assembly.Load("Domain");
     private static readonly Assembly EventStore = Assembly.Load("EventStore");
+    private static readonly Assembly ModuleHosting = Assembly.Load("ModuleHosting");
     private static readonly Assembly Projections = Assembly.Load("Projections");
     private static readonly Assembly[] Modules =
     [
@@ -28,22 +30,30 @@ public class DependencyRuleTests
     public void Abstractions_depend_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Abstractions),
-            "CCC.Base.Dcb", "CCC.Domain", "CCC.EventStore", "CCC.Base.Projections", "CCC.Base.Automations", "CCC.Modules", "CCC.Api",
-            "Microsoft.AspNetCore");
+            "CCC.Base.Dcb", "CCC.Domain", "CCC.EventStore", "CCC.Base.ModuleHosting", "CCC.Base.Projections", "CCC.Base.Automations",
+            "CCC.Modules", "CCC.Api", "Microsoft.AspNetCore");
     }
 
     [Fact]
     public void Dcb_depends_on_nothing()
     {
         AssertNoDependency(Types.InAssembly(Dcb),
-            "CCC.Base.Abstractions", "CCC.Domain", "CCC.EventStore", "CCC.Base.Projections", "CCC.Base.Automations", "CCC.Modules",
-            "CCC.Api", "Dapper", "Npgsql", "Microsoft");
+            "CCC.Base.Abstractions", "CCC.Domain", "CCC.EventStore", "CCC.Base.ModuleHosting", "CCC.Base.Projections",
+            "CCC.Base.Automations", "CCC.Modules", "CCC.Api", "Dapper", "Npgsql", "Microsoft");
     }
 
     [Fact]
-    public void EventStore_knows_nothing_about_the_domain_or_the_projections_or_the_automations()
+    public void EventStore_knows_nothing_about_the_domain_or_what_builds_on_it()
     {
         AssertNoDependency(Types.InAssembly(EventStore),
+            "CCC.Base.Abstractions", "CCC.Domain", "CCC.Base.ModuleHosting", "CCC.Base.Projections", "CCC.Base.Automations",
+            "CCC.Modules", "CCC.Api");
+    }
+
+    [Fact]
+    public void ModuleHosting_knows_nothing_about_the_domain_or_the_projections_or_the_automations()
+    {
+        AssertNoDependency(Types.InAssembly(ModuleHosting),
             "CCC.Base.Abstractions", "CCC.Domain", "CCC.Base.Projections", "CCC.Base.Automations", "CCC.Modules", "CCC.Api");
     }
 
@@ -55,18 +65,18 @@ public class DependencyRuleTests
     }
 
     [Fact]
-    public void Automations_know_nothing_about_the_domain()
+    public void Automations_know_nothing_about_the_domain_or_the_projections()
     {
         AssertNoDependency(Types.InAssembly(Automations),
-            "CCC.Domain", "CCC.Modules", "CCC.Api");
+            "CCC.Domain", "CCC.Base.Projections", "CCC.Modules", "CCC.Api");
     }
 
     [Fact]
     public void Domain_depends_on_nothing_but_Dcb()
     {
         AssertNoDependency(Types.InAssembly(Domain),
-            "CCC.Base.Abstractions", "CCC.EventStore", "CCC.Base.Projections", "CCC.Base.Automations", "CCC.Modules", "CCC.Api",
-            "Microsoft");
+            "CCC.Base.Abstractions", "CCC.EventStore", "CCC.Base.ModuleHosting", "CCC.Base.Projections", "CCC.Base.Automations",
+            "CCC.Modules", "CCC.Api", "Microsoft");
     }
 
     [Fact]
@@ -85,7 +95,8 @@ public class DependencyRuleTests
     {
         AssertNoDependency(
             Types.InAssembly(Api).That().DoNotHaveName("Program"),
-            "CCC.Base.Dcb", "CCC.EventStore", "CCC.Base.Projections", "CCC.Base.Automations", "CCC.Domain.State");
+            "CCC.Base.Dcb", "CCC.EventStore", "CCC.Base.ModuleHosting", "CCC.Base.Projections", "CCC.Base.Automations",
+            "CCC.Domain.State");
     }
 
     [Fact]
@@ -95,6 +106,16 @@ public class DependencyRuleTests
 
         Assert.NotEmpty(automations.GetTypes());
         AssertNoDependency(automations, "CCC.EventStore", "CCC.Domain.State");
+    }
+
+    [Fact]
+    public void Each_module_has_one_internal_marker_so_only_it_can_open_its_database()
+    {
+        foreach (var module in Modules)
+        {
+            var marker = Assert.Single(module.GetTypes(), type => typeof(IModule).IsAssignableFrom(type));
+            Assert.False(marker.IsVisible, $"{marker.FullName} is public.");
+        }
     }
 
     [Fact]

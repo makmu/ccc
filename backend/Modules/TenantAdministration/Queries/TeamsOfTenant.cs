@@ -1,5 +1,5 @@
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.Domain.Types;
 using Dapper;
 
@@ -9,7 +9,7 @@ public record TeamsOfTenant(TenantId TenantId);
 
 public record TeamSummary(Guid Id, string Name, string SubscriptionModel);
 
-sealed class TeamsOfTenantHandler(ProjectionDatabase database) : IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>
+sealed class TeamsOfTenantHandler(ModuleDatabase<TenantAdministrationModule> database) : IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>
 {
     public async Task<IReadOnlyList<TeamSummary>> HandleAsync(TeamsOfTenant query, CancellationToken cancellationToken)
     {

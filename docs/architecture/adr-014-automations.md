@@ -1,5 +1,7 @@
 # ADR-014: Automations React to Events by Issuing Commands
 
+> **Changed by ADR-015:** an automation keeps its bookmark in its module's database instead of the projection database. `EventLogRunner`, the retry policy and `.With` moved into `Base/ModuleHosting`, and `Automations` references it instead of `Projections`. `AutomationHealthCheck<T>` derives from `BookmarkHealthCheck` and no longer repeats `ProjectionHealthCheck<T>`. An automation is registered with `AddModule<TModule>().AddAutomation<T>()`.
+
 ## Decision
 
 An automation reacts to events by issuing a command. It never appends events itself. The command's handler runs the business checks, builds the tags and appends conditionally, as it does for an endpoint, so every event type is still appended by one module only.

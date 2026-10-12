@@ -1,5 +1,5 @@
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.Domain.Types;
 using Dapper;
 
@@ -9,7 +9,7 @@ public record TranslationsOfProject(TeamId TeamId, ProjectId ProjectId, Language
 
 public record Translation(Guid KeyId, string KeyName, string? Text, string? SourceLanguageCode);
 
-sealed class TranslationsOfProjectHandler(ProjectionDatabase database)
+sealed class TranslationsOfProjectHandler(ModuleDatabase<TranslationDeliveryModule> database)
     : IQueryHandler<TranslationsOfProject, IReadOnlyList<Translation>?>
 {
     public async Task<IReadOnlyList<Translation>?> HandleAsync(TranslationsOfProject query, CancellationToken cancellationToken)

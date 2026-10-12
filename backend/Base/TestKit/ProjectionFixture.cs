@@ -1,5 +1,5 @@
 using CCC.Base.Abstractions;
-using CCC.Base.Projections;
+using CCC.Base.ModuleHosting;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,14 +37,20 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
         await StartAsync();
     }
 
-    public async Task<ProjectionBookmark> BookmarkAsync()
+    public async Task<Bookmark> BookmarkAsync()
     {
         await using var connection = new NpgsqlConnection(ConnectionString);
-        return await connection.QuerySingleAsync<ProjectionBookmark>(
+        return await connection.QuerySingleAsync<Bookmark>(
             $"SELECT position, stalled_at AS stalledAt, stall_reason AS stallReason FROM {schema}.bookmark");
     }
 
-    public async Task<ProjectionBookmark> WaitForStallAsync()
+    public async Task GivenInstalledVersion(int version)
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.ExecuteAsync($"UPDATE {schema}.bookmark SET version = @version", new { version });
+    }
+
+    public async Task<Bookmark> WaitForStallAsync()
     {
         var deadline = DateTime.UtcNow + CatchUpTimeout;
         while (true)
@@ -77,9 +83,9 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
     {
         _services = addModule(new ServiceCollection()
                 .AddLogging()
-                .AddSingleton(new ProjectionRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
+                .AddSingleton(new RunnerRetryPolicy(3, TimeSpan.FromMilliseconds(10)))
                 .AddEventStore(ConnectionString)
-                .AddProjectionDatabase(ConnectionString))
+                .AddModuleDatabases(_ => ConnectionString))
             .BuildServiceProvider();
 
         await EventStoreSchema.CreateAsync(_services);
@@ -124,4 +130,4 @@ public sealed class ProjectionFixture(string schema, Func<IServiceCollection, IS
             """);
 }
 
-public sealed record ProjectionBookmark(long Position, DateTimeOffset? StalledAt, string? StallReason);
+public sealed record Bookmark(long Position, DateTimeOffset? StalledAt, string? StallReason);

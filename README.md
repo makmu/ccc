@@ -8,7 +8,7 @@ The repository is not intended to be a generic content management system. Its ma
 
 ## Repository Structure
 
-- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into `Api`, one project per module under `Modules/`, `Domain`, `EventStore`, and the shared projects `Abstractions`, `Dcb`, `Projections`, `Automations` and `TestKit` under `Base/` (see ADR-006, ADR-009, ADR-011, ADR-012, ADR-013 and ADR-014)
+- `backend/` - ASP.NET Core backend with the event-sourced write model and API, split into `Api`, one project per module under `Modules/`, `Domain`, `EventStore`, and the shared projects `Abstractions`, `Dcb`, `ModuleHosting`, `Projections`, `Automations` and `TestKit` under `Base/` (see ADR-006, ADR-009, ADR-011, ADR-012, ADR-013, ADR-014 and ADR-015)
 - `frontend/` - React frontend for exploring and exercising the sample application
 - `presentation/` - standalone React/RevealJS slide deck used to explain CCC in this repository
 - `docs/architecture/` - architecture decision records for the main technical choices
@@ -71,3 +71,4 @@ The browser-hosted presentation runs on Vite's default dev port unless that port
 | [ADR-012: State Model Primitives in a Dependency-Free Dcb Project](docs/architecture/adr-012-dcb.md) | Moves state models, tags and event records into a project that references nothing, so the domain no longer depends on the event store |
 | [ADR-013: A Base Folder for the Shared Projects](docs/architecture/adr-013-base-folder.md) | Groups `Abstractions`, `Dcb`, `Projections` and `TestKit` under `Base/`, with `CCC.Base.*` namespaces |
 | [ADR-014: Automations React to Events by Issuing Commands](docs/architecture/adr-014-automations.md) | Adds automations, such as the default team of a new tenant, which issue commands instead of appending events, and defines their bookmark, repeated reactions and stalls |
+| [ADR-015: Every Module Owns Its Database, Hosted Through ModuleHosting](docs/architecture/adr-015-module-databases.md) | Gives every module its own database for projections and automation bookmarks, with one default connection string and optional overrides, and moves what projections and automations share into `ModuleHosting` |

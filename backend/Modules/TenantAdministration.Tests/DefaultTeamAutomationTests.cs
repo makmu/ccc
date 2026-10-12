@@ -25,6 +25,18 @@ public class DefaultTeamAutomationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_caught_up_automation_is_healthy_and_reports_no_version()
+    {
+        await _fixture.GivenTenant();
+        await _fixture.Events<TeamAdded>();
+
+        var health = await _fixture.HealthAsync();
+
+        Assert.Equal(HealthStatus.Healthy, health.Status);
+        Assert.Equal(["position"], health.Data.Keys);
+    }
+
+    [Fact]
     public async Task Reacting_to_the_same_event_again_adds_no_second_team()
     {
         await _fixture.GivenTenant();

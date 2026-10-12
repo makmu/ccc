@@ -1,4 +1,5 @@
 using CCC.Base.Dcb;
+using CCC.Base.ModuleHosting;
 using CCC.EventStore;
 using Dapper;
 using Microsoft.Extensions.Logging;
@@ -9,9 +10,9 @@ namespace CCC.Base.Projections;
 sealed class ProjectionRunner<TProjection>(
     TProjection projection,
     IEventStore eventStore,
-    ProjectionDatabase database,
+    ModuleDatabase database,
     AppendSignal signal,
-    ProjectionRetryPolicy retryPolicy,
+    RunnerRetryPolicy retryPolicy,
     ILogger<ProjectionRunner<TProjection>> logger) : EventLogRunner(eventStore, database, signal, retryPolicy, logger)
     where TProjection : IProjection
 {

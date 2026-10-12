@@ -1,5 +1,7 @@
 # ADR-011: Projection Infrastructure in a ProjectionBase Project
 
+> **Changed by ADR-015:** `ProjectionDatabase` is replaced by `ModuleDatabase<TModule>`, one database per module. It moved into `Base/ModuleHosting`, together with the runner base `EventLogRunner`, `RunnerRetryPolicy` (formerly `ProjectionRetryPolicy`) and `CommandDefinitionExtensions`. `AddProjectionDatabase` is gone, and `AddProjection<T>` extends the `ModuleBuilder` that `AddModule<TModule>()` returns.
+
 > **Changed by ADR-013:** the project is now called `Projections` and lives in `backend/Base/Projections`, with the namespace `CCC.Base.Projections`. The `Base` folder and namespace mark it as infrastructure, which answers the objection to alternative 4 below.
 
 > **Changed by ADR-012:** `EventHandlers<T>` and `EventRecord` have moved from `EventStore` into the dependency-free `Dcb` project. `ProjectionBase` references `Dcb` and `EventStore`, and projections no longer need `CCC.EventStore`.

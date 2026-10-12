@@ -1,5 +1,7 @@
 # ADR-010: Projections Stall After Repeated Failures
 
+> **Changed by ADR-015:** `ProjectionRetryPolicy` is now `RunnerRetryPolicy` in `ModuleHosting`, and applies to automations as well. `AddModule<TModule>()` registers the default.
+
 ## Decision
 
 A projection runner gives up on a failure it can't get past. It retries a failing step three times at most, waiting 2, 4 and 8 seconds, and then stalls. A stalled projection stops catching up until an operator unstalls it, including across restarts of the API.

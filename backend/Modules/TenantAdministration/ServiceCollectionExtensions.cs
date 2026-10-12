@@ -1,5 +1,6 @@
 using CCC.Base.Abstractions;
 using CCC.Base.Automations;
+using CCC.Base.ModuleHosting;
 using CCC.Base.Projections;
 using CCC.Modules.TenantAdministration.Commands;
 using CCC.Modules.TenantAdministration.Queries;
@@ -13,11 +14,12 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<ICommandHandler<AddTeam>, AddTeamHandler>();
         services.AddTransient<ICommandHandler<AddDefaultTeam>, AddDefaultTeamHandler>();
-        services.AddAutomation<DefaultTeamAutomation>();
         services.AddTransient<ICommandHandler<RenameTenant>, RenameTenantHandler>();
         services.AddTransient<IQueryHandler<DetailsOfTenant, TenantDetails?>, DetailsOfTenantHandler>();
-        services.AddProjection<TenantAdministrationProjection>();
         services.AddTransient<IQueryHandler<TeamsOfTenant, IReadOnlyList<TeamSummary>>, TeamsOfTenantHandler>();
+        services.AddModule<TenantAdministrationModule>()
+            .AddProjection<TenantAdministrationProjection>()
+            .AddAutomation<DefaultTeamAutomation>();
         return services;
     }
 }
