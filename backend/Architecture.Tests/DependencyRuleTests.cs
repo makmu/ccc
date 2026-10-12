@@ -89,6 +89,15 @@ public class DependencyRuleTests
     }
 
     [Fact]
+    public void Automations_append_nothing_themselves()
+    {
+        var automations = Types.InAssemblies(Modules).That().ImplementInterface(typeof(IAutomation));
+
+        Assert.NotEmpty(automations.GetTypes());
+        AssertNoDependency(automations, "CCC.EventStore", "CCC.Domain.State");
+    }
+
+    [Fact]
     public void Handlers_are_reachable_only_through_their_interfaces()
     {
         var handlers = Modules

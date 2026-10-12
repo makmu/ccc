@@ -15,7 +15,7 @@ The first automation is `DefaultTeamAutomation` in `TenantAdministration`. It re
 - **Health.** `/health` lists each automation under its schema name. It is healthy when caught up, degraded while events are left to react to, and unhealthy while not installed or stalled.
 - **Tests.** The command is tested like any other, against the in-memory store. The automation is tested with `AutomationFixture` from `TestKit`, which runs it against PostgreSQL and sets up state through commands, since commands depend on tags.
 
-`Architecture.Tests` checks that `Automations` knows nothing about the domain, that `Abstractions`, `Dcb`, `EventStore`, `Projections`, `Domain` and the endpoints don't depend on it, and that automations live in a `Commands` namespace.
+`Architecture.Tests` checks that `Automations` knows nothing about the domain, that `Abstractions`, `Dcb`, `EventStore`, `Projections`, `Domain` and the endpoints don't depend on it, that automations depend neither on `EventStore` nor on `CCC.Domain.State`, so they can't append or load state themselves, and that automations live in a `Commands` namespace.
 
 ## Context
 
