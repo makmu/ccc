@@ -33,7 +33,6 @@ public abstract class EventLogRunner(
     // continues after the last event whose effects are bookmarked.
     protected long Position { get; set; }
 
-    // "Projection" or "Automation", to start every log message with.
     protected abstract string Kind { get; }
 
     protected abstract string Schema { get; }
